@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>飞白 - GameJam Demo</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* ================= 基础变量与重置 ================= */
+        :root {
+            --ink-bg: #050507;
+            --ink-panel: #121216;
+            --ink-light: #d1d5db;
+            --ink-border: #2a2a30;
+            --blood-red: #8b1818;
+            --gold: #b8860b;
+            --abar-height: 10vh;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        body, html { width: 100%; height: 100%; background-color: var(--ink-bg); color: var(--ink-light); font-family: 'Noto Serif SC', 'Georgia', serif; overflow: hidden; }
+
+        /* ================= 共有层与特效 ================= */
+        #bgCanvas, #fxCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+        #bgCanvas { z-index: 0; opacity: 0.5; }
+        #fxCanvas { z-index: 9999; } 
+
+        .vignette { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle, transparent 40%, #000 100%); pointer-events: none; z-index: 1; }
+        
+        .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; display: none; flex-direction: column; background-color: var(--ink-bg); }
+        .screen.active { display: flex; }
+        .screen-content { flex: 1; position: relative; overflow: hidden; display: flex; flex-direction: column; } 
+
+        .shake { animation: shakeAnim 0.3s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shakeAnim { 10%, 90% { transform: translate3d(-2px, 0, 0); } 20%, 80% { transform: translate3d(4px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-6px, 0, 0); } 40%, 60% { transform: translate3d(6px, 0, 0); } }
+        .hit-stop { filter: grayscale(100%) contrast(150%); }
+
+        /* ================= UI 组件 ================= */
+        .btn-g { background: linear-gradient(90deg, transparent, rgba(30,30,35,0.8), transparent); border: 1px solid transparent; color: #ccc; padding: 15px 40px; font-size: 24px; cursor: pointer; transition: all 0.3s; font-family: inherit; text-align: center; }
+        .btn-g:hover { border-bottom: 1px solid var(--blood-red); color: white; text-shadow: 0 0 10px var(--blood-red); transform: scale(1.05); }
+        
+        .asset-placeholder { display: flex; justify-content: center; align-items: center; background: rgba(30,30,30,0.5); border: 1px dashed #555; color: #888; font-size: 14px; text-align: center; padding: 10px; }
+
+        /* ================= 界面 1 & 2 & 3: 前期流转 (使用逻辑命名的资产) ================= */
+        #screen-main { background: url('assets/main_menu_bg.png') center/cover, var(--ink-bg); justify-content: center; align-items: center; }
+        #screen-saves { background: url('assets/saves_menu_bg.png') center/cover, var(--ink-bg); justify-content: center; align-items: center; }
+        #screen-class { background: url('assets/class_select_bg.png') center/cover, var(--ink-bg); justify-content: center; align-items: center; }
+        
+        .game-title { font-size: 100px; color: #eee; letter-spacing: 30px; text-shadow: 0 0 20px rgba(139,24,24,0.8); margin-bottom: 50px; }
+        
+        .saves-container { display: flex; gap: 50px; }
+        .save-slot { width: 220px; height: 320px; background: rgba(10,10,12,0.9); border: 1px solid #333; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; transition: 0.3s; }
+        .save-slot:hover { border-color: var(--blood-red); transform: translateY(-10px); box-shadow: 0 10px 20px rgba(0,0,0,0.8); }
+        
+        #pv-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 100; display: none; justify-content: center; align-items: center; flex-direction: column; }
+        
+        .class-wheel { position: relative; width: 500px; height: 500px; margin-bottom: 30px; }
+        .class-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 200px; height: 200px; border: 2px solid #444; border-radius: 50%; background: rgba(0,0,0,0.8); display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; transition: 0.3s; }
+        .class-center:hover { border-color: var(--blood-red); box-shadow: 0 0 30px rgba(139,24,24,0.6); }
+        .class-btn { position: absolute; width: 60px; height: 60px; background: #1a1a20; border: 1px solid #444; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 20px; cursor: pointer; transition: 0.2s; transform: translate(-50%, -50%); }
+        .class-btn:hover, .class-btn.selected { background: var(--blood-red); color: white; transform: translate(-50%, -50%) scale(1.2); }
+        .pos-1 { top: 10%; left: 50%; } .pos-2 { top: 30%; left: 84.6%; } .pos-3 { top: 70%; left: 84.6%; }
+        .pos-4 { top: 90%; left: 50%; } .pos-5 { top: 70%; left: 15.4%; } .pos-6 { top: 30%; left: 15.4%; }
+
+        /* ================= Abar 系统 ================= */
+        #abar { height: var(--abar-height); background: linear-gradient(to bottom, #1a1a1f, #0a0a0c); border-bottom: 2px solid #2a2a30; display: flex; justify-content: space-between; align-items: center; padding: 0 30px; z-index: 50; box-shadow: 0 5px 20px rgba(0,0,0,0.8); }
+        .abar-btn { background: linear-gradient(145deg, #2a2a30, #1a1a20); box-shadow: 3px 3px 6px #050505, -3px -3px 6px #2b2b35; border: 1px solid #333; border-radius: 8px; width: 50px; height: 50px; display: flex; justify-content: center; align-items: center; font-size: 20px; color: #ccc; cursor: pointer; transition: 0.1s; }
+        .abar-btn:active { box-shadow: inset 3px 3px 6px #050505, inset -3px -3px 6px #2b2b35; color: var(--blood-red); }
+
+        /* 面板 Modal 修正 */
+        .modal { position: absolute; top: var(--abar-height); left: 0; width: 100%; height: calc(100% - var(--abar-height)); background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); z-index: 100; display: none; justify-content: center; align-items: center; }
+        .modal.active { display: flex; }
+        
+        /* 个人信息面板内容区 */
+        #info-content { width: 80%; height: 80%; background: var(--ink-panel); border: 1px solid #444; display: flex; border-radius: 10px; overflow: hidden; position: relative;}
+        .info-col { flex: 1; border-right: 1px solid #333; padding: 20px; display: flex; flex-direction: column; }
+        .info-col:last-child { border-right: none; }
+        .info-section { flex: 1; border-bottom: 1px solid #222; margin-bottom: 10px; padding-bottom: 10px; }
+        .info-section:last-child { border-bottom: none; }
+        
+        #settings-panel { flex-direction: column; gap: 20px; }
+
+        /* ================= 界面 4: 地图 ================= */
+        #screen-map .screen-content { background: url('assets/map_bg.png') center/cover, var(--ink-bg); position: relative; }
+        .map-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+        .map-line { stroke: #444; stroke-width: 2; stroke-dasharray: 5,5; }
+        .map-node { position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: flex-end; cursor: pointer; transition: 0.3s; opacity: 0.5; pointer-events: none;}
+        .map-node.reachable { opacity: 1; pointer-events: auto; }
+        .map-node.reachable:hover { transform: translate(-50%, -50%) scale(1.2); filter: drop-shadow(0 0 10px var(--blood-red)); }
+        .map-node.visited { opacity: 0.3; }
+        .node-icon { font-size: 40px; color: #ccc; }
+        .node-icon.big { font-size: 60px; color: var(--blood-red); }
+        .node-name { writing-mode: vertical-rl; font-size: 20px; font-weight: bold; position: absolute; top: -10px; right: -30px; letter-spacing: 5px; text-shadow: 2px 2px 5px black; color: #fff;}
+
+        /* ================= 事件界面 (界面 B) ================= */
+        #screen-event .screen-content { background: url('assets/event_bg.png') center/cover, var(--ink-bg); justify-content: flex-end; align-items: center; padding-bottom: 50px; }
+        .dialog-box { width: 80%; max-width: 1000px; height: 250px; background: rgba(10,10,15,0.95); border: 2px solid #444; border-radius: 10px; position: relative; padding: 40px; display: flex; flex-direction: column; justify-content: center; cursor: pointer; }
+        .dialog-name { position: absolute; top: -20px; left: 30px; background: var(--ink-border); padding: 5px 20px; font-size: 24px; font-weight: bold; border: 1px solid #555; color: var(--blood-red); }
+        .dialog-text { font-size: 28px; line-height: 1.5; text-shadow: 1px 1px 2px black; }
+        .dialog-options { display: none; flex-direction: column; gap: 15px; width: 60%; margin: 0 auto; z-index: 10;}
+        .dialog-opt-btn { background: rgba(30,30,35,0.9); border: 1px solid #555; padding: 15px; color: white; font-size: 20px; text-align: center; cursor: pointer; transition: 0.2s; font-family: inherit;}
+        .dialog-opt-btn:hover { background: var(--blood-red); border-color: #fff; }
+
+        /* ================= 战斗界面 ================= */
+        #screen-combat .screen-content { display: flex; flex-direction: column; background: url('assets/combat_bg.png') center/cover, var(--ink-bg); }
+        
+        .combat-top { padding: 10px 40px; display: flex; justify-content: space-between; align-items: center; font-size: 24px; font-weight: bold; }
+        .stat-badge { background: rgba(0,0,0,0.8); padding: 5px 15px; border: 1px solid #444; border-radius: 20px; }
+        
+        .combat-middle { flex: 1; display: flex; justify-content: space-around; align-items: center; position: relative; }
+        .entity { display: flex; flex-direction: column; align-items: center; gap: 15px; position: relative; }
+        .entity-sprite { width: 180px; height: 240px; }
+        .hp-container { width: 180px; height: 12px; background: #222; border: 1px solid #000; position: relative; }
+        .hp-fill { height: 100%; background: var(--blood-red); width: 100%; transition: 0.3s; }
+        .hp-text { position: absolute; top: -20px; left: 0; width: 100%; text-align: center; font-size: 14px; text-shadow: 1px 1px 2px black; }
+        .intent { position: absolute; top: -40px; background: rgba(0,0,0,0.8); padding: 5px 10px; border: 1px solid #555; font-size: 16px; color: #ff6b6b; border-radius: 5px; }
+        
+        .combat-bottom { height: 260px; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 20px; position: relative; }
+        .pile { position: absolute; bottom: 30px; width: 100px; height: 140px; background: rgba(20,20,25,0.9); border: 1px solid #444; display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 18px; }
+        #draw-pile { left: 40px; }
+        #discard-pile { right: 40px; }
+        
+        #end-turn-btn { position: absolute; right: 40px; bottom: 190px; background: #333; color: #888; border: 1px solid #555; padding: 15px 30px; font-size: 20px; cursor: not-allowed; transition: 0.3s; font-family: inherit;}
+        #end-turn-btn.active { background: var(--blood-red); color: white; border-color: #fff; cursor: pointer; }
+        #end-turn-btn.active:hover { box-shadow: 0 0 15px rgba(139,24,24,0.8); }
+
+        /* 卡牌样式 */
+        .hand { display: flex; gap: -20px; justify-content: center; align-items: flex-end; height: 100%; }
+        .card { width: 150px; height: 220px; background: linear-gradient(135deg, #222, #111); border: 2px solid #555; border-radius: 8px; position: relative; padding: 10px; cursor: grab; transition: transform 0.2s, z-index 0s; box-shadow: 0 5px 10px rgba(0,0,0,0.5); user-select: none; display: flex; flex-direction: column; }
+        .card:hover { transform: translateY(-40px) scale(1.1); z-index: 10 !important; border-color: #aaa; box-shadow: 0 0 20px rgba(255,255,255,0.2); }
+        .card.dragging { cursor: grabbing; transition: none; z-index: 999 !important; opacity: 0.9; box-shadow: 0 20px 40px rgba(0,0,0,0.8); border-color: var(--gold); }
+        .card.disabled { filter: grayscale(100%) brightness(0.5); pointer-events: none; }
+        
+        .card-cost { position: absolute; top: -10px; left: -10px; width: 30px; height: 30px; background: #111; border: 2px solid #888; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 18px; font-weight: bold; color: #60a5fa; box-shadow: 0 0 5px black;}
+        .card-type { position: absolute; top: -5px; right: -5px; width: 24px; height: 24px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 12px; font-weight: bold; color: white; box-shadow: 0 0 5px black; }
+        .type-ping { background-color: #4b5563; } .type-ze { background-color: var(--blood-red); }
+        
+        .card-name { text-align: center; font-weight: bold; font-size: 18px; margin-top: 5px; border-bottom: 1px solid #444; padding-bottom: 5px; }
+        .card-img { height: 70px; margin: 5px 0; border: 1px dashed #444; font-size: 12px;}
+        .card-desc { font-size: 12px; color: #aaa; flex: 1; text-align: center; display: flex; align-items: center; justify-content: center; }
+
+        .ping-ze-tracker { position: absolute; top: 80px; left: 50%; transform: translateX(-50%); font-size: 30px; letter-spacing: 10px; display: flex; }
+        .pz-char { animation: pzPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes pzPop { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+        
+        .dmg-text { position: absolute; color: white; font-size: 40px; font-weight: bold; -webkit-text-stroke: 2px black; pointer-events: none; animation: floatUp 1s forwards; z-index: 100; font-family: 'Ma Shan Zheng', cursive; }
+        .dmg-text.crit { color: var(--blood-red); font-size: 50px; }
+        .dmg-text.block { color: #60a5fa; }
+        @keyframes floatUp { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-100px) scale(1.5); opacity: 0; } }
+
+        #toast { position: fixed; top: 20%; left: 50%; transform: translateX(-50%); background: rgba(139,24,24,0.9); padding: 10px 30px; font-size: 20px; border-radius: 5px; border: 1px solid #ff6b6b; color: white; z-index: 1000; opacity: 0; pointer-events: none; transition: 0.3s; }
+    </style>
+</head>
+<body>
+
+    <!-- 底层水墨特效 -->
+    <canvas id="bgCanvas"></canvas>
+    <div class="vignette"></div>
+
+    <!-- ================= 界面 1: 主界面 ================= -->
+    <div id="screen-main" class="screen active">
+        <div class="game-title">飞白</div>
+        <div class="btn-g" onclick="Game.navTo('screen-saves')">开始旅程</div>
+        <div class="btn-g" onclick="Game.showToast('选项功能开发中')">选项</div>
+        <div class="btn-g" onclick="Game.showToast('三生石(图鉴)功能开发中')">三生石</div>
+        <div class="btn-g" onclick="Game.showToast('结束运行')">退出旅程</div>
+    </div>
+
+    <!-- ================= 界面 2: 回忆/存档 ================= -->
+    <div id="screen-saves" class="screen">
+        <h2 style="font-size: 40px; margin-bottom: 60px; letter-spacing: 10px;">选择轮回</h2>
+        <div class="saves-container">
+            <div class="save-slot" onclick="Game.selectSave(1)">
+                <h3 style="font-size: 28px; margin-bottom: 20px;">回忆 1</h3><p style="color:#888;">空</p>
+            </div>
+            <div class="save-slot" onclick="Game.selectSave(2)">
+                <h3 style="font-size: 28px; margin-bottom: 20px;">回忆 2</h3><p style="color:#aaa;">地图: 望乡台<br>流派: 剑</p>
+            </div>
+            <div class="save-slot" onclick="Game.selectSave(3)">
+                <h3 style="font-size: 28px; margin-bottom: 20px;">回忆 3</h3><p style="color:#888;">空</p>
+            </div>
+        </div>
+        <div class="btn-g" style="margin-top: 50px;" onclick="Game.navTo('screen-main')">返回</div>
+    </div>
+
+    <!-- PV 浮层视频 -->
+    <div id="pv-overlay">
+        <!-- 视频源占位，配合 mp3 -->
+        <video id="pv-video" src="assets/飞白PV.mp4" style="width: 80%; max-width: 800px; border: 2px solid #444;" controls></video>
+        <h1 style="color:white; font-size:30px; letter-spacing:10px; margin-top:20px;">《飞白》世界观 PV</h1>
+        <div class="btn-g" style="margin-top:30px;" onclick="Game.skipPV()">跳过 PV</div>
+    </div>
+
+    <!-- ================= 界面 3: 流派选择 ================= -->
+    <div id="screen-class" class="screen">
+        <h2 style="font-size: 40px; margin-bottom: 20px; letter-spacing: 10px;">六道轮回</h2>
+        <div class="class-wheel">
+            <div class="class-btn pos-1" onclick="Game.selectClass('剑', '高爆发，连击剑法。\n基础攻击:4 防御:0')">剑</div>
+            <div class="class-btn pos-2" onclick="Game.selectClass('弓', '远程消耗，叠毒与流血。')">弓</div>
+            <div class="class-btn pos-3" onclick="Game.selectClass('枪', '横扫千军，范围伤害。')">枪</div>
+            <div class="class-btn pos-4" onclick="Game.selectClass('毒', '诡异莫测，暗器与毒药。')">毒</div>
+            <div class="class-btn pos-5" onclick="Game.selectClass('棍', '坚若磐石，格挡反击。')">棍</div>
+            <div class="class-btn pos-6" onclick="Game.selectClass('拳', '拳拳到肉，破甲连营。')">拳</div>
+            
+            <div class="class-center" onclick="Game.enterMap()">
+                <div id="class-icon" style="font-size: 50px; margin-bottom: 10px;">❓</div>
+                <div id="class-enter" style="color: var(--blood-red); font-size: 16px; opacity: 0; transition: 0.3s; letter-spacing: 2px;">进入游戏</div>
+            </div>
+        </div>
+        <div id="class-desc" style="background: rgba(0,0,0,0.8); padding: 20px; border: 1px solid #444; width: 600px; text-align: center; min-height: 80px; white-space: pre-line;">请选择流派</div>
+    </div>
+
+    <!-- ================= 全局 Abar 系统 ================= -->
+    <div id="abar" style="display: none;">
+        <div class="abar-btn" onclick="Game.toggleModal('info-panel')"><i class="fa-solid fa-address-card"></i></div>
+        <div style="font-size: 24px; letter-spacing: 10px; color: #888;">冥 府 游 记</div>
+        <div class="abar-btn" onclick="Game.toggleModal('settings-panel')"><i class="fa-solid fa-gear"></i></div>
+    </div>
+
+    <!-- 个人信息 Modal (Bug已修复) -->
+    <div id="info-panel" class="modal">
+        <div id="info-content">
+            <div class="abar-btn" style="position:absolute; top:10px; right:10px; border:none; box-shadow:none; z-index:10;" onclick="Game.toggleModal('info-panel')"><i class="fa-solid fa-xmark"></i></div>
+            
+            <div class="info-col">
+                <div class="info-section">
+                    <h3 style="color:var(--blood-red); margin-bottom:10px;">属性</h3>
+                    <p>流派: <span id="info-class">无</span></p>
+                    <p>气血: <span id="info-hp">0/0</span></p>
+                    <p>力: 10 &nbsp; 御: 5 &nbsp; 悟性: <span id="info-wuxing">8</span></p>
+                </div>
+                <div class="info-section" style="overflow-y:auto;">
+                    <h3 style="color:var(--blood-red); margin-bottom:10px;">卡组残卷</h3>
+                    <div id="info-deck" style="font-size:14px; color:#aaa; line-height:1.6;"></div>
+                </div>
+            </div>
+            <!-- 角色立绘 -->
+            <div class="info-col" style="justify-content: center; align-items: center; background: url('assets/info_character.png') center/cover, var(--ink-bg);"></div>
+            
+            <div class="info-col">
+                <div style="background: rgba(0,0,0,0.5); padding: 10px; text-align: center; font-size: 20px; color: var(--gold); border: 1px solid #444; margin-bottom: 20px;">
+                    钱财: <span id="info-gold">0</span>
+                </div>
+                <div class="info-section">
+                    <h3 style="color:var(--blood-red); margin-bottom:10px;">装备</h3>
+                    <div class="asset-placeholder" style="height: 100px;">无</div>
+                </div>
+                <div class="info-section">
+                    <h3 style="color:var(--blood-red); margin-bottom:10px;">法宝</h3>
+                    <div id="info-relics" style="display:flex; gap:10px; flex-wrap:wrap;">无</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 设置 Modal -->
+    <div id="settings-panel" class="modal">
+        <div class="btn-g" onclick="Game.toggleModal('settings-panel')">回到旅程</div>
+        <div class="btn-g" onclick="Game.navTo('screen-class'); Game.toggleModal('settings-panel')">重新开始</div>
+        <div class="btn-g" onclick="Game.showToast('选项...')">选项</div>
+        <div class="btn-g" onclick="document.getElementById('abar').style.display='none'; Game.navTo('screen-main'); Game.toggleModal('settings-panel')">主菜单</div>
+        <div class="btn-g" onclick="Game.showToast('退出')">退出旅程</div>
+    </div>
+
+    <!-- ================= 界面 4: 地图 ================= -->
+    <div id="screen-map" class="screen">
+        <div class="screen-content">
+            <svg class="map-svg" id="map-svg"></svg>
+            <div id="map-nodes-container"></div>
+        </div>
+    </div>
+
+    <!-- ================= 事件界面 ================= -->
+    <div id="screen-event" class="screen">
+        <div class="screen-content">
+            <div class="dialog-box" id="event-dialog" onclick="EventSys.nextDialog()">
+                <div class="dialog-name" id="event-name">我</div>
+                <div class="dialog-text" id="event-text">...</div>
+                <div class="dialog-options" id="event-options"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= 战斗界面 ================= -->
+    <div id="screen-combat" class="screen">
+        <div class="screen-content">
+            <div class="combat-top">
+                <div class="stat-badge">气: <span id="ui-energy" style="color:#60a5fa">3</span>/<span id="ui-max-energy">3</span></div>
+                <div class="stat-badge">势: <span id="ui-momentum" style="color:var(--gold)">0</span>/10 <span style="font-size:12px;color:#aaa">(满10次伤害+50%)</span></div>
+            </div>
+            
+            <div class="ping-ze-tracker" id="pz-tracker"></div>
+
+            <div class="combat-middle" id="combat-arena">
+                <div class="entity" id="player">
+                    <!-- 玩家立绘 -->
+                    <div class="asset-placeholder entity-sprite" style="background: url('assets/player_sprite.png') center/cover, #222; border:none;"></div>
+                    <div class="hp-container"><div class="hp-fill" id="player-hp-fill"></div><div class="hp-text" id="player-hp-text">50/50 <span id="player-block" style="color:#60a5fa"></span></div></div>
+                </div>
+
+                <div class="entity" id="enemy">
+                    <div class="intent" id="enemy-intent">意图: 等待</div>
+                    <!-- 敌人立绘 -->
+                    <div class="asset-placeholder entity-sprite" id="enemy-sprite" style="border:none;"></div>
+                    <div class="hp-container"><div class="hp-fill" id="enemy-hp-fill"></div><div class="hp-text" id="enemy-hp-text">80/80</div></div>
+                </div>
+            </div>
+
+            <div class="combat-bottom">
+                <div class="pile" id="draw-pile">抽牌堆<br><span id="draw-count">0</span></div>
+                <div class="hand" id="hand-container"></div>
+                <div class="pile" id="discard-pile">弃牌堆<br><span id="discard-count">0</span></div>
+                <button id="end-turn-btn" onclick="Combat.endTurn()">结束回合</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 顶层画布用于卡牌拖拽水墨轨迹 -->
+    <canvas id="fxCanvas"></canvas>
+    <div id="toast">提示信息</div>
+
+    <!-- ================= 核心 JS 逻辑 ================= -->
+    <script>
+        const $ = id => document.getElementById(id);
+        const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+        // === 独立音频系统 ===
+        const AudioSys = {
+            bgm: null,
+            playBGM: (src) => {
+                if(AudioSys.bgm) { AudioSys.bgm.pause(); AudioSys.bgm.currentTime = 0; }
+                AudioSys.bgm = new Audio(src);
+                AudioSys.bgm.loop = true;
+                AudioSys.bgm.volume = 0.5;
+                // Web端需用户交互才能自动播放音频，这里做catch处理
+                AudioSys.bgm.play().catch(e => console.log('BGM Auto-play blocked pending interaction', e));
+                console.log(`[Audio] 播放 BGM: ${src}`);
+            },
+            playSFX: (src) => {
+                let sfx = new Audio(src); 
+                sfx.volume = 0.8;
+                sfx.play().catch(e => {}); 
+                console.log(`[Audio] 播放音效: ${src}`);
+            },
+            stopBGM: () => {
+                if(AudioSys.bgm) AudioSys.bgm.pause();
+            }
+        };
+
+        const State = {
+            class: '', gold: 0, hp: 50, maxHp: 50, energy: 3, maxEnergy: 3, momentum: 0, wuxing: 8,
+            deck: [], relics: [], mapNodeIndex: 0,
+            combat: {
+                inCombat: false, turn: 1, isPlayerTurn: true, hand: [], drawPile: [], discardPile: [],
+                enemy: { id: '', name: '', hp: 80, maxHp: 80, turnCounter: 1, dmgMod: 1 },
+                player: { block: 0, dmgMod: 0, cantPlay: false }, pzHistory: []
+            }
+        };
+
+        // === 卡牌库 ===
+        const CardDB = {
+            'strike': { id: 'strike', name: '横砍', cost: 1, type: '平', typeClass: 'type-ping', desc: '造成 10 点伤害', isAttack: true, effect: (t) => Combat.dealDmg(10) },
+            'dodge': { id: 'dodge', name: '闪避', cost: 0, type: '仄', typeClass: 'type-ze', desc: '不可主动打出。受击时弃置抵消5伤', unplayable: true },
+            'draw': { id: 'draw', name: '点水', cost: 1, type: '平', typeClass: 'type-ping', desc: '抽 3 张牌', effect: (t) => Combat.draw(3) },
+            'butterfly': { id: 'butterfly', name: '蝶恋花', cost: 0, type: '仄', typeClass: 'type-ze', desc: '获得2气。本场战斗伤害-1', effect: (t) => { State.energy += 2; State.combat.player.dmgMod -= 1; Game.updateUI(); } },
+            'po_zhen_zi': { id: 'po_zhen_zi', name: '破阵子', cost: 2, type: '仄', typeClass: 'type-ze', desc: '打出手牌所有攻卡', effect: (t) => Combat.playAllAttacks() },
+            'nian_nu_jiao': { id: 'nian_nu_jiao', name: '念奴娇', cost: 1, type: '平', typeClass: 'type-ping', desc: '失去7血，造30伤，本回合禁牌', effect: (t) => { Combat.takeDmg(7, true); Combat.dealDmg(30); State.combat.player.cantPlay = true; } }
+        };
+
+        // === 主流程控制器 ===
+        const Game = {
+            pvTimer: null,
+            navTo: (screenId) => {
+                document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+                $(screenId).classList.add('active');
+                $('abar').style.display = ['screen-map', 'screen-event', 'screen-combat'].includes(screenId) ? 'flex' : 'none';
+            },
+            showToast: (msg) => {
+                const t = $('toast'); t.innerText = msg; t.style.opacity = 1;
+                setTimeout(() => t.style.opacity = 0, 2000);
+            },
+            toggleModal: (id) => {
+                const el = $(id);
+                el.classList.contains('active') ? el.classList.remove('active') : el.classList.add('active');
+                if(id === 'info-panel') Game.updateInfoPanel();
+            },
+            selectSave: (slot) => {
+                if(slot === 2) { Game.initGame('剑'); return; } // 已有存档
+                
+                // 空存档，触发 PV 播放与音乐
+                $('pv-overlay').style.display = 'flex';
+                $('pv-video').play().catch(e=>{}); // 尝试播放视频
+                AudioSys.playBGM('assets/铁雨尘朝.mp3'); // 占位: 铁雨尘朝音乐
+                
+                Game.pvTimer = setTimeout(() => { Game.skipPV(); }, 5000); // 暂设 5秒后自动跳过
+            },
+            skipPV: () => {
+                clearTimeout(Game.pvTimer);
+                $('pv-overlay').style.display = 'none';
+                $('pv-video').pause();
+                AudioSys.stopBGM();
+                Game.navTo('screen-class');
+            },
+            selectClass: (cls, desc) => {
+                State.class = cls;
+                document.querySelectorAll('.class-btn').forEach(b => b.classList.remove('selected'));
+                event.target.classList.add('selected');
+                $('class-icon').innerText = event.target.innerText;
+                $('class-enter').style.opacity = 1;
+                $('class-desc').innerText = desc;
+                
+                document.querySelector('.class-center').onmouseover = () => $('class-icon').style.color = 'white';
+                document.querySelector('.class-center').onmouseout = () => $('class-icon').style.color = '#ccc';
+            },
+            enterMap: () => {
+                if(!State.class) return Game.showToast('请先选择流派');
+                Game.initGame(State.class);
+            },
+            initGame: (cls) => {
+                State.class = cls; State.hp = 50; State.maxHp = 50; State.gold = 0; State.mapNodeIndex = 0; State.relics = [];
+                State.deck = ['strike','strike','strike','strike','strike', 'dodge','dodge','dodge','dodge','dodge', 'draw', 'butterfly'];
+                MapSys.renderMap();
+                AudioSys.playBGM('assets/bgm_map.mp3'); // 占位: 地图音乐
+                Game.navTo('screen-map');
+            },
+            updateInfoPanel: () => {
+                $('info-class').innerText = State.class;
+                $('info-hp').innerText = `${State.hp}/${State.maxHp}`;
+                $('info-gold').innerText = State.gold;
+                $('info-wuxing').innerText = State.wuxing;
+                
+                const counts = {};
+                State.deck.forEach(id => counts[id] = (counts[id]||0)+1);
+                $('info-deck').innerHTML = Object.entries(counts).map(([id, c]) => `${CardDB[id].name} x${c}`).join('<br>');
+                $('info-relics').innerHTML = State.relics.length ? State.relics.map(r => `<div style="background:#333;padding:5px;border:1px solid #555;">${r}</div>`).join('') : '无';
+            },
+            updateUI: () => {
+                $('ui-energy').innerText = State.energy; $('ui-max-energy').innerText = State.maxEnergy;
+                $('ui-momentum').innerText = State.momentum;
+                $('player-hp-text').innerHTML = `${State.hp}/${State.maxHp} <span style="color:#60a5fa">${State.combat.player.block > 0 ? `(+${State.combat.player.block}格挡)` : ''}</span>`;
+                $('player-hp-fill').style.width = `${(State.hp/State.maxHp)*100}%`;
+                if(State.combat.inCombat) {
+                    $('enemy-hp-text').innerText = `${State.combat.enemy.hp}/${State.combat.enemy.maxHp}`;
+                    $('enemy-hp-fill').style.width = `${(State.combat.enemy.hp/State.combat.enemy.maxHp)*100}%`;
+                }
+            }
+        };
+
+        // === 地图系统 ===
+        const MapSys = {
+            nodesData: [
+                { id: 0, x: 10, y: 80, name: '望乡台', type: 'big', icon: '🪨', ev: 'vn1' },
+                { id: 1, x: 30, y: 50, name: '山路', type: 'normal', icon: '⛰️', ev: 'fight1' },
+                { id: 2, x: 45, y: 70, name: '山路', type: 'normal', icon: '⛰️', ev: 'fight2' },
+                { id: 3, x: 65, y: 40, name: '茶楼', type: 'normal', icon: '🏯', ev: 'vn2' },
+                { id: 4, x: 80, y: 60, name: '破庙', type: 'normal', icon: '🏚️', ev: 'vn3' },
+                { id: 5, x: 90, y: 20, name: '奈何桥', type: 'big', icon: '🌉', ev: 'end' }
+            ],
+            renderMap: () => {
+                const svg = $('map-svg'); const container = $('map-nodes-container');
+                svg.innerHTML = ''; container.innerHTML = '';
+                
+                for(let i=0; i<MapSys.nodesData.length-1; i++) {
+                    const n1 = MapSys.nodesData[i]; const n2 = MapSys.nodesData[i+1];
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', `${n1.x}%`); line.setAttribute('y1', `${n1.y}%`);
+                    line.setAttribute('x2', `${n2.x}%`); line.setAttribute('y2', `${n2.y}%`);
+                    line.setAttribute('class', 'map-line');
+                    svg.appendChild(line);
+                }
+
+                MapSys.nodesData.forEach((n, i) => {
+                    const el = document.createElement('div');
+                    el.className = `map-node ${i < State.mapNodeIndex ? 'visited' : (i === State.mapNodeIndex ? 'reachable' : '')}`;
+                    el.style.left = `${n.x}%`; el.style.top = `${n.y}%`;
+                    el.innerHTML = `<div class="node-name">${n.name}</div><div class="node-icon ${n.type}">${n.icon}</div>`;
+                    if(i === State.mapNodeIndex) el.onclick = () => MapSys.enterNode(n);
+                    container.appendChild(el);
+                });
+            },
+            enterNode: (node) => {
+                State.mapNodeIndex++; 
+                if(node.ev === 'vn1') EventSys.start(Events.vn1);
+                else if(node.ev === 'vn2') EventSys.start(Events.vn2);
+                else if(node.ev === 'vn3') EventSys.start(Events.vn3);
+                else if(node.ev === 'end') { Game.showToast('Demo 游玩结束，感谢体验！'); setTimeout(()=>Game.navTo('screen-main'), 3000); }
+                else if(node.ev.startsWith('fight')) Combat.start(node.ev);
+            }
+        };
+
+        // === 事件系统 (VN) ===
+        const Events = {
+            vn1: { name: '我', texts: ['似乎有些记忆……', '想起了些什么……', '好像是……被杀了……', '我要杀出……阎王殿……'], opts: [] },
+            vn2: { name: '冥府茶楼店小二', texts: ['小店……恭迎……客官……\n有何……吩咐？'], opts: [
+                { text: '歇息一会 (回复35%已损生命)', cb: () => { const heal = Math.floor((State.maxHp-State.hp)*0.35); Combat.heal(heal); } },
+                { text: '活动筋骨 (支付100钱，删一张牌 - 暂未实装)', cb: () => Game.showToast('功能开发中') },
+                { text: '凑凑热闹 (获得卡牌“破阵子”)', cb: () => { State.deck.push('po_zhen_zi'); Game.showToast('获得 破阵子'); } }
+            ]},
+            vn3: { name: '我', texts: ['破庙中心有一尊小佛像', '要做些什么？'], opts: [
+                { text: '不去碰他，只是歇脚 (回复7生命)', cb: () => Combat.heal(7) },
+                { text: '拿走佛像 (受20伤，获得佛像[开局全体10伤])', cb: () => { Combat.takeDmg(20, true); State.relics.push('佛像'); Game.showToast('获得法宝 佛像'); } },
+                { text: '敬拜佛像 (悟性-1，获得卡牌“念奴娇”)', cb: () => { State.wuxing -= 1; State.deck.push('nian_nu_jiao'); Game.showToast('获得 念奴娇'); } }
+            ]}
+        };
+
+        const EventSys = {
+            currEv: null, textIndex: 0,
+            start: (evData) => {
+                EventSys.currEv = evData; EventSys.textIndex = 0;
+                $('event-name').innerText = evData.name;
+                $('event-options').style.display = 'none';
+                $('event-text').style.display = 'block';
+                EventSys.renderText();
+                Game.navTo('screen-event');
+            },
+            renderText: () => { $('event-text').innerText = EventSys.currEv.texts[EventSys.textIndex]; },
+            nextDialog: () => {
+                if(EventSys.textIndex < EventSys.currEv.texts.length - 1) {
+                    EventSys.textIndex++; EventSys.renderText();
+                } else {
+                    if(EventSys.currEv.opts.length > 0) {
+                        $('event-text').style.display = 'none';
+                        const optBox = $('event-options'); optBox.style.display = 'flex'; optBox.innerHTML = '';
+                        EventSys.currEv.opts.forEach(o => {
+                            const btn = document.createElement('div'); btn.className = 'dialog-opt-btn'; btn.innerHTML = o.text.replace('\n','<br>');
+                            btn.onclick = (e) => { e.stopPropagation(); o.cb(); MapSys.renderMap(); Game.navTo('screen-map'); };
+                            optBox.appendChild(btn);
+                        });
+                    } else { MapSys.renderMap(); Game.navTo('screen-map'); }
+                }
+            }
+        };
+
+        // === 战斗系统 ===
+        const Combat = {
+            start: (fightId) => {
+                AudioSys.playBGM('assets/bgm_combat.mp3'); // 占位: 战斗音乐
+
+                State.combat.inCombat = true; State.combat.turn = 1; State.combat.pzHistory = [];
+                State.combat.drawPile = [...State.deck]; Combat.shuffle(State.combat.drawPile);
+                State.combat.discardPile = []; State.combat.hand = [];
+                State.combat.player = { block: 0, dmgMod: 0, cantPlay: false };
+                
+                $('pz-tracker').innerHTML = '';
+                
+                const e = State.combat.enemy;
+                if(fightId === 'fight1') { e.id = 'e1'; e.name = '游魂'; e.hp = e.maxHp = 80; e.turnCounter = 1; $('enemy-sprite').style.background = "url('assets/enemy_1.png') center/cover, #222"; }
+                else { e.id = 'e2'; e.name = '恶鬼'; e.hp = e.maxHp = 100; e.turnCounter = 1; $('enemy-sprite').style.background = "url('assets/enemy_2.png') center/cover, #222"; }
+                
+                Game.navTo('screen-combat');
+                Game.updateUI();
+
+                if(State.relics.includes('佛像')) setTimeout(() => { Combat.floatText('enemy', '-10', 'crit'); e.hp -= 10; Game.updateUI(); }, 500);
+
+                setTimeout(Combat.startTurn, 1000);
+            },
+            shuffle: (arr) => { for(let i=arr.length-1; i>0; i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } },
+            startTurn: () => {
+                State.combat.isPlayerTurn = true;
+                State.energy = State.maxEnergy; State.combat.player.block = 0; State.combat.player.cantPlay = false;
+                $('end-turn-btn').className = 'active'; $('end-turn-btn').innerText = '洗墨 (结束回合)';
+                
+                Combat.updateEnemyIntent();
+                Combat.draw(State.combat.turn === 1 ? 6 : 3);
+                Game.updateUI();
+            },
+            draw: (amt) => {
+                AudioSys.playSFX('assets/sfx_draw.mp3'); // 占位: 翻牌音效
+                for(let i=0; i<amt; i++) {
+                    if(State.combat.hand.length >= 10) break;
+                    if(State.combat.drawPile.length === 0) {
+                        if(State.combat.discardPile.length === 0) break;
+                        State.combat.drawPile = [...State.combat.discardPile]; State.combat.discardPile = [];
+                        Combat.shuffle(State.combat.drawPile); Game.showToast('牌库重洗');
+                    }
+                    State.combat.hand.push(State.combat.drawPile.pop());
+                }
+                Combat.renderHand();
+            },
+            renderHand: () => {
+                const c = $('hand-container'); c.innerHTML = '';
+                $('draw-count').innerText = State.combat.drawPile.length;
+                $('discard-count').innerText = State.combat.discardPile.length;
+                
+                State.combat.hand.forEach((cardId, i) => {
+                    const cd = CardDB[cardId];
+                    const canPlay = State.combat.isPlayerTurn && !cd.unplayable && State.energy >= cd.cost && !State.combat.player.cantPlay;
+                    
+                    const el = document.createElement('div');
+                    el.className = `card ${canPlay ? '' : 'disabled'}`;
+                    el.dataset.index = i;
+                    el.innerHTML = `
+                        <div class="card-cost">${cd.cost}</div><div class="card-type ${cd.typeClass}">${cd.type}</div>
+                        <div class="card-name">${cd.name}</div>
+                        <div class="asset-placeholder card-img" style="background: url('assets/card_${cd.id}.png') center/cover, #222; border:none;"></div>
+                        <div class="card-desc">${cd.desc}</div>
+                    `;
+                    
+                    if(canPlay) {
+                        el.onmousedown = (e) => DragSys.start(e, el, cd, i);
+                        el.ontouchstart = (e) => DragSys.start(e.touches[0], el, cd, i);
+                    }
+                    c.appendChild(el);
+                });
+            },
+            playCard: (index) => {
+                const cardId = State.combat.hand[index]; const cd = CardDB[cardId];
+                State.energy -= cd.cost;
+                if(cd.isAttack) State.momentum = Math.min(10, State.momentum + 1);
+                
+                State.combat.pzHistory.push(cd.type);
+                if(State.combat.pzHistory.length > 5) State.combat.pzHistory.shift();
+                Combat.renderPZ();
+
+                State.combat.hand.splice(index, 1);
+                State.combat.discardPile.push(cardId);
+                
+                cd.effect();
+                
+                Combat.renderHand(); Game.updateUI(); Combat.checkDeath();
+            },
+            renderPZ: () => {
+                const tr = $('pz-tracker'); tr.innerHTML = '';
+                State.combat.pzHistory.forEach(char => {
+                    const s = document.createElement('span'); s.className = 'pz-char'; s.innerText = char;
+                    s.style.color = char === '平' ? '#9ca3af' : 'var(--blood-red)';
+                    tr.appendChild(s);
+                });
+                if(State.combat.pzHistory.length > 0) AudioSys.playSFX('assets/sfx_pingze.mp3'); // 占位: 平仄音效
+            },
+            playAllAttacks: () => {
+                const attacks = [];
+                for(let i=State.combat.hand.length-1; i>=0; i--) if(CardDB[State.combat.hand[i]].isAttack) attacks.push(i);
+                if(attacks.length === 0) return;
+                
+                let delay = 0;
+                attacks.forEach(idx => {
+                    setTimeout(() => {
+                        const cid = State.combat.hand[idx];
+                        State.combat.discardPile.push(cid);
+                        CardDB[cid].effect();
+                        State.momentum = Math.min(10, State.momentum + 1);
+                        Combat.renderHand(); Game.updateUI(); Combat.checkDeath();
+                    }, delay);
+                    delay += 400;
+                });
+                attacks.forEach(idx => State.combat.hand.splice(idx, 1));
+            },
+            dealDmg: (base) => {
+                AudioSys.playSFX('assets/sfx_hit.mp3'); // 占位: 攻击音效
+                let dmg = base + State.combat.player.dmgMod;
+                let isCrit = false;
+                if(State.momentum >= 10) { dmg = Math.floor(dmg * 1.5); State.momentum = 0; isCrit = true; }
+                if(State.combat.player.weak) dmg = Math.floor(dmg * 0.8);
+
+                State.combat.enemy.hp = Math.max(0, State.combat.enemy.hp - dmg);
+                Combat.floatText('enemy', `-${dmg}`, isCrit ? 'crit' : '');
+                
+                $('screen-combat').classList.add('hit-stop');
+                $('enemy').classList.add('shake');
+                setTimeout(() => { $('screen-combat').classList.remove('hit-stop'); $('enemy').classList.remove('shake'); }, 300);
+            },
+            takeDmg: (dmg, ignoreBlock = false) => {
+                if(!ignoreBlock) {
+                    while(dmg > 0) {
+                        const dodgeIdx = State.combat.hand.indexOf('dodge');
+                        if(dodgeIdx !== -1) {
+                            State.combat.hand.splice(dodgeIdx, 1); State.combat.discardPile.push('dodge');
+                            dmg -= 5; Game.showToast('闪避生效！抵消 5 伤'); Combat.floatText('player', '闪避', 'block');
+                        } else break;
+                    }
+                    if(dmg <= 0) { Combat.renderHand(); return; }
+
+                    if(State.combat.player.block > 0) {
+                        if(State.combat.player.block >= dmg) { State.combat.player.block -= dmg; dmg = 0; Combat.floatText('player', '格挡', 'block'); }
+                        else { dmg -= State.combat.player.block; State.combat.player.block = 0; }
+                    }
+                }
+                
+                if(dmg > 0) {
+                    State.hp = Math.max(0, State.hp - dmg);
+                    Combat.floatText('player', `-${dmg}`, 'crit');
+                    $('player').classList.add('shake'); setTimeout(()=>$('player').classList.remove('shake'), 300);
+                }
+                Game.updateUI(); Combat.renderHand(); Combat.checkDeath();
+            },
+            heal: (amt) => { State.hp = Math.min(State.maxHp, State.hp + amt); Game.updateUI(); Game.showToast(`回复 ${amt} 生命`); },
+            floatText: (targetId, text, cls) => {
+                const el = document.createElement('div'); el.className = `dmg-text ${cls}`; el.innerText = text;
+                const rect = $(targetId).getBoundingClientRect();
+                el.style.left = `${rect.left + rect.width/2 - 20}px`; el.style.top = `${rect.top + 50}px`;
+                document.body.appendChild(el); setTimeout(() => el.remove(), 1000);
+            },
+            endTurn: () => {
+                if(!State.combat.isPlayerTurn) return;
+                State.combat.isPlayerTurn = false;
+                $('end-turn-btn').className = ''; $('end-turn-btn').innerText = '敌方回合';
+                
+                State.combat.player.weak = false;
+                Combat.renderHand(); 
+                setTimeout(Combat.enemyTurn, 1000);
+            },
+            updateEnemyIntent: () => {
+                const e = State.combat.enemy; const el = $('enemy-intent');
+                if(e.id === 'e1') { 
+                    if(e.turnCounter % 2 === 0) { const dmg = 4 + 5 * (e.turnCounter/2 - 1); el.innerText = `意图: 攻击 (${dmg})`; }
+                    else el.innerText = '意图: 等待';
+                } else if(e.id === 'e2') {
+                    if(e.turnCounter % 2 !== 0) el.innerText = '意图: 虚弱咒';
+                    else el.innerText = '意图: 攻击 (8)';
+                }
+            },
+            enemyTurn: () => {
+                const e = State.combat.enemy;
+                if(e.id === 'e1') {
+                    if(e.turnCounter % 2 === 0) { const dmg = 4 + 5 * (e.turnCounter/2 - 1); Combat.takeDmg(dmg); }
+                } else if(e.id === 'e2') {
+                    if(e.turnCounter % 2 !== 0) { State.combat.player.weak = true; Game.showToast('受到虚弱！下回合伤害-20%'); }
+                    else { Combat.takeDmg(8); }
+                }
+                
+                e.turnCounter++;
+                if(State.hp > 0 && e.hp > 0) { State.combat.turn++; setTimeout(Combat.startTurn, 1000); }
+            },
+            checkDeath: () => {
+                if(State.combat.enemy.hp <= 0) {
+                    State.combat.inCombat = false;
+                    State.gold += 30; Game.showToast('战斗胜利！获得 30 钱');
+                    AudioSys.playBGM('assets/bgm_map.mp3'); // 返回地图音乐
+                    setTimeout(() => { MapSys.renderMap(); Game.navTo('screen-map'); }, 2000);
+                } else if(State.hp <= 0) {
+                    State.combat.inCombat = false;
+                    Game.showToast('胜败乃兵家常事，大侠重新来过...');
+                    AudioSys.stopBGM();
+                    setTimeout(() => Game.navTo('screen-main'), 3000);
+                }
+            }
+        };
+
+        // === 笔意拖拽系统 (DOM + Canvas 复合渲染) ===
+        const DragSys = {
+            cardEl: null, cardData: null, index: -1, isDragging: false, startPt: {x:0, y:0}, currPt: {x:0, y:0},
+            ctx: $('fxCanvas').getContext('2d'), paths: [],
+            start: (e, el, cd, idx) => {
+                DragSys.isDragging = true; DragSys.cardEl = el; DragSys.cardData = cd; DragSys.index = idx;
+                DragSys.startPt = { x: e.clientX, y: e.clientY };
+                DragSys.currPt = { ...DragSys.startPt };
+                
+                const rect = el.getBoundingClientRect();
+                el.classList.add('dragging');
+                el.style.position = 'fixed';
+                el.style.left = `${rect.left}px`; el.style.top = `${rect.top}px`;
+                
+                document.onmousemove = DragSys.move; document.onmouseup = DragSys.end;
+                document.ontouchmove = (ev) => DragSys.move(ev.touches[0]); document.ontouchend = DragSys.end;
+            },
+            move: (e) => {
+                if(!DragSys.isDragging) return;
+                const dx = e.clientX - DragSys.startPt.x; const dy = e.clientY - DragSys.startPt.y;
+                DragSys.cardEl.style.transform = `translate(${dx}px, ${dy}px) rotate(${dx*0.05}deg)`;
+                
+                DragSys.paths.push({ x: e.clientX, y: e.clientY, life: 1.0 });
+                DragSys.currPt = { x: e.clientX, y: e.clientY };
+            },
+            end: (e) => {
+                if(!DragSys.isDragging) return;
+                DragSys.isDragging = false; document.onmousemove = null; document.onmouseup = null; document.ontouchmove = null; document.ontouchend = null;
+                
+                const el = DragSys.cardEl; el.classList.remove('dragging');
+                
+                const inHitZone = DragSys.currPt.y < window.innerHeight * 0.6; 
+                
+                if(inHitZone) {
+                    el.style.display = 'none';
+                    Combat.playCard(DragSys.index);
+                } else {
+                    el.style.transition = 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                    el.style.transform = 'translate(0, 0) rotate(0)';
+                    setTimeout(() => { el.style.position = 'relative'; el.style.left='0'; el.style.top='0'; el.style.transition=''; }, 300);
+                }
+            },
+            drawFx: () => {
+                const ctx = DragSys.ctx;
+                ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+                if(DragSys.paths.length > 1) {
+                    ctx.beginPath();
+                    ctx.moveTo(DragSys.paths[0].x, DragSys.paths[0].y);
+                    for(let i=1; i<DragSys.paths.length; i++) {
+                        const p = DragSys.paths[i]; ctx.lineTo(p.x, p.y); p.life -= 0.05; 
+                    }
+                    ctx.strokeStyle = `rgba(100, 100, 100, 0.5)`; ctx.lineWidth = 15; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke();
+                    DragSys.paths = DragSys.paths.filter(p => p.life > 0);
+                }
+                requestAnimationFrame(DragSys.drawFx);
+            }
+        };
+
+        function resize() { $('bgCanvas').width = $('fxCanvas').width = window.innerWidth; $('bgCanvas').height = $('fxCanvas').height = window.innerHeight; }
+        window.addEventListener('resize', resize); resize();
+        DragSys.drawFx(); 
+
+        const bgCtx = $('bgCanvas').getContext('2d');
+        const bgParticles = Array.from({length: 40}, () => ({ x: rand(0, window.innerWidth), y: rand(0, window.innerHeight), r: rand(10, 80), vx: rand(-2, 2)*0.1, vy: rand(-2, 2)*0.1, a: rand(1, 5)*0.01 }));
+        function drawBg() {
+            bgCtx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+            bgParticles.forEach(p => {
+                bgCtx.beginPath(); bgCtx.arc(p.x, p.y, p.r, 0, Math.PI*2); bgCtx.fillStyle = `rgba(200, 200, 200, ${p.a})`; bgCtx.fill();
+                p.x += p.vx; p.y += p.vy;
+                if(p.x < 0 || p.x > window.innerWidth) p.vx *= -1;
+                if(p.y < 0 || p.y > window.innerHeight) p.vy *= -1;
+            });
+            requestAnimationFrame(drawBg);
+        }
+        drawBg();
+
+    </script>
+</body>
+</html>
