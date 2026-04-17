@@ -3,7 +3,7 @@
 **东方暗黑水墨风 · 卡牌肉鸽 (Roguelike) RPG**
 > 本项目为 GameJam 参赛作品，完全基于原生 Web 技术（HTML5 / Canvas / Vanilla JS）开发，无需任何插件或引擎即可在浏览器中流畅体验泼墨挥毫的武侠世界。
 
-🌐 **[点击这里直接游玩 (Game Demo) ](https://你的github用户名.github.io/你的仓库名/)** *(请将链接替换为你的 GitHub Pages 地址)*
+🌐 **[点击这里直接游玩 (Game Demo) ](https://birchove.github.io/Feibai-GameJam/)**
 
 ---
 
