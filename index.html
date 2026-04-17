@@ -41,10 +41,10 @@
         
         .asset-placeholder { display: flex; justify-content: center; align-items: center; background: rgba(30,30,30,0.5); border: 1px dashed #555; color: #888; font-size: 14px; text-align: center; padding: 10px; }
 
-        /* ================= 界面 1 & 2 & 3: 前期流转 (使用逻辑命名的资产) ================= */
-        #screen-main { background: url('assets/main_menu_bg.png') center/cover, var(--ink-bg); justify-content: center; align-items: center; }
-        #screen-saves { background: url('assets/saves_menu_bg.png') center/cover, var(--ink-bg); justify-content: center; align-items: center; }
-        #screen-class { background: url('assets/class_select_bg.png') center/cover, var(--ink-bg); justify-content: center; align-items: center; }
+        /* ================= 界面 1 & 2 & 3: 前期流转 (使用纯默认水墨粒子背景) ================= */
+        #screen-main { background-color: var(--ink-bg); justify-content: center; align-items: center; }
+        #screen-saves { background-color: var(--ink-bg); justify-content: center; align-items: center; }
+        #screen-class { background-color: var(--ink-bg); justify-content: center; align-items: center; }
         
         .game-title { font-size: 100px; color: #eee; letter-spacing: 30px; text-shadow: 0 0 20px rgba(139,24,24,0.8); margin-bottom: 50px; }
         
@@ -81,7 +81,7 @@
         #settings-panel { flex-direction: column; gap: 20px; }
 
         /* ================= 界面 4: 地图 ================= */
-        #screen-map .screen-content { background: url('assets/map_bg.png') center/cover, var(--ink-bg); position: relative; }
+        #screen-map .screen-content { background-color: var(--ink-bg); position: relative; }
         .map-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
         .map-line { stroke: #444; stroke-width: 2; stroke-dasharray: 5,5; }
         .map-node { position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: flex-end; cursor: pointer; transition: 0.3s; opacity: 0.5; pointer-events: none;}
@@ -93,7 +93,7 @@
         .node-name { writing-mode: vertical-rl; font-size: 20px; font-weight: bold; position: absolute; top: -10px; right: -30px; letter-spacing: 5px; text-shadow: 2px 2px 5px black; color: #fff;}
 
         /* ================= 事件界面 (界面 B) ================= */
-        #screen-event .screen-content { background: url('assets/event_bg.png') center/cover, var(--ink-bg); justify-content: flex-end; align-items: center; padding-bottom: 50px; }
+        #screen-event .screen-content { background-color: var(--ink-bg); justify-content: flex-end; align-items: center; padding-bottom: 50px; }
         .dialog-box { width: 80%; max-width: 1000px; height: 250px; background: rgba(10,10,15,0.95); border: 2px solid #444; border-radius: 10px; position: relative; padding: 40px; display: flex; flex-direction: column; justify-content: center; cursor: pointer; }
         .dialog-name { position: absolute; top: -20px; left: 30px; background: var(--ink-border); padding: 5px 20px; font-size: 24px; font-weight: bold; border: 1px solid #555; color: var(--blood-red); }
         .dialog-text { font-size: 28px; line-height: 1.5; text-shadow: 1px 1px 2px black; }
@@ -102,7 +102,7 @@
         .dialog-opt-btn:hover { background: var(--blood-red); border-color: #fff; }
 
         /* ================= 战斗界面 ================= */
-        #screen-combat .screen-content { display: flex; flex-direction: column; background: url('assets/combat_bg.png') center/cover, var(--ink-bg); }
+        #screen-combat .screen-content { display: flex; flex-direction: column; background-color: var(--ink-bg); }
         
         .combat-top { padding: 10px 40px; display: flex; justify-content: space-between; align-items: center; font-size: 24px; font-weight: bold; }
         .stat-badge { background: rgba(0,0,0,0.8); padding: 5px 15px; border: 1px solid #444; border-radius: 20px; }
@@ -186,7 +186,7 @@
     <!-- PV 浮层视频 -->
     <div id="pv-overlay">
         <!-- 视频源占位，配合 mp3 -->
-        <video id="pv-video" src="assets/PV.mp4" style="width: 80%; max-width: 800px; border: 2px solid #444;" controls></video>
+        <video id="pv-video" src="assets/飞白PV.mp4" style="width: 80%; max-width: 800px; border: 2px solid #444;" controls></video>
         <h1 style="color:white; font-size:30px; letter-spacing:10px; margin-top:20px;">《飞白》世界观 PV</h1>
         <div class="btn-g" style="margin-top:30px;" onclick="Game.skipPV()">跳过 PV</div>
     </div>
@@ -217,7 +217,7 @@
         <div class="abar-btn" onclick="Game.toggleModal('settings-panel')"><i class="fa-solid fa-gear"></i></div>
     </div>
 
-    <!-- 个人信息 Modal (Bug已修复) -->
+    <!-- 个人信息 Modal -->
     <div id="info-panel" class="modal">
         <div id="info-content">
             <div class="abar-btn" style="position:absolute; top:10px; right:10px; border:none; box-shadow:none; z-index:10;" onclick="Game.toggleModal('info-panel')"><i class="fa-solid fa-xmark"></i></div>
@@ -234,8 +234,8 @@
                     <div id="info-deck" style="font-size:14px; color:#aaa; line-height:1.6;"></div>
                 </div>
             </div>
-            <!-- 角色立绘 -->
-            <div class="info-col" style="justify-content: center; align-items: center; background: url('assets/info_character.png') center/cover, var(--ink-bg);"></div>
+            <!-- 角色立绘占位 (保留 assets/笔冢.png 如果存在，或者展示为占位框) -->
+            <div class="info-col" style="justify-content: center; align-items: center; background: url('assets/笔冢.png') center/cover, var(--ink-bg);"></div>
             
             <div class="info-col">
                 <div style="background: rgba(0,0,0,0.5); padding: 10px; text-align: center; font-size: 20px; color: var(--gold); border: 1px solid #444; margin-bottom: 20px;">
@@ -293,15 +293,13 @@
 
             <div class="combat-middle" id="combat-arena">
                 <div class="entity" id="player">
-                    <!-- 玩家立绘 -->
-                    <div class="asset-placeholder entity-sprite" style="background: url('assets/player_sprite.png') center/cover, #222; border:none;"></div>
+                    <div class="asset-placeholder entity-sprite" style="background: url('assets/笔冢.png') center/cover, #222; border:none;">玩家</div>
                     <div class="hp-container"><div class="hp-fill" id="player-hp-fill"></div><div class="hp-text" id="player-hp-text">50/50 <span id="player-block" style="color:#60a5fa"></span></div></div>
                 </div>
 
                 <div class="entity" id="enemy">
                     <div class="intent" id="enemy-intent">意图: 等待</div>
-                    <!-- 敌人立绘 -->
-                    <div class="asset-placeholder entity-sprite" id="enemy-sprite" style="border:none;"></div>
+                    <div class="asset-placeholder entity-sprite" id="enemy-sprite" style="border:none;">怪物</div>
                     <div class="hp-container"><div class="hp-fill" id="enemy-hp-fill"></div><div class="hp-text" id="enemy-hp-text">80/80</div></div>
                 </div>
             </div>
@@ -369,7 +367,6 @@
 
         // === 主流程控制器 ===
         const Game = {
-            pvTimer: null,
             navTo: (screenId) => {
                 document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
                 $(screenId).classList.add('active');
@@ -389,15 +386,24 @@
                 
                 // 空存档，触发 PV 播放与音乐
                 $('pv-overlay').style.display = 'flex';
-                $('pv-video').play().catch(e=>{}); // 尝试播放视频
-                AudioSys.playBGM('assets/铁雨尘朝.mp3'); // 占位: 铁雨尘朝音乐
                 
-                Game.pvTimer = setTimeout(() => { Game.skipPV(); }, 5000); // 暂设 5秒后自动跳过
+                const video = $('pv-video');
+                video.play().catch(e=>{}); // 尝试播放视频
+                AudioSys.playBGM('assets/铁雨尘朝.mp3'); 
+                
+                // 监听视频完整播放结束后，自动跳转
+                video.onended = () => {
+                    Game.skipPV();
+                };
             },
             skipPV: () => {
-                clearTimeout(Game.pvTimer);
                 $('pv-overlay').style.display = 'none';
-                $('pv-video').pause();
+                
+                const video = $('pv-video');
+                video.pause();
+                video.currentTime = 0; // 重置进度
+                video.onended = null;  // 清理事件监听
+                
                 AudioSys.stopBGM();
                 Game.navTo('screen-class');
             },
@@ -420,7 +426,7 @@
                 State.class = cls; State.hp = 50; State.maxHp = 50; State.gold = 0; State.mapNodeIndex = 0; State.relics = [];
                 State.deck = ['strike','strike','strike','strike','strike', 'dodge','dodge','dodge','dodge','dodge', 'draw', 'butterfly'];
                 MapSys.renderMap();
-                AudioSys.playBGM('assets/bgm_map.mp3'); // 占位: 地图音乐
+                AudioSys.playBGM('assets/bgm_map.mp3'); 
                 Game.navTo('screen-map');
             },
             updateInfoPanel: () => {
@@ -534,7 +540,7 @@
         // === 战斗系统 ===
         const Combat = {
             start: (fightId) => {
-                AudioSys.playBGM('assets/bgm_combat.mp3'); // 占位: 战斗音乐
+                AudioSys.playBGM('assets/bgm_combat.mp3'); 
 
                 State.combat.inCombat = true; State.combat.turn = 1; State.combat.pzHistory = [];
                 State.combat.drawPile = [...State.deck]; Combat.shuffle(State.combat.drawPile);
@@ -544,8 +550,8 @@
                 $('pz-tracker').innerHTML = '';
                 
                 const e = State.combat.enemy;
-                if(fightId === 'fight1') { e.id = 'e1'; e.name = '游魂'; e.hp = e.maxHp = 80; e.turnCounter = 1; $('enemy-sprite').style.background = "url('assets/enemy_1.png') center/cover, #222"; }
-                else { e.id = 'e2'; e.name = '恶鬼'; e.hp = e.maxHp = 100; e.turnCounter = 1; $('enemy-sprite').style.background = "url('assets/enemy_2.png') center/cover, #222"; }
+                if(fightId === 'fight1') { e.id = 'e1'; e.name = '游魂'; e.hp = e.maxHp = 80; e.turnCounter = 1; $('enemy-sprite').innerHTML = "山路怪物1"; }
+                else { e.id = 'e2'; e.name = '恶鬼'; e.hp = e.maxHp = 100; e.turnCounter = 1; $('enemy-sprite').innerHTML = "山路怪物2"; }
                 
                 Game.navTo('screen-combat');
                 Game.updateUI();
@@ -565,7 +571,7 @@
                 Game.updateUI();
             },
             draw: (amt) => {
-                AudioSys.playSFX('assets/sfx_draw.mp3'); // 占位: 翻牌音效
+                AudioSys.playSFX('assets/sfx_draw.mp3'); 
                 for(let i=0; i<amt; i++) {
                     if(State.combat.hand.length >= 10) break;
                     if(State.combat.drawPile.length === 0) {
@@ -626,7 +632,7 @@
                     s.style.color = char === '平' ? '#9ca3af' : 'var(--blood-red)';
                     tr.appendChild(s);
                 });
-                if(State.combat.pzHistory.length > 0) AudioSys.playSFX('assets/sfx_pingze.mp3'); // 占位: 平仄音效
+                if(State.combat.pzHistory.length > 0) AudioSys.playSFX('assets/sfx_pingze.mp3'); 
             },
             playAllAttacks: () => {
                 const attacks = [];
@@ -647,7 +653,7 @@
                 attacks.forEach(idx => State.combat.hand.splice(idx, 1));
             },
             dealDmg: (base) => {
-                AudioSys.playSFX('assets/sfx_hit.mp3'); // 占位: 攻击音效
+                AudioSys.playSFX('assets/sfx_hit.mp3'); 
                 let dmg = base + State.combat.player.dmgMod;
                 let isCrit = false;
                 if(State.momentum >= 10) { dmg = Math.floor(dmg * 1.5); State.momentum = 0; isCrit = true; }
@@ -726,7 +732,7 @@
                 if(State.combat.enemy.hp <= 0) {
                     State.combat.inCombat = false;
                     State.gold += 30; Game.showToast('战斗胜利！获得 30 钱');
-                    AudioSys.playBGM('assets/bgm_map.mp3'); // 返回地图音乐
+                    AudioSys.playBGM('assets/bgm_map.mp3'); 
                     setTimeout(() => { MapSys.renderMap(); Game.navTo('screen-map'); }, 2000);
                 } else if(State.hp <= 0) {
                     State.combat.inCombat = false;
