@@ -389,7 +389,6 @@
                 
                 const video = $('pv-video');
                 video.play().catch(e=>{}); // 尝试播放视频
-                AudioSys.playBGM('assets/铁雨尘朝.mp3'); 
                 
                 // 监听视频完整播放结束后，自动跳转
                 video.onended = () => {
