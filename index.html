@@ -83,19 +83,22 @@
         .equip-box { border: 2px dashed #444; border-radius: 8px; background: rgba(30,30,35,0.4); display: flex; flex-direction: column; align-items: center; justify-content: center; color: #666; transition: 0.3s; cursor:pointer;}
         .equip-box:hover { border-color: var(--gold); color: var(--gold); box-shadow: 0 0 15px rgba(184,134,11,0.2) inset; }
 
-        /* ================= 卡组详情 / 牌堆 / 三生石 通用卡牌样式 ================= */
-        .deck-card { width: 120px; height: 176px; background: linear-gradient(135deg, #222, #111); border: 2px solid #555; border-radius: 8px; position: relative; padding: 8px; box-shadow: 0 5px 10px rgba(0,0,0,0.5); display: flex; flex-direction: column; transition: 0.2s; }
+        /* ================= 卡组详情 / 牌堆 / 三生石 通用卡牌样式 (修复了文字排版) ================= */
+        .deck-card { width: 140px; height: 210px; background: linear-gradient(135deg, #222, #111); border: 2px solid #555; border-radius: 8px; position: relative; padding: 10px; box-shadow: 0 5px 10px rgba(0,0,0,0.5); display: flex; flex-direction: column; transition: 0.2s; }
         .deck-card.mid-rarity-card { border-color: var(--mid-color); box-shadow: 0 0 12px rgba(160, 170, 181, 0.4); }
         .deck-card.high-rarity-card { border-color: var(--gold-light); box-shadow: 0 0 15px rgba(255, 215, 0, 0.5); }
         
-        .deck-card .card-cost { width: 24px; height: 24px; font-size: 14px; top: -8px; left: -8px; position: absolute; background: #111; border: 2px solid #888; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; color: #60a5fa; box-shadow: 0 0 5px black; z-index: 5; }
-        .deck-card .card-type { width: 20px; height: 20px; font-size: 10px; top: -4px; right: -4px; position: absolute; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; color: white; box-shadow: 0 0 5px black; z-index: 5;}
+        .deck-card .card-cost { width: 26px; height: 26px; font-size: 14px; top: -10px; left: -10px; position: absolute; background: #111; border: 2px solid #888; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; color: #60a5fa; box-shadow: 0 0 5px black; z-index: 5; }
+        .deck-card .card-type { width: 22px; height: 22px; font-size: 11px; top: -6px; right: -6px; position: absolute; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; color: white; box-shadow: 0 0 5px black; z-index: 5;}
         .deck-card .type-ping { background-color: #4b5563; } 
         .deck-card .type-ze { background-color: var(--blood-red); }
-        .deck-card .card-name { text-align: center; font-weight: bold; font-size: 14px; margin-top: 5px; padding-bottom: 2px; color: #eee; }
-        .deck-card .card-category { text-align: center; font-size: 10px; color: #888; margin-bottom: 2px; border-bottom: 1px solid #444; padding-bottom: 2px;}
-        .deck-card .card-img { height: 45px; margin: 5px 0; border: 1px dashed #444; font-size: 10px; display: flex; justify-content: center; align-items: center; color: #888;}
-        .deck-card .card-desc { font-size: 10px; color: #aaa; flex: 1; text-align: center; display: flex; align-items: center; justify-content: center; }
+        .deck-card .card-name { text-align: center; font-weight: bold; font-size: 15px; margin-top: 5px; padding-bottom: 4px; color: #eee; }
+        .deck-card .card-category { text-align: center; font-size: 11px; color: #888; margin-bottom: 4px; border-bottom: 1px solid #444; padding-bottom: 4px;}
+        .deck-card .card-img { height: 50px; margin: 5px 0; border: 1px dashed #444; font-size: 10px; display: flex; justify-content: center; align-items: center; color: #888; overflow: hidden;}
+        
+        /* 关键修复：卡面描述向左对齐，正常换行，不再堆叠居中 */
+        .deck-card .card-desc { font-size: 11px; color: #aaa; flex: 1; text-align: left; display: block; margin-top: 5px; line-height: 1.4; white-space: normal;}
+        
         .card-count-badge { position: absolute; top: -10px; right: -10px; background: var(--blood-red); color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; justify-content: center; align-items: center; font-size: 12px; font-weight: bold; border: 2px solid #222; z-index: 10; }
 
         #settings-panel { flex-direction: column; gap: 20px; }
@@ -104,7 +107,7 @@
         #gallery-panel .screen-content { background: var(--ink-bg); padding: 40px; overflow-y: auto; width: 100%; height: 100%; }
         .gallery-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 20px; }
         .gallery-section-title { font-size: 24px; color: var(--blood-red); margin-top: 30px; margin-bottom: 25px; font-weight: bold; }
-        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 25px; justify-items: center; }
+        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 25px; justify-items: center; }
 
         /* ================= 游戏各子界面 ================= */
         #screen-map .screen-content { background: url('assets/map_bg.png') center/cover, var(--ink-bg); position: relative; }
@@ -128,7 +131,7 @@
         .dialog-opt-btn { background: rgba(30,30,35,0.9); border: 1px solid #555; padding: 15px; color: white; font-size: 20px; text-align: center; cursor: pointer; transition: 0.2s; font-family: inherit;}
         .dialog-opt-btn:hover { background: var(--blood-red); border-color: #fff; }
 
-        /* ================= 战斗状态栏与 Hover 特效 ================= */
+        /* ================= 战斗状态栏与 Hover 术语特效 ================= */
         .status-bar { display: flex; justify-content: center; gap: 5px; margin-top: 5px; height: 24px; pointer-events: auto; }
         .status-icon { position: relative; font-size: 16px; cursor: help; background: rgba(0,0,0,0.6); padding: 2px 6px; border-radius: 4px; border: 1px solid #555; }
         .status-tooltip { visibility: hidden; position: absolute; bottom: 130%; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.95); color: #fff; padding: 6px 12px; border-radius: 4px; border: 1px solid #888; font-size: 12px; white-space: nowrap; z-index: 100; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
@@ -136,8 +139,8 @@
 
         /* 术语 Hover 解析核心样式 */
         .kw { position: relative; text-decoration: underline dashed var(--blood-red); cursor: help; font-weight: bold; color: #e5e7eb; }
-        .kw:hover::after { content: attr(data-tip); position: absolute; bottom: 120%; left: 50%; transform: translateX(-50%); background: rgba(10,10,12,0.98); color: var(--gold); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--blood-red); white-space: pre-wrap; width: max-content; max-width: 240px; font-size: 12px; z-index: 100000; font-weight: normal; line-height: 1.5; text-shadow: none; text-align: left; box-shadow: 0 5px 15px rgba(0,0,0,0.8); pointer-events: none;}
-        .deck-card:hover { z-index: 100; } /* 确保卡片悬停时 tooltip 不会被旁边的卡片遮挡 */
+        .kw:hover::after { content: attr(data-tip); position: absolute; bottom: 110%; left: 50%; transform: translateX(-50%); background: rgba(10,10,12,0.98); color: var(--gold); padding: 10px 14px; border-radius: 6px; border: 1px solid var(--blood-red); white-space: pre-wrap; width: max-content; max-width: 200px; font-size: 12px; z-index: 999999; font-weight: normal; line-height: 1.5; text-shadow: none; text-align: left; box-shadow: 0 5px 15px rgba(0,0,0,0.8); pointer-events: none;}
+        .deck-card:hover { z-index: 100; } 
 
         #screen-combat .screen-content { display: flex; flex-direction: column; background: url('assets/combat_bg.png') center/cover, var(--ink-bg); }
         .combat-top { padding: 10px 40px; display: flex; justify-content: space-between; align-items: center; font-size: 24px; font-weight: bold; }
@@ -157,16 +160,17 @@
         #end-turn-btn.active:hover { box-shadow: 0 0 15px rgba(139,24,24,0.8); }
 
         .hand { display: flex; gap: -20px; justify-content: center; align-items: flex-end; height: 100%; }
-        .card { width: 150px; height: 220px; background: linear-gradient(135deg, #222, #111); border: 2px solid #555; border-radius: 8px; position: relative; padding: 10px; cursor: grab; transition: transform 0.2s, z-index 0s; box-shadow: 0 5px 10px rgba(0,0,0,0.5); user-select: none; display: flex; flex-direction: column; }
+        .card { width: 140px; height: 210px; background: linear-gradient(135deg, #222, #111); border: 2px solid #555; border-radius: 8px; position: relative; padding: 10px; cursor: grab; transition: transform 0.2s, z-index 0s; box-shadow: 0 5px 10px rgba(0,0,0,0.5); user-select: none; display: flex; flex-direction: column; }
         .card:hover { transform: translateY(-40px) scale(1.1); z-index: 100 !important; border-color: #aaa; box-shadow: 0 0 20px rgba(255,255,255,0.2); }
         .card.dragging { cursor: grabbing; transition: none; z-index: 999 !important; opacity: 0.9; box-shadow: 0 20px 40px rgba(0,0,0,0.8); border-color: var(--gold); }
         .card.disabled { filter: grayscale(100%) brightness(0.5); pointer-events: none; }
         .card-cost { position: absolute; top: -10px; left: -10px; width: 30px; height: 30px; background: #111; border: 2px solid #888; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 18px; font-weight: bold; color: #60a5fa; box-shadow: 0 0 5px black; z-index: 5;}
         .card-type { position: absolute; top: -5px; right: -5px; width: 24px; height: 24px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 12px; font-weight: bold; color: white; box-shadow: 0 0 5px black; z-index: 5;}
         .type-ping { background-color: #4b5563; } .type-ze { background-color: var(--blood-red); }
-        .card-name { text-align: center; font-weight: bold; font-size: 18px; margin-top: 5px; padding-bottom: 2px; color: #eee;}
-        .card-img { height: 60px; margin: 5px 0; border: 1px dashed #444; font-size: 12px;}
-        .card-desc { font-size: 12px; color: #aaa; flex: 1; text-align: center; display: flex; align-items: center; justify-content: center; }
+        .card-name { text-align: center; font-weight: bold; font-size: 15px; margin-top: 5px; padding-bottom: 2px; color: #eee;}
+        .card-img { height: 50px; margin: 5px 0; border: 1px dashed #444; font-size: 12px; overflow:hidden;}
+        /* 战斗内的卡牌文字也应用统一的左对齐文本格式 */
+        .card .card-desc { font-size: 11px; color: #aaa; flex: 1; text-align: left; display: block; margin-top: 5px; line-height: 1.4; white-space: normal;}
 
         .ping-ze-tracker { position: absolute; top: 80px; left: 50%; transform: translateX(-50%); font-size: 30px; letter-spacing: 10px; display: flex; }
         .pz-char { animation: pzPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
@@ -290,10 +294,10 @@
                 </div>
 
                 <div class="info-section" style="border-bottom:none; flex: 1; display: flex; flex-direction: column;">
-                    <div class="info-title">卡组 <span style="font-size:14px; color:#888; font-weight:normal; letter-spacing:0;">(点击查看)</span></div>
+                    <div class="info-title" style="border:none;">卡组残卷 (<span id="info-deck-count" style="font-size:16px;">0</span>)</div>
                     <div class="equip-box" style="flex: 1; min-height: 120px;" onclick="Game.viewDeck()">
                         <i class="fa-solid fa-layer-group" style="font-size: 32px; margin-bottom: 8px; color:#888;"></i>
-                        <span id="info-deck-count" style="font-size:14px; color: #aaa;">共 0 张残卷</span>
+                        <span style="font-size:14px; color: #aaa;">点击查看牌库详细</span>
                     </div>
                 </div>
             </div>
@@ -336,7 +340,7 @@
     <div id="deck-panel" class="modal">
         <div id="deck-content" style="width: 80%; height: 80%; background: var(--ink-panel); border: 1px solid #444; border-radius: 12px; position: relative; display: flex; flex-direction: column; padding: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.9);">
             <div class="close-btn" onclick="Game.toggleModal('deck-panel');" title="关闭"><i class="fa-solid fa-xmark"></i></div>
-            <div class="info-title" style="border:none;" id="deck-detail-title">卡组残卷 (0)</div>
+            <div class="info-title" style="border:none;">卡组残卷 (<span id="deck-detail-count">0</span>)</div>
             <div id="deck-grid" style="flex: 1; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 20px; justify-content: flex-start; align-content: flex-start; padding: 20px 10px;"></div>
         </div>
     </div>
@@ -369,12 +373,13 @@
             <div class="gallery-section-title">【 低阶残卷 】 (初始构建)</div>
             <div class="gallery-grid" id="gallery-low"></div>
 
-            <div class="gallery-section-title" style="color: var(--mid-color); text-shadow: 0 0 10px rgba(160,170,181,0.5);">【 中阶秘籍 】</div>
+            <div class="gallery-section-title" style="color: var(--mid-color); text-shadow: 0 0 10px rgba(160,170,181,0.5); border-top: 1px solid #333; padding-top: 30px; margin-top: 30px;">【 中阶秘籍 】</div>
             <div class="gallery-grid" id="gallery-mid"></div>
 
-            <div class="gallery-section-title" style="color: var(--gold-light); text-shadow: 0 0 10px rgba(255,215,0,0.5);">【 高阶绝学 】</div>
+            <div class="gallery-section-title" style="color: var(--gold-light); text-shadow: 0 0 10px rgba(255,215,0,0.5); border-top: 1px solid #333; padding-top: 30px; margin-top: 30px;">【 高阶绝学 】</div>
             <div class="gallery-grid" id="gallery-high"></div>
 
+            <!-- 新增衍生物区块 (修复要求4) -->
             <div class="gallery-section-title" style="color: #888; border-top: 1px solid #333; padding-top: 30px; margin-top: 30px;">【 衍生物 / 特殊卡牌 】</div>
             <div class="gallery-grid" id="gallery-token"></div>
         </div>
@@ -517,7 +522,7 @@
             combat: {
                 inCombat: false, turn: 1, isPlayerTurn: true, hand: [], drawPile: [], discardPile: [],
                 enemy: { id: '', name: '', hp: 80, maxHp: 80, turnCounter: 1, dmgMod: 1, weak: 0, vuln: 0, stun: false },
-                player: { block: 0, dmgMod: 0, cantPlay: false, cantDmg: false, weak: 0, vuln: 0, turnStr: 0, turnDef: 0, turnDmgMod: 0, keepBlock: 0, nianNuJiao: false, dmgDouble: false, takeDmgDouble: false, daoGuang: false }, pzHistory: []
+                player: { block: 0, dmgMod: 0, cantPlay: false, cantDmg: false, weak: 0, vuln: 0, turnStr: 0, turnDef: 0, turnDmgMod: 0, keepBlock: 0, nianNuJiao: false, dmgDouble: false, takeDmgDouble: false, daoGuang: false, ignorePZ: false, cantDmgNextTurn: false }, pzHistory: []
             }
         };
 
@@ -528,12 +533,12 @@
             FX: `<span class="kw" data-tip="无视角色或武器的力与御加成，只造成卡面基础数值的效果">固定</span>`,
             YY: `<span class="kw" data-tip="本回合不行动">囿于旋风</span>`,
             JX: `<span class="kw" data-tip="卡牌的复制品，本回合结束时进入沉沙">镜像</span>`,
-            CSH: `<span class="kw" data-tip="在音律学中，是平仄的同义词。清除目前游戏界面上中心展示的平仄这些文字记录，重新开始记录">侧声</span>`,
+            CSH: `<span class="kw" data-tip="在音律学中，是平仄的同义词。清除目前记录，重新开始">侧声</span>`,
             XR: `<span class="kw" data-tip="造成的伤害降低30%">虚弱</span>`,
             YS: `<span class="kw" data-tip="受到的伤害增加50%">易伤</span>`,
-            DW: `<span class="kw" data-tip="占用卡组中转牌的逻辑，但是不可以被打出">黩武</span>`,
-            CSHOU: `<span class="kw" data-tip="抵挡敌方伤害，回合结束时清零。\n实际获得量 = 卡面数值 + 角色【御】 + 武器【御】">持守</span>`,
-            SH: `<span class="kw" data-tip="扣除敌方气血。\n实际造成量 = 卡面伤害 + 角色【力】 + 武器【力】">伤害</span>`,
+            DW: `<span class="kw" data-tip="占用卡组流转空间，不可被打出">黩武</span>`,
+            CSHOU: `<span class="kw" data-tip="抵挡敌方伤害，回合结束时清零。实际量 = 卡面数值 + 角色【御】 + 武器【御】">持守</span>`,
+            SH: `<span class="kw" data-tip="扣除敌方气血。实际量 = 卡面数值 + 角色【力】 + 武器【力】">伤害</span>`,
             LBMM: `<span class="kw" data-tip="在手牌中加一张黩武，固定抽取三张卡牌">厉兵秣马</span>`
         };
 
@@ -545,21 +550,21 @@
             'c3': { id: 'c3', name: '蝶恋花', cost: 0, type: '平', typeClass: 'type-ping', desc: `本回合你的${K.SH}减少3点，获得2点气`, rarity: 'low', cardType: '词牌', effect: () => { State.combat.player.turnDmgMod -= 3; State.energy += 2; } },
             'c4': { id: 'c4', name: '点水', cost: 1, type: '仄', typeClass: 'type-ze', desc: '抽取卡牌', rarity: 'low', cardType: '功卡', effect: () => Combat.draw(1) },
             'c5': { id: 'c5', name: '绣剑', cost: 0, type: '平', typeClass: 'type-ping', desc: '6力6御', rarity: 'equip', cardType: '装备卡', effect: () => {} },
-            'c6': { id: 'c6', name: '破阵子', cost: 3, type: '仄', typeClass: 'type-ze', desc: `打出你手牌的所有武卡，下回合你不能造成${K.SH}`, rarity: 'mid', cardType: '词牌', effect: () => { Combat.playAllAttacks(); State.combat.player.cantDmg = true; } },
+            'c6': { id: 'c6', name: '破阵子', cost: 3, type: '仄', typeClass: 'type-ze', desc: `打出你手牌的所有武卡，下回合你不能造成${K.SH}`, rarity: 'mid', cardType: '词牌', effect: () => { Combat.playAllAttacks(); State.combat.player.cantDmgNextTurn = true; } },
             'c7': { id: 'c7', name: '定风波', cost: 3, type: '平', typeClass: 'type-ping', desc: `你失去7点血量，让一名敌人${K.YY}`, rarity: 'high', cardType: '词牌', effect: () => { Combat.takeDmg(7, true); State.combat.enemy.stun = true; Game.showToast('敌人被旋风困住！'); } },
-            'c8': { id: 'c8', name: '水调歌头', cost: 2, type: '平', typeClass: 'type-ping', desc: `造成${K.SH}2次，抽取+1张卡牌`, rarity: 'mid', cardType: '词牌', effect: () => { Combat.dealDmg(0); setTimeout(()=>Combat.dealDmg(0), 200); Combat.draw(1 + State.agi); } },
-            'c9': { id: 'c9', name: '念奴娇', cost: 2, type: '平', typeClass: 'type-ping', desc: `${K.GF}，每回合开始失去1点生命，然后从弃牌堆中选择一张卡并打出`, rarity: 'mid', cardType: '词牌', effect: () => { State.combat.player.nianNuJiao = true; Game.showToast('功法发动：念奴娇'); } },
+            'c8': { id: 'c8', name: '水调歌头', cost: 2, type: '平', typeClass: 'type-ping', desc: `造成${K.SH}2次，抽取+1卡牌`, rarity: 'mid', cardType: '词牌', effect: () => { Combat.dealDmg(0); setTimeout(()=>Combat.dealDmg(0), 200); Combat.draw(1 + State.agi); } },
+            'c9': { id: 'c9', name: '念奴娇', cost: 2, type: '平', typeClass: 'type-ping', desc: `${K.GF}，每回合开始失去1点生命，从弃牌堆中选择一张卡并打出`, rarity: 'mid', cardType: '词牌', effect: () => { State.combat.player.nianNuJiao = true; Game.showToast('功法发动：念奴娇'); } },
             'c10': { id: 'c10', name: '满江红', cost: 0, type: '平', typeClass: 'type-ping', desc: `打出后进入${K.CS}，抽取卡牌，本回合${K.SH}翻倍，受到的${K.SH}也翻倍`, rarity: 'mid', cardType: '词牌', effect: () => { Combat.draw(1); State.combat.player.dmgDouble = true; State.combat.player.takeDmgDouble = true; } },
             
             // [ 11-21: 低阶残卷-补充 ]
             'c11': { id: 'c11', name: '习武', cost: 0, type: '仄', typeClass: 'type-ze', desc: '本回合获得1点力，1点御', rarity: 'low', cardType: '功卡', effect: () => { State.combat.player.turnStr += 1; State.combat.player.turnDef += 1; Game.updateUI(); } },
             'c12': { id: 'c12', name: '刺击', cost: 1, type: '平', typeClass: 'type-ping', desc: `对所有敌人造成-1点${K.SH}`, isAttack: true, rarity: 'low', cardType: '武卡', effect: () => Combat.dealDmg(-1) },
             'c13': { id: 'c13', name: '舞剑', cost: 1, type: '仄', typeClass: 'type-ze', desc: `造成1点${K.SH}，${K.FX}抽取1张卡牌`, isAttack: true, rarity: 'low', cardType: '武卡', effect: () => { Combat.dealDmg(1); Combat.draw(1); } },
-            'c14': { id: 'c14', name: '挂剑', cost: 1, type: '仄', typeClass: 'type-ze', desc: `造成1点${K.SH}，选择一张牌放入${K.CS}`, isAttack: true, rarity: 'low', cardType: '武卡', effect: () => { Combat.dealDmg(1); Game.showToast('触发沉沙'); } },
+            'c14': { id: 'c14', name: '挂剑', cost: 1, type: '仄', typeClass: 'type-ze', desc: `造成1点${K.SH}，选择一张牌放入${K.CS}堆`, isAttack: true, rarity: 'low', cardType: '武卡', effect: () => { Combat.dealDmg(1); Game.showToast('触发沉沙'); } },
             'c15': { id: 'c15', name: '撩剑', cost: 1, type: '仄', typeClass: 'type-ze', desc: `${K.FX}造成4点${K.SH}3次`, isAttack: true, rarity: 'low', cardType: '武卡', effect: () => { Combat.dealDmg(4, true); setTimeout(()=>Combat.dealDmg(4, true), 150); setTimeout(()=>Combat.dealDmg(4, true), 300); } },
             'c16': { id: 'c16', name: '抗衡', cost: 1, type: '平', typeClass: 'type-ping', desc: `获得3点${K.CSHOU}`, rarity: 'low', cardType: '功卡', effect: () => Combat.addBlock(3) },
             'c17': { id: 'c17', name: '斡旋', cost: 0, type: '平', typeClass: 'type-ping', desc: `${K.FX}抽取1张卡牌`, rarity: 'low', cardType: '功卡', effect: () => Combat.draw(1) },
-            'c18': { id: 'c18', name: '缮甲', cost: 1, type: '仄', typeClass: 'type-ze', desc: `获得0点${K.CSHOU}，本场战斗每打出一次额外增加1点${K.CSHOU}`, rarity: 'low', cardType: '功卡', effect: () => { State.combat.shanjia = (State.combat.shanjia || 0) + 1; Combat.addBlock(0 + State.combat.shanjia); } },
+            'c18': { id: 'c18', name: '缮甲', cost: 1, type: '仄', typeClass: 'type-ze', desc: `获得0点${K.CSHOU}，本场战斗每打出一次多增加1点${K.CSHOU}`, rarity: 'low', cardType: '功卡', effect: () => { State.combat.shanjia = (State.combat.shanjia || 0) + 1; Combat.addBlock(0 + State.combat.shanjia); } },
             'c19': { id: 'c19', name: '磨刀', cost: 1, type: '平', typeClass: 'type-ping', desc: `获得-2点${K.CSHOU}，本回合获得1点力`, rarity: 'low', cardType: '功卡', effect: () => { Combat.addBlock(-2); State.combat.player.turnStr += 1; } },
             'c20': { id: 'c20', name: '伏击', cost: 0, type: '平', typeClass: 'type-ping', desc: `失去1点血量，造成-1点${K.SH}`, isAttack: true, rarity: 'low', cardType: '武卡', effect: () => { Combat.takeDmg(1, true); Combat.dealDmg(-1); } },
             'c21': { id: 'c21', name: '双斩', cost: 1, type: '仄', typeClass: 'type-ze', desc: `造成-3点${K.SH}两次`, isAttack: true, rarity: 'low', cardType: '武卡', effect: () => { Combat.dealDmg(-3); setTimeout(()=>Combat.dealDmg(-3), 200); } },
@@ -567,33 +572,33 @@
             // [ 22-40: 中阶秘籍 ]
             'c22': { id: 'c22', name: '歃血为盟', cost: 2, type: '平', typeClass: 'type-ping', desc: `打出后进入${K.CS}，失去1点血量，对所有敌人给予三层${K.YS}和${K.XR}`, rarity: 'mid', cardType: '功卡', effect: () => { Combat.takeDmg(1, true); State.combat.enemy.weak += 3; State.combat.enemy.vuln += 3; Game.updateUI(); } },
             'c23': { id: 'c23', name: '一转攻势', cost: 1, type: '仄', typeClass: 'type-ze', desc: `${K.GF}，你每失去3点力，获得1点力`, rarity: 'mid', cardType: '功卡', effect: () => { Game.showToast('一转攻势生效'); } },
-            'c24': { id: 'c24', name: '束手就擒', cost: 1, type: '平', typeClass: 'type-ping', desc: `打出后进入${K.CS}，本回合失去2点力，所有敌人失去6点力`, rarity: 'mid', cardType: '功卡', effect: () => { State.combat.player.turnStr -= 2; Game.showToast('敌我力量削弱'); } },
+            'c24': { id: 'c24', name: '束手就擒', cost: 1, type: '平', typeClass: 'type-ping', desc: `打出后进入${K.CS}，你本回合失去2点力，所有敌人失去6点力`, rarity: 'mid', cardType: '功卡', effect: () => { State.combat.player.turnStr -= 2; Game.showToast('敌我力量削弱'); } },
             'c25': { id: 'c25', name: '厉兵秣马', cost: 0, type: '仄', typeClass: 'type-ze', desc: `在手牌中加一张${K.DW}，${K.FX}抽取三张卡牌`, rarity: 'mid', cardType: '功卡', effect: () => { State.combat.hand.push('c_duwu'); Combat.draw(3); } },
             'c26': { id: 'c26', name: '万夫莫开', cost: 2, type: '平', typeClass: 'type-ping', desc: `获得8点${K.CSHOU}，给所有敌人一层${K.XR}`, rarity: 'mid', cardType: '功卡', effect: () => { Combat.addBlock(8); State.combat.enemy.weak += 1; Game.updateUI(); } },
-            'c27': { id: 'c27', name: '摧枯拉朽', cost: 2, type: '仄', typeClass: 'type-ze', desc: `保留，造成5点${K.SH}，敌人每失去10%血量，此牌${K.SH}增加3`, isAttack: true, rarity: 'mid', cardType: '武卡', effect: () => { let d = 5 + Math.floor((1 - State.combat.enemy.hp/State.combat.enemy.maxHp)*10)*3; Combat.dealDmg(d); } },
-            'c28': { id: 'c28', name: '白虹贯日', cost: 1, type: '平', typeClass: 'type-ping', desc: `打出后进入${K.CS}，造成5点${K.SH}，对血量最高敌人造成双倍${K.SH}`, isAttack: true, rarity: 'mid', cardType: '武卡', effect: () => Combat.dealDmg(5) },
-            'c29': { id: 'c29', name: '峨眉剑法', cost: 1, type: '仄', typeClass: 'type-ze', desc: `${K.GF}，每打出3张武卡，${K.FX}抽取1张卡牌`, rarity: 'mid', cardType: '功卡', effect: () => { State.combat.player.emei = true; Game.showToast('峨眉剑法生效'); } },
+            'c27': { id: 'c27', name: '摧枯拉朽', cost: 2, type: '仄', typeClass: 'type-ze', desc: `保留，造成5点${K.SH}，敌人每失去10%的血量，此牌的${K.SH}增加3`, isAttack: true, rarity: 'mid', cardType: '武卡', effect: () => { let d = 5 + Math.floor((1 - State.combat.enemy.hp/State.combat.enemy.maxHp)*10)*3; Combat.dealDmg(d); } },
+            'c28': { id: 'c28', name: '白虹贯日', cost: 1, type: '平', typeClass: 'type-ping', desc: `打出后进入${K.CS}，造成5点${K.SH}，对血量最高的敌人造成双倍${K.SH}`, isAttack: true, rarity: 'mid', cardType: '武卡', effect: () => Combat.dealDmg(10) },
+            'c29': { id: 'c29', name: '峨眉剑法', cost: 1, type: '仄', typeClass: 'type-ze', desc: `${K.GF}，你每打出3张武卡，${K.FX}抽取1张卡牌`, rarity: 'mid', cardType: '功卡', effect: () => { State.combat.player.emei = true; Game.showToast('峨眉剑法生效'); } },
             'c30': { id: 'c30', name: '以逸待劳', cost: 2, type: '平', typeClass: 'type-ping', desc: `获得5点${K.CSHOU}，下回合额外获得2点气`, rarity: 'mid', cardType: '功卡', effect: () => { Combat.addBlock(5); State.combat.player.nextTurnEnergy = 2; } },
             'c31': { id: 'c31', name: '一剑封喉', cost: 2, type: '平', typeClass: 'type-ping', desc: `造成17点${K.SH}`, isAttack: true, rarity: 'mid', cardType: '武卡', effect: () => Combat.dealDmg(17) },
-            'c32': { id: 'c32', name: '波诡云谲', cost: 1, type: '平', typeClass: 'type-ping', desc: `打出后进入${K.CS}，随机1张武卡加入手牌，其本回合耗气为0`, rarity: 'mid', cardType: '功卡', effect: () => { Combat.draw(1); } },
-            'c33': { id: 'c33', name: '流星落月', cost: 1, type: '仄', typeClass: 'type-ze', desc: `${K.GF}，对敌人的溢出${K.SH}转移到随机其他敌人`, rarity: 'mid', cardType: '功卡', effect: () => { Game.showToast('流星落月生效'); } },
+            'c32': { id: 'c32', name: '波诡云谲', cost: 1, type: '平', typeClass: 'type-ping', desc: `打出后进入${K.CS}，将1张随机的武卡加入到你的手牌，这张武卡本回合耗气为0`, rarity: 'mid', cardType: '功卡', effect: () => { Combat.draw(1); } },
+            'c33': { id: 'c33', name: '流星落月', cost: 1, type: '仄', typeClass: 'type-ze', desc: `${K.GF}，对敌人的溢出${K.SH}转移到一名随机的其他敌人身上`, rarity: 'mid', cardType: '功卡', effect: () => { Game.showToast('流星落月生效'); } },
             'c34': { id: 'c34', name: '坚壁清野', cost: 2, type: '仄', typeClass: 'type-ze', desc: `${K.GF}，你可以跨回合保留15点${K.CSHOU}`, rarity: 'mid', cardType: '功卡', effect: () => { State.combat.player.keepBlock = 15; Game.showToast('坚壁清野生效'); } },
             'c35': { id: 'c35', name: '付之一炬', cost: 1, type: '仄', typeClass: 'type-ze', desc: `将一张手牌放入${K.CS}，抽取1张卡牌`, rarity: 'mid', cardType: '功卡', effect: () => { Combat.draw(1); } },
             'c36': { id: 'c36', name: '封刀挂剑', cost: 1, type: '仄', typeClass: 'type-ze', desc: `${K.GF}，你每失去力时，${K.FX}抽取2张卡牌`, rarity: 'mid', cardType: '功卡', effect: () => { Game.showToast('封刀挂剑生效'); } },
             'c37': { id: 'c37', name: '七步成诗', cost: 0, type: '平', typeClass: 'type-ping', desc: `打出后进入${K.CS}，本场战斗随机获得1份诗句残片`, rarity: 'mid', cardType: '功卡', effect: () => { Game.showToast('寻得残卷！'); } },
-            'c38': { id: 'c38', name: '投笔从戎', cost: 1, type: '平', typeClass: 'type-ping', desc: `对一名敌人造成0点${K.SH}，本回合所有手牌不分平仄`, isAttack: true, rarity: 'mid', cardType: '武卡', effect: () => Combat.dealDmg(0) },
+            'c38': { id: 'c38', name: '投笔从戎', cost: 1, type: '平', typeClass: 'type-ping', desc: `对一名敌人造成0点${K.SH}，本回合你的所有手牌不分平仄`, isAttack: true, rarity: 'mid', cardType: '武卡', effect: () => { Combat.dealDmg(0); State.combat.player.ignorePZ = true; } },
             'c39': { id: 'c39', name: '拔山扛鼎', cost: 1, type: '仄', typeClass: 'type-ze', desc: `${K.GF}，你获得4点力`, rarity: 'mid', cardType: '功卡', effect: () => { State.combat.player.turnStr += 4; Game.updateUI(); } },
-            'c40': { id: 'c40', name: '文思泉涌', cost: 1, type: '仄', typeClass: 'type-ze', desc: `清除你所有的${K.CSH}，每清除一个获得0点${K.CSHOU}`, rarity: 'mid', cardType: '功卡', effect: () => { let count = State.combat.pzHistory.length; State.combat.pzHistory = []; Combat.renderPZ(); for(let i=0; i<count; i++) Combat.addBlock(0); } },
+            'c40': { id: 'c40', name: '文思泉涌', cost: 1, type: '仄', typeClass: 'type-ze', desc: `清除你所有的${K.CSH}，每清除一个就获得0点${K.CSHOU}`, rarity: 'mid', cardType: '功卡', effect: () => { let count = State.combat.pzHistory.length; State.combat.pzHistory = []; Combat.renderPZ(); for(let i=0; i<count; i++) Combat.addBlock(0); } },
             
             // [ 41-50: 高阶绝学 ]
-            'c41': { id: 'c41', name: '万剑归宗', cost: 3, type: '平', typeClass: 'type-ping', desc: `打出后进入${K.CS}，打出手牌所有武卡并加入${K.JX}到手牌，镜像本回合耗气为0`, rarity: 'high', cardType: '功卡', effect: () => Combat.playAllAttacks() },
-            'c42': { id: 'c42', name: '城焚烬余', cost: 2, type: '平', typeClass: 'type-ping', desc: `打出后进入${K.CS}，手牌全部放入${K.CS}，对所有敌人造成-3点${K.SH}X次(X为沉沙牌数)`, isAttack: true, rarity: 'high', cardType: '武卡', effect: () => { Combat.dealDmg(-3); setTimeout(()=>Combat.dealDmg(-3), 200); } },
-            'c43': { id: 'c43', name: '折戟沉沙', cost: 1, type: '平', typeClass: 'type-ping', desc: `打出后进入${K.CS}，将${K.CS}中的至多两张卡牌加入手牌`, rarity: 'high', cardType: '功卡', effect: () => Combat.draw(2) },
-            'c44': { id: 'c44', name: '唇枪舌剑', cost: 3, type: '仄', typeClass: 'type-ze', desc: `${K.GF}，你每打出一张仄牌，对随机一名敌人造成-5点${K.SH}`, rarity: 'high', cardType: '功卡', effect: () => { State.combat.player.chunQiang = true; Game.showToast('唇枪舌剑生效'); } },
+            'c41': { id: 'c41', name: '万剑归宗', cost: 3, type: '平', typeClass: 'type-ping', desc: `打出后进入${K.CS}，打出你手牌的所有武卡，同时加入他们的${K.JX}到你的手牌，耗气为0`, rarity: 'high', cardType: '功卡', effect: () => Combat.playAllAttacks() },
+            'c42': { id: 'c42', name: '城焚烬余', cost: 2, type: '平', typeClass: 'type-ping', desc: `打出后进入${K.CS}，将所有手牌放入${K.CS}，然后对所有敌人造成-3点${K.SH}x次(x为沉沙牌数)`, isAttack: true, rarity: 'high', cardType: '武卡', effect: () => { Combat.dealDmg(-3); setTimeout(()=>Combat.dealDmg(-3), 200); } },
+            'c43': { id: 'c43', name: '折戟沉沙', cost: 1, type: '平', typeClass: 'type-ping', desc: `打出后进入${K.CS}，将${K.CS}中的至多两张卡牌加入你的手牌`, rarity: 'high', cardType: '功卡', effect: () => Combat.draw(2) },
+            'c44': { id: 'c44', name: '唇枪舌剑', cost: 3, type: '仄', typeClass: 'type-ze', desc: `${K.GF}，你每打出一张仄牌，就对随机一名敌人造成-5点${K.SH}`, rarity: 'high', cardType: '功卡', effect: () => { State.combat.player.chunQiang = true; Game.showToast('唇枪舌剑生效'); } },
             'c45': { id: 'c45', name: '固若金汤', cost: 3, type: '平', typeClass: 'type-ping', desc: `${K.GF}，你每打出一张平牌，获得-4点${K.CSHOU}`, rarity: 'high', cardType: '功卡', effect: () => { State.combat.player.guRuo = true; Game.showToast('固若金汤生效'); } },
-            'c46': { id: 'c46', name: '案剑瞋目', cost: 0, type: '仄', typeClass: 'type-ze', desc: `打出后进入${K.CS}，获得3气，${K.FX}抽3张牌，得3力，3回合后死亡`, rarity: 'high', cardType: '功卡', effect: () => { State.energy += 3; Combat.draw(3); State.combat.player.turnStr += 3; } },
-            'c47': { id: 'c47', name: '刀光剑影', cost: 2, type: '仄', typeClass: 'type-ze', desc: `${K.GF}，所有名字含“剑”的卡牌打出时再触发一次`, rarity: 'high', cardType: '功卡', effect: () => { State.combat.player.daoGuang = true; Game.showToast('剑气纵横！') } },
-            'c48': { id: 'c48', name: '金蝉脱壳', cost: 3, type: '仄', typeClass: 'type-ze', desc: `打出后进入${K.CS}，将血量和状态回退至上回合`, rarity: 'high', cardType: '功卡', effect: () => { Combat.heal(10); Game.showToast('金蝉脱壳生效！'); } },
+            'c46': { id: 'c46', name: '案剑瞋目', cost: 0, type: '仄', typeClass: 'type-ze', desc: `打出后进入${K.CS}，获得3点气，${K.FX}抽取3张牌，获得3点力，3回合后死亡`, rarity: 'high', cardType: '功卡', effect: () => { State.energy += 3; Combat.draw(3); State.combat.player.turnStr += 3; } },
+            'c47': { id: 'c47', name: '刀光剑影', cost: 2, type: '仄', typeClass: 'type-ze', desc: `${K.GF}，所有名字里有“剑”的卡牌打出时，再打出一次`, rarity: 'high', cardType: '功卡', effect: () => { State.combat.player.daoGuang = true; Game.showToast('剑气纵横！') } },
+            'c48': { id: 'c48', name: '金蝉脱壳', cost: 3, type: '仄', typeClass: 'type-ze', desc: `打出后进入${K.CS}，将你的血量和状态回退至上回合`, rarity: 'high', cardType: '功卡', effect: () => { Combat.heal(10); Game.showToast('金蝉脱壳生效！'); } },
             'c49': { id: 'c49', name: '操戈擐甲', cost: 3, type: '仄', typeClass: 'type-ze', desc: `造成31点${K.SH}`, isAttack: true, rarity: 'high', cardType: '武卡', effect: () => Combat.dealDmg(31) },
             'c50': { id: 'c50', name: '枯木逢春', cost: 2, type: '平', typeClass: 'type-ping', desc: `打出后进入${K.CS}，回复12点血量`, rarity: 'high', cardType: '功卡', effect: () => Combat.heal(12) },
 
@@ -987,7 +992,7 @@
                 State.combat.inCombat = true; State.combat.turn = 1; State.combat.pzHistory = [];
                 State.combat.drawPile = [...State.deck]; Combat.shuffle(State.combat.drawPile);
                 State.combat.discardPile = []; State.combat.hand = [];
-                State.combat.player = { block: 0, dmgMod: 0, cantPlay: false, cantDmg: false, weak: 0, vuln: 0, turnStr: 0, turnDef: 0, turnDmgMod: 0, keepBlock: 0, nianNuJiao: false, dmgDouble: false, takeDmgDouble: false, daoGuang: false };
+                State.combat.player = { block: 0, dmgMod: 0, cantPlay: false, cantDmg: false, weak: 0, vuln: 0, turnStr: 0, turnDef: 0, turnDmgMod: 0, keepBlock: 0, nianNuJiao: false, dmgDouble: false, takeDmgDouble: false, daoGuang: false, ignorePZ: false, cantDmgNextTurn: false };
                 
                 $('pz-tracker').innerHTML = '';
                 
@@ -1017,10 +1022,12 @@
                 }
 
                 State.combat.player.cantPlay = false;
-                State.combat.player.cantDmg = false;
+                State.combat.player.cantDmg = State.combat.player.cantDmgNextTurn;
+                State.combat.player.cantDmgNextTurn = false;
                 State.combat.player.turnStr = 0; 
                 State.combat.player.turnDef = 0;
                 State.combat.player.turnDmgMod = 0;
+                State.combat.player.ignorePZ = false;
                 
                 // 递减持续状态
                 if(State.combat.player.weak > 0) State.combat.player.weak--;
@@ -1093,9 +1100,11 @@
                 State.energy -= cd.cost;
                 if(cd.isAttack) State.momentum = Math.min(10, State.momentum + 1);
                 
-                State.combat.pzHistory.push(cd.type);
-                if(State.combat.pzHistory.length > 5) State.combat.pzHistory.shift();
-                Combat.renderPZ();
+                if (!State.combat.player.ignorePZ) {
+                    State.combat.pzHistory.push(cd.type);
+                    if(State.combat.pzHistory.length > 5) State.combat.pzHistory.shift();
+                    Combat.renderPZ();
+                }
 
                 State.combat.hand.splice(index, 1);
                 State.combat.discardPile.push(cardId);
@@ -1138,10 +1147,10 @@
                 AudioSys.playSFX('assets/sfx_hit.mp3'); 
                 if (State.combat.player.cantDmg) { Game.showToast("止战：本回合无法造成伤害！"); return; }
                 
-                let wStr = 0; // 武器力 default 0
+                let wStr = 0; // 武器力
                 // 计算：基础 + 角色属性力 + 临时力 + 武器力 (若固定则仅算基础)
                 let dmg = isFixed ? base : base + State.str + (State.combat.player.turnStr || 0) + wStr;
-                dmg += (State.combat.player.turnDmgMod || 0); // 蝶恋花修饰
+                dmg += (State.combat.player.turnDmgMod || 0); // 蝶恋花等伤害修饰
                 if (dmg < 0) dmg = 0; 
                 
                 let isCrit = false;
@@ -1165,15 +1174,6 @@
                 if(State.combat.player.takeDmgDouble && !ignoreBlock) dmg *= 2;
                 
                 if(!ignoreBlock) {
-                    while(dmg > 0) {
-                        const dodgeIdx = State.combat.hand.indexOf('c2'); // 闪避检测
-                        if(dodgeIdx !== -1) {
-                            State.combat.hand.splice(dodgeIdx, 1); State.combat.discardPile.push('c2');
-                            dmg -= 5; Game.showToast('闪避生效！抵消 5 伤'); Combat.floatText('player', '闪避', 'block');
-                        } else break;
-                    }
-                    if(dmg <= 0) { Combat.renderHand(); return; }
-
                     if(State.combat.player.block > 0) {
                         if(State.combat.player.block >= dmg) { State.combat.player.block -= dmg; dmg = 0; Combat.floatText('player', '持守', 'block'); }
                         else { dmg -= State.combat.player.block; State.combat.player.block = 0; }
@@ -1189,8 +1189,7 @@
             },
             heal: (amt) => { State.hp = Math.min(State.maxHp, State.hp + amt); Game.updateUI(); Game.showToast(`回复 ${amt} 生命`); },
             addBlock: (base, isFixed = false) => { 
-                let wDef = 0; // 武器御 default 0
-                // 计算：基础 + 角色属性御 + 临时御 + 武器御
+                let wDef = 0; // 武器御
                 let blk = isFixed ? base : base + State.def + (State.combat.player.turnDef || 0) + wDef;
                 if (blk < 0) blk = 0;
                 State.combat.player.block += blk; 
