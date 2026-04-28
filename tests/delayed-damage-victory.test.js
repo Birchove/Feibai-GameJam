@@ -102,5 +102,17 @@ vm.runInContext(`
   Combat.dealDmg(2, true);
   if (!settlementShown) throw new Error('delayed lethal hit should show settlement');
   if (State.combat.inCombat) throw new Error('combat should end after delayed lethal hit');
+
+  settlementShown = false;
+  State.combat.inCombat = true;
+  State.combat.isPlayerTurn = true;
+  State.combat.hand = ['c20', 'c31'];
+  State.combat.discardPile = [];
+  State.combat.enemy.id = 'e1';
+  State.combat.enemy.hp = 17;
+  State.hp = 1;
+  Combat.playAllAttacks();
+  if (!settlementShown) throw new Error('first queued attack should end combat');
+  if (State.hp !== 1) throw new Error('queued attacks should stop after combat ends');
 `, context);
 

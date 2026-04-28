@@ -1151,6 +1151,7 @@
                 let delay = 0;
                 attackIds.forEach(cid => {
                     setTimeout(() => {
+                        if(!State.combat.inCombat) return;
                         State.combat.discardPile.push(cid);
                         CardDB[cid].effect();
                         State.momentum = Math.min(10, State.momentum + 1);
