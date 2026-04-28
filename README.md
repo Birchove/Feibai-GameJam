@@ -64,6 +64,7 @@ Feibai-GameJam/
 + 玩法设计/核心策划 -> [only1occasion](https://github.com/only1occasion)
 + 程序/核心Debug -> [Birchove](https://github.com/Birchove)
 + 核心协作AI ->
+  - Cursor
   - Gemini
   - Nano Banana 2
   - Suno
