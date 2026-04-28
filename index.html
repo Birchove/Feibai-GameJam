@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>飞白 - GameJam Demo</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
@@ -20,7 +20,18 @@
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
-        body, html { width: 100%; height: 100%; background-color: var(--ink-bg); color: var(--ink-light); font-family: 'Noto Serif SC', 'Georgia', serif; overflow: hidden; }
+        body, html { width: 100%; height: 100%; background-color: var(--ink-bg); color: var(--ink-light); font-family: 'Noto Serif SC', 'Georgia', serif; overflow: hidden; touch-action: none; }
+
+        /* ================= 移动端竖屏拦截 ================= */
+        #orientation-prompt { display: none; }
+        @media screen and (orientation: portrait) {
+            #orientation-prompt {
+                display: flex; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+                background: #050507; z-index: 9999999; flex-direction: column; 
+                justify-content: center; align-items: center; color: var(--gold); text-align: center;
+            }
+            .screen, #abar, #toast { display: none !important; }
+        }
 
         /* ================= 共有层与层级管理 ================= */
         #bgCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; opacity: 0.5; }
@@ -37,7 +48,7 @@
         .btn-g:hover { border-bottom: 1px solid var(--blood-red); color: white; text-shadow: 0 0 10px var(--blood-red); transform: scale(1.05); }
         .asset-placeholder { display: flex; justify-content: center; align-items: center; background: rgba(30,30,30,0.5); border: 1px dashed #555; color: #888; font-size: 14px; text-align: center; padding: 10px; }
 
-        /* ================= 前期界面流转 ================= */
+        /* ================= 前期界面 ================= */
         #screen-main { background: url('assets/main_menu_bg.png') center/cover, var(--ink-bg); justify-content: center; align-items: center; }
         #screen-saves { background: url('assets/saves_menu_bg.png') center/cover, var(--ink-bg); justify-content: center; align-items: center; }
         #screen-class { background: url('assets/class_select_bg.png') center/cover, var(--ink-bg); justify-content: center; align-items: center; }
@@ -70,8 +81,8 @@
         .modal { position: absolute; top: var(--abar-height); left: 0; width: 100%; height: calc(100% - var(--abar-height)); background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); z-index: 200; display: none; justify-content: center; align-items: center; }
         .modal.active { display: flex; }
         
-        /* ================= 个人信息面板 ================= */
-        #info-content { width: 900px; max-width: 90%; height: 600px; max-height: 85%; background: var(--ink-panel); border: 1px solid #444; display: flex; border-radius: 12px; overflow: hidden; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.9); }
+        /* ================= 面板专项排版 ================= */
+        #info-content, #deck-content, #pile-content { width: 900px; max-width: 90%; height: 600px; max-height: 85%; background: var(--ink-panel); border: 1px solid #444; display: flex; border-radius: 12px; overflow: hidden; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.9); }
         .info-col { flex: 1; padding: 25px; display: flex; flex-direction: column; position: relative; }
         .close-btn { position: absolute; top: 15px; right: 15px; width: 40px; height: 40px; background: rgba(30,30,35,0.8); border: 1px solid #444; border-radius: 8px; display: flex; justify-content: center; align-items: center; color: #aaa; font-size: 20px; cursor: pointer; transition: 0.2s; z-index: 210; }
         .close-btn:hover { background: var(--blood-red); color: #fff; border-color: #fff; }
@@ -83,21 +94,28 @@
         .equip-box { border: 2px dashed #444; border-radius: 8px; background: rgba(30,30,35,0.4); display: flex; flex-direction: column; align-items: center; justify-content: center; color: #666; transition: 0.3s; cursor:pointer;}
         .equip-box:hover { border-color: var(--gold); color: var(--gold); box-shadow: 0 0 15px rgba(184,134,11,0.2) inset; }
 
-        /* ================= 卡组详情 / 牌堆 / 三生石 通用卡牌样式 (修复了文字排版) ================= */
-        .deck-card { width: 140px; height: 210px; background: linear-gradient(135deg, #222, #111); border: 2px solid #555; border-radius: 8px; position: relative; padding: 10px; box-shadow: 0 5px 10px rgba(0,0,0,0.5); display: flex; flex-direction: column; transition: 0.2s; }
-        .deck-card.mid-rarity-card { border-color: var(--mid-color); box-shadow: 0 0 12px rgba(160, 170, 181, 0.4); }
-        .deck-card.high-rarity-card { border-color: var(--gold-light); box-shadow: 0 0 15px rgba(255, 215, 0, 0.5); }
+        /* ================= 核心：卡牌与 Hover 术语特效 ================= */
+        .kw { position: relative; text-decoration: underline dashed var(--blood-red); cursor: help; font-weight: bold; color: #e5e7eb; }
+        .kw:hover::after { content: attr(data-tip); position: absolute; bottom: 110%; left: 50%; transform: translateX(-50%); background: rgba(10,10,12,0.98); color: var(--gold); padding: 10px 14px; border-radius: 6px; border: 1px solid var(--blood-red); white-space: pre-wrap; width: max-content; max-width: 200px; font-size: 12px; z-index: 999999; font-weight: normal; line-height: 1.5; text-shadow: none; text-align: left; box-shadow: 0 5px 15px rgba(0,0,0,0.8); pointer-events: none;}
         
-        .deck-card .card-cost { width: 26px; height: 26px; font-size: 14px; top: -10px; left: -10px; position: absolute; background: #111; border: 2px solid #888; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; color: #60a5fa; box-shadow: 0 0 5px black; z-index: 5; }
-        .deck-card .card-type { width: 22px; height: 22px; font-size: 11px; top: -6px; right: -6px; position: absolute; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; color: white; box-shadow: 0 0 5px black; z-index: 5;}
-        .deck-card .type-ping { background-color: #4b5563; } 
-        .deck-card .type-ze { background-color: var(--blood-red); }
-        .deck-card .card-name { text-align: center; font-weight: bold; font-size: 15px; margin-top: 5px; padding-bottom: 4px; color: #eee; }
-        .deck-card .card-category { text-align: center; font-size: 11px; color: #888; margin-bottom: 4px; border-bottom: 1px solid #444; padding-bottom: 4px;}
-        .deck-card .card-img { height: 50px; margin: 5px 0; border: 1px dashed #444; font-size: 10px; display: flex; justify-content: center; align-items: center; color: #888; overflow: hidden;}
+        .deck-card, .card { width: 150px; height: 230px; background: linear-gradient(135deg, #222, #111); border: 2px solid #555; border-radius: 8px; position: relative; padding: 10px; box-shadow: 0 5px 10px rgba(0,0,0,0.5); display: flex; flex-direction: column; transition: 0.2s; user-select: none;}
+        .deck-card.mid-rarity-card, .card.mid-rarity-card { border-color: var(--mid-color); box-shadow: 0 0 12px rgba(160, 170, 181, 0.4); }
+        .deck-card.high-rarity-card, .card.high-rarity-card { border-color: var(--gold-light); box-shadow: 0 0 15px rgba(255, 215, 0, 0.5); }
+        .deck-card:hover, .card:hover { z-index: 100 !important; transform: translateY(-10px); }
+        .card:hover { transform: translateY(-40px) scale(1.1); border-color: #aaa; box-shadow: 0 0 20px rgba(255,255,255,0.2); }
+        .card.dragging { cursor: grabbing; transition: none; z-index: 999 !important; opacity: 0.9; box-shadow: 0 20px 40px rgba(0,0,0,0.8); border-color: var(--gold); }
+        .card.disabled { filter: grayscale(100%) brightness(0.5); pointer-events: none; }
         
-        /* 关键修复：卡面描述向左对齐，正常换行，不再堆叠居中 */
-        .deck-card .card-desc { font-size: 11px; color: #aaa; flex: 1; text-align: left; display: block; margin-top: 5px; line-height: 1.4; white-space: normal;}
+        .card-cost { width: 26px; height: 26px; font-size: 14px; top: -10px; left: -10px; position: absolute; background: #111; border: 2px solid #888; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; color: #60a5fa; box-shadow: 0 0 5px black; z-index: 5; }
+        .card-type { width: 22px; height: 22px; font-size: 11px; top: -6px; right: -6px; position: absolute; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; color: white; box-shadow: 0 0 5px black; z-index: 5;}
+        .type-ping { background-color: #4b5563; } 
+        .type-ze { background-color: var(--blood-red); }
+        .card-name { text-align: center; font-weight: bold; font-size: 16px; margin-top: 5px; padding-bottom: 2px; color: #eee; }
+        .card-category { text-align: center; font-size: 11px; color: #888; margin-bottom: 4px; border-bottom: 1px solid #444; padding-bottom: 4px;}
+        .card-img { height: 50px; margin: 5px 0; border: 1px dashed #444; font-size: 10px; display: flex; justify-content: center; align-items: center; color: #888; overflow: hidden;}
+        
+        /* 关键修复：卡面描述不再使用 flex 居中，彻底解决文字堆叠和悬停错乱 */
+        .card-desc { font-size: 12px; color: #aaa; flex: 1; text-align: left; display: block; margin-top: 5px; line-height: 1.4; white-space: normal; overflow: hidden;}
         
         .card-count-badge { position: absolute; top: -10px; right: -10px; background: var(--blood-red); color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; justify-content: center; align-items: center; font-size: 12px; font-weight: bold; border: 2px solid #222; z-index: 10; }
 
@@ -107,9 +125,9 @@
         #gallery-panel .screen-content { background: var(--ink-bg); padding: 40px; overflow-y: auto; width: 100%; height: 100%; }
         .gallery-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 20px; }
         .gallery-section-title { font-size: 24px; color: var(--blood-red); margin-top: 30px; margin-bottom: 25px; font-weight: bold; }
-        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 25px; justify-items: center; }
+        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 25px; justify-items: center; }
 
-        /* ================= 游戏各子界面 ================= */
+        /* ================= 地图与事件 ================= */
         #screen-map .screen-content { background: url('assets/map_bg.png') center/cover, var(--ink-bg); position: relative; }
         .map-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
         .map-line { stroke: #444; stroke-width: 2; stroke-dasharray: 5,5; }
@@ -131,16 +149,11 @@
         .dialog-opt-btn { background: rgba(30,30,35,0.9); border: 1px solid #555; padding: 15px; color: white; font-size: 20px; text-align: center; cursor: pointer; transition: 0.2s; font-family: inherit;}
         .dialog-opt-btn:hover { background: var(--blood-red); border-color: #fff; }
 
-        /* ================= 战斗状态栏与 Hover 术语特效 ================= */
+        /* ================= 战斗状态栏 ================= */
         .status-bar { display: flex; justify-content: center; gap: 5px; margin-top: 5px; height: 24px; pointer-events: auto; }
         .status-icon { position: relative; font-size: 16px; cursor: help; background: rgba(0,0,0,0.6); padding: 2px 6px; border-radius: 4px; border: 1px solid #555; }
         .status-tooltip { visibility: hidden; position: absolute; bottom: 130%; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.95); color: #fff; padding: 6px 12px; border-radius: 4px; border: 1px solid #888; font-size: 12px; white-space: nowrap; z-index: 100; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
         .status-icon:hover .status-tooltip { visibility: visible; opacity: 1; }
-
-        /* 术语 Hover 解析核心样式 */
-        .kw { position: relative; text-decoration: underline dashed var(--blood-red); cursor: help; font-weight: bold; color: #e5e7eb; }
-        .kw:hover::after { content: attr(data-tip); position: absolute; bottom: 110%; left: 50%; transform: translateX(-50%); background: rgba(10,10,12,0.98); color: var(--gold); padding: 10px 14px; border-radius: 6px; border: 1px solid var(--blood-red); white-space: pre-wrap; width: max-content; max-width: 200px; font-size: 12px; z-index: 999999; font-weight: normal; line-height: 1.5; text-shadow: none; text-align: left; box-shadow: 0 5px 15px rgba(0,0,0,0.8); pointer-events: none;}
-        .deck-card:hover { z-index: 100; } 
 
         #screen-combat .screen-content { display: flex; flex-direction: column; background: url('assets/combat_bg.png') center/cover, var(--ink-bg); }
         .combat-top { padding: 10px 40px; display: flex; justify-content: space-between; align-items: center; font-size: 24px; font-weight: bold; }
@@ -160,18 +173,7 @@
         #end-turn-btn.active:hover { box-shadow: 0 0 15px rgba(139,24,24,0.8); }
 
         .hand { display: flex; gap: -20px; justify-content: center; align-items: flex-end; height: 100%; }
-        .card { width: 140px; height: 210px; background: linear-gradient(135deg, #222, #111); border: 2px solid #555; border-radius: 8px; position: relative; padding: 10px; cursor: grab; transition: transform 0.2s, z-index 0s; box-shadow: 0 5px 10px rgba(0,0,0,0.5); user-select: none; display: flex; flex-direction: column; }
-        .card:hover { transform: translateY(-40px) scale(1.1); z-index: 100 !important; border-color: #aaa; box-shadow: 0 0 20px rgba(255,255,255,0.2); }
-        .card.dragging { cursor: grabbing; transition: none; z-index: 999 !important; opacity: 0.9; box-shadow: 0 20px 40px rgba(0,0,0,0.8); border-color: var(--gold); }
-        .card.disabled { filter: grayscale(100%) brightness(0.5); pointer-events: none; }
-        .card-cost { position: absolute; top: -10px; left: -10px; width: 30px; height: 30px; background: #111; border: 2px solid #888; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 18px; font-weight: bold; color: #60a5fa; box-shadow: 0 0 5px black; z-index: 5;}
-        .card-type { position: absolute; top: -5px; right: -5px; width: 24px; height: 24px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 12px; font-weight: bold; color: white; box-shadow: 0 0 5px black; z-index: 5;}
-        .type-ping { background-color: #4b5563; } .type-ze { background-color: var(--blood-red); }
-        .card-name { text-align: center; font-weight: bold; font-size: 15px; margin-top: 5px; padding-bottom: 2px; color: #eee;}
-        .card-img { height: 50px; margin: 5px 0; border: 1px dashed #444; font-size: 12px; overflow:hidden;}
-        /* 战斗内的卡牌文字也应用统一的左对齐文本格式 */
-        .card .card-desc { font-size: 11px; color: #aaa; flex: 1; text-align: left; display: block; margin-top: 5px; line-height: 1.4; white-space: normal;}
-
+        
         .ping-ze-tracker { position: absolute; top: 80px; left: 50%; transform: translateX(-50%); font-size: 30px; letter-spacing: 10px; display: flex; }
         .pz-char { animation: pzPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         @keyframes pzPop { 0% { transform: scale(0); } 100% { transform: scale(1); } }
@@ -213,11 +215,40 @@
         /* ================= 顶级层 ================= */
         #toast { position: fixed; top: 20%; left: 50%; transform: translateX(-50%); background: rgba(139,24,24,0.9); padding: 10px 30px; font-size: 20px; border-radius: 5px; border: 1px solid #ff6b6b; color: white; z-index: 1000; opacity: 0; pointer-events: none; transition: 0.3s; }
         #fxCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; } 
+
+        /* ================= 移动端横屏压缩适配 ================= */
+        @media screen and (max-height: 600px) {
+            :root { --abar-height: 12vh; }
+            .game-title { font-size: 60px; margin-bottom: 20px; }
+            .btn-g { padding: 8px 20px; font-size: 18px; }
+            .saves-container { gap: 20px; }
+            .save-slot { width: 150px; height: 220px; }
+            
+            .deck-card, .card { width: 110px; height: 165px; padding: 6px; border-width: 1px; }
+            .card-name { font-size: 13px; margin-top: 2px; }
+            .card-category { font-size: 9px; margin-bottom: 2px; padding-bottom: 2px; }
+            .card-cost { width: 20px; height: 20px; font-size: 12px; top: -6px; left: -6px; }
+            .card-type { width: 18px; height: 18px; font-size: 9px; top: -4px; right: -4px; }
+            .card-img { height: 35px; margin: 3px 0; }
+            .card-desc { font-size: 10px; line-height: 1.2; }
+            
+            .combat-bottom { height: 160px; padding-bottom: 5px; }
+            .pile { width: 70px; height: 100px; font-size: 14px; bottom: 20px; }
+            #draw-pile { left: 10px; } #discard-pile { right: 10px; }
+            #end-turn-btn { bottom: 130px; right: 10px; padding: 8px 15px; font-size: 14px; }
+            .entity-sprite { width: 100px; height: 140px; }
+            .combat-top { font-size: 16px; padding: 5px 15px; }
+            
+            #info-content, #deck-content, #pile-content { width: 95%; height: 95%; padding: 15px; }
+            .info-col { padding: 10px; }
+            .info-title { font-size: 18px; margin-bottom: 10px; }
+            .attr-item { font-size: 14px; margin-bottom: 10px; }
+            .settlement-title { font-size: 32px; margin-bottom: 15px; }
+        }
     </style>
 </head>
 <body>
 
-    <!-- 新增：竖屏拦截提示 -->
     <div id="orientation-prompt">
         <i class="fa-solid fa-rotate" style="font-size: 50px; margin-bottom: 20px;"></i>
         <h2 style="font-family: 'Ma Shan Zheng', cursive; letter-spacing: 5px; font-size: 32px;">请旋转设备</h2>
@@ -227,7 +258,6 @@
     <canvas id="bgCanvas"></canvas>
     <div class="vignette"></div>
 
-    <!-- ================= 界面 1: 主界面 ================= -->
     <div id="screen-main" class="screen active">
         <div class="game-title">飞白</div>
         <div class="btn-g" onclick="Game.navTo('screen-saves')">开始旅程</div>
@@ -236,7 +266,6 @@
         <div class="btn-g" onclick="Game.showToast('结束运行')">退出旅程</div>
     </div>
 
-    <!-- ================= 界面 2: 回忆/存档 ================= -->
     <div id="screen-saves" class="screen">
         <h2 style="font-size: 40px; margin-bottom: 60px; letter-spacing: 10px;">选择轮回</h2>
         <div class="saves-container">
@@ -254,12 +283,11 @@
     </div>
 
     <div id="pv-overlay">
-        <video id="pv-video" src="assets/PV.mp4" style="width: 80%; max-width: 800px; border: 2px solid #444;" controls></video>
+        <video id="pv-video" src="assets/飞白PV.mp4" style="width: 80%; max-width: 800px; border: 2px solid #444;" controls></video>
         <h1 style="color:white; font-size:30px; letter-spacing:10px; margin-top:20px;">《飞白》世界观 PV</h1>
         <div class="btn-g" style="margin-top:30px;" onclick="Game.skipPV()">跳过 PV</div>
     </div>
 
-    <!-- ================= 界面 3: 流派选择 ================= -->
     <div id="screen-class" class="screen">
         <h2 style="font-size: 40px; margin-bottom: 20px; letter-spacing: 10px;">六道轮回</h2>
         <div class="class-wheel">
@@ -278,14 +306,12 @@
         <div id="class-desc" style="background: rgba(0,0,0,0.8); padding: 20px; border: 1px solid #444; width: 600px; text-align: center; min-height: 80px; white-space: pre-line;">请选择流派</div>
     </div>
 
-    <!-- ================= 全局 Abar 系统 ================= -->
     <div id="abar" style="display: none;">
         <div class="abar-btn" onclick="Game.toggleModal('info-panel')"><i class="fa-solid fa-address-card"></i></div>
         <div style="font-size: 24px; letter-spacing: 10px; color: #888;">冥 府 游 记</div>
         <div class="abar-btn" onclick="Game.toggleModal('settings-panel')"><i class="fa-solid fa-gear"></i></div>
     </div>
 
-    <!-- ================= 个人信息 Modal ================= -->
     <div id="info-panel" class="modal">
         <div id="info-content">
             <div class="close-btn" onclick="Game.toggleModal('info-panel')"><i class="fa-solid fa-xmark"></i></div>
@@ -343,11 +369,10 @@
         </div>
     </div>
 
-    <!-- ================= 卡组详情 / 牌堆 Modal ================= -->
     <div id="deck-panel" class="modal">
         <div id="deck-content" style="width: 80%; height: 80%; background: var(--ink-panel); border: 1px solid #444; border-radius: 12px; position: relative; display: flex; flex-direction: column; padding: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.9);">
             <div class="close-btn" onclick="Game.toggleModal('deck-panel');" title="关闭"><i class="fa-solid fa-xmark"></i></div>
-            <div class="info-title" style="border:none;">卡组残卷 (<span id="deck-detail-count">0</span>)</div>
+            <div class="info-title" style="border:none;">现有卡组残卷 (<span id="deck-detail-count">0</span>)</div>
             <div id="deck-grid" style="flex: 1; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 20px; justify-content: flex-start; align-content: flex-start; padding: 20px 10px;"></div>
         </div>
     </div>
@@ -360,7 +385,6 @@
         </div>
     </div>
 
-    <!-- 设置 Modal -->
     <div id="settings-panel" class="modal">
         <div class="btn-g" onclick="Game.toggleModal('settings-panel')">回到旅程</div>
         <div class="btn-g" onclick="Game.navTo('screen-class'); Game.toggleModal('settings-panel')">重新开始</div>
@@ -369,7 +393,6 @@
         <div class="btn-g" onclick="Game.showToast('退出')">退出旅程</div>
     </div>
 
-    <!-- ================= 三生石 (图鉴) 界面 ================= -->
     <div id="screen-gallery" class="screen">
         <div class="screen-content" style="background: var(--ink-bg); padding: 40px; overflow-y: auto;">
             <div class="gallery-header">
@@ -386,23 +409,19 @@
             <div class="gallery-section-title" style="color: var(--gold-light); text-shadow: 0 0 10px rgba(255,215,0,0.5); border-top: 1px solid #333; padding-top: 30px; margin-top: 30px;">【 高阶绝学 】</div>
             <div class="gallery-grid" id="gallery-high"></div>
 
-            <!-- 新增衍生物区块 (修复要求4) -->
             <div class="gallery-section-title" style="color: #888; border-top: 1px solid #333; padding-top: 30px; margin-top: 30px;">【 衍生物 / 特殊卡牌 】</div>
             <div class="gallery-grid" id="gallery-token"></div>
         </div>
     </div>
 
-    <!-- ================= 界面 4: 地图 ================= -->
     <div id="screen-map" class="screen">
         <div class="screen-content">
             <svg class="map-svg" id="map-svg"></svg>
             <div id="map-nodes-container"></div>
-            <!-- 地图上的返回结算按钮 (仅在结算查阅地图时显示) -->
             <div id="map-return-btn" class="btn-g" onclick="Settlement.returnFromMap()">返回结算界面</div>
         </div>
     </div>
 
-    <!-- ================= 事件界面 ================= -->
     <div id="screen-event" class="screen">
         <div class="screen-content">
             <div class="dialog-box" id="event-dialog" onclick="EventSys.nextDialog()">
@@ -413,7 +432,6 @@
         </div>
     </div>
 
-    <!-- ================= 战斗界面 ================= -->
     <div id="screen-combat" class="screen">
         <div class="screen-content">
             <div class="combat-top">
@@ -447,38 +465,31 @@
         </div>
     </div>
 
-    <!-- ================= 战斗结算界面 ================= -->
     <div id="screen-settlement" class="screen">
         <div class="screen-content">
             <div class="settlement-title">战 胜 强 敌</div>
             
             <div class="settlement-grid">
-                <!-- 1. 钱财 -->
                 <div class="reward-box" id="reward-gold-box">
                     <div class="reward-title">钱财</div>
                     <div class="reward-content" id="reward-gold-content"></div>
                 </div>
-                <!-- 2. 悟性 -->
                 <div class="reward-box" id="reward-wuxing-box">
                     <div class="reward-title">悟性</div>
                     <div class="reward-content" id="reward-wuxing-content"></div>
                 </div>
-                <!-- 3. 卡牌 -->
                 <div class="reward-box" id="reward-card-box">
                     <div class="reward-title" id="reward-card-title">卡牌</div>
                     <div class="reward-content" id="reward-card-content"></div>
                 </div>
-                <!-- 4. 武器 -->
                 <div class="reward-box" id="reward-weapon-box">
                     <div class="reward-title">神兵</div>
                     <div class="reward-content" id="reward-weapon-content"></div>
                 </div>
-                <!-- 5. 法宝 -->
                 <div class="reward-box" id="reward-relic-box">
                     <div class="reward-title">法宝</div>
                     <div class="reward-content" id="reward-relic-content"></div>
                 </div>
-                <!-- 6. 诗句 -->
                 <div class="reward-box" id="reward-poetry-box">
                     <div class="reward-title">诗句</div>
                     <div class="reward-content" id="reward-poetry-content"></div>
@@ -492,11 +503,9 @@
         </div>
     </div>
 
-    <!-- 顶层画布用于卡牌拖拽水墨轨迹 -->
     <canvas id="fxCanvas"></canvas>
     <div id="toast">提示信息</div>
 
-    <!-- ================= 核心 JS 逻辑 ================= -->
     <script>
         const $ = id => document.getElementById(id);
         const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
@@ -533,7 +542,7 @@
             }
         };
 
-        // 术语常数词典 (悬停触发器)
+        // ================= 术语常数词典 (悬停触发器) =================
         const K = {
             GF: `<span class="kw" data-tip="使用后本场战斗有效，且不再出现在本场战斗中，效果持续整场战斗">功法</span>`,
             CS: `<span class="kw" data-tip="本场战斗不会再出现该卡牌">沉沙</span>`,
@@ -544,8 +553,8 @@
             XR: `<span class="kw" data-tip="造成的伤害降低30%">虚弱</span>`,
             YS: `<span class="kw" data-tip="受到的伤害增加50%">易伤</span>`,
             DW: `<span class="kw" data-tip="占用卡组流转空间，不可被打出">黩武</span>`,
-            CSHOU: `<span class="kw" data-tip="抵挡敌方伤害，回合结束时清零。实际量 = 卡面数值 + 角色【御】 + 武器【御】">持守</span>`,
-            SH: `<span class="kw" data-tip="扣除敌方气血。实际量 = 卡面数值 + 角色【力】 + 武器【力】">伤害</span>`,
+            CSHOU: `<span class="kw" data-tip="抵挡敌方伤害，回合结束时清零。&#10;实际量 = 卡面数值 + 角色【御】 + 武器【御】">持守</span>`,
+            SH: `<span class="kw" data-tip="扣除敌方气血。&#10;实际量 = 卡面数值 + 角色【力】 + 武器【力】">伤害</span>`,
             LBMM: `<span class="kw" data-tip="在手牌中加一张黩武，固定抽取三张卡牌">厉兵秣马</span>`
         };
 
@@ -556,18 +565,18 @@
             'c2': { id: 'c2', name: '闪避', cost: 1, type: '仄', typeClass: 'type-ze', desc: `获得0点${K.CSHOU}`, rarity: 'low', cardType: '功卡', effect: () => Combat.addBlock(0) },
             'c3': { id: 'c3', name: '蝶恋花', cost: 0, type: '平', typeClass: 'type-ping', desc: `本回合你的${K.SH}减少3点，获得2点气`, rarity: 'low', cardType: '词牌', effect: () => { State.combat.player.turnDmgMod -= 3; State.energy += 2; } },
             'c4': { id: 'c4', name: '点水', cost: 1, type: '仄', typeClass: 'type-ze', desc: '抽取卡牌', rarity: 'low', cardType: '功卡', effect: () => Combat.draw(1) },
-            'c5': { id: 'c5', name: '绣剑', cost: 0, type: '平', typeClass: 'type-ping', desc: '6力6御', rarity: 'equip', cardType: '装备卡', effect: () => {} },
+            'c5': { id: 'c5', name: '绣剑', cost: 0, type: '平', typeClass: 'type-ping', desc: '6力6防', rarity: 'equip', cardType: '装备卡', effect: () => {} },
             'c6': { id: 'c6', name: '破阵子', cost: 3, type: '仄', typeClass: 'type-ze', desc: `打出你手牌的所有武卡，下回合你不能造成${K.SH}`, rarity: 'mid', cardType: '词牌', effect: () => { Combat.playAllAttacks(); State.combat.player.cantDmgNextTurn = true; } },
             'c7': { id: 'c7', name: '定风波', cost: 3, type: '平', typeClass: 'type-ping', desc: `你失去7点血量，让一名敌人${K.YY}`, rarity: 'high', cardType: '词牌', effect: () => { Combat.takeDmg(7, true); State.combat.enemy.stun = true; Game.showToast('敌人被旋风困住！'); } },
             'c8': { id: 'c8', name: '水调歌头', cost: 2, type: '平', typeClass: 'type-ping', desc: `造成${K.SH}2次，抽取+1卡牌`, rarity: 'mid', cardType: '词牌', effect: () => { Combat.dealDmg(0); setTimeout(()=>Combat.dealDmg(0), 200); Combat.draw(1 + State.agi); } },
-            'c9': { id: 'c9', name: '念奴娇', cost: 2, type: '平', typeClass: 'type-ping', desc: `${K.GF}，每回合开始失去1点生命，从弃牌堆中选择一张卡并打出`, rarity: 'mid', cardType: '词牌', effect: () => { State.combat.player.nianNuJiao = true; Game.showToast('功法发动：念奴娇'); } },
+            'c9': { id: 'c9', name: '念奴娇', cost: 2, type: '平', typeClass: 'type-ping', desc: `${K.GF}，每回合开始失去1点生命，从弃牌堆打出1卡`, rarity: 'mid', cardType: '词牌', effect: () => { State.combat.player.nianNuJiao = true; Game.showToast('功法发动：念奴娇'); } },
             'c10': { id: 'c10', name: '满江红', cost: 0, type: '平', typeClass: 'type-ping', desc: `打出后进入${K.CS}，抽取卡牌，本回合${K.SH}翻倍，受到的${K.SH}也翻倍`, rarity: 'mid', cardType: '词牌', effect: () => { Combat.draw(1); State.combat.player.dmgDouble = true; State.combat.player.takeDmgDouble = true; } },
             
             // [ 11-21: 低阶残卷-补充 ]
             'c11': { id: 'c11', name: '习武', cost: 0, type: '仄', typeClass: 'type-ze', desc: '本回合获得1点力，1点御', rarity: 'low', cardType: '功卡', effect: () => { State.combat.player.turnStr += 1; State.combat.player.turnDef += 1; Game.updateUI(); } },
             'c12': { id: 'c12', name: '刺击', cost: 1, type: '平', typeClass: 'type-ping', desc: `对所有敌人造成-1点${K.SH}`, isAttack: true, rarity: 'low', cardType: '武卡', effect: () => Combat.dealDmg(-1) },
             'c13': { id: 'c13', name: '舞剑', cost: 1, type: '仄', typeClass: 'type-ze', desc: `造成1点${K.SH}，${K.FX}抽取1张卡牌`, isAttack: true, rarity: 'low', cardType: '武卡', effect: () => { Combat.dealDmg(1); Combat.draw(1); } },
-            'c14': { id: 'c14', name: '挂剑', cost: 1, type: '仄', typeClass: 'type-ze', desc: `造成1点${K.SH}，选择一张牌放入${K.CS}堆`, isAttack: true, rarity: 'low', cardType: '武卡', effect: () => { Combat.dealDmg(1); Game.showToast('触发沉沙'); } },
+            'c14': { id: 'c14', name: '挂剑', cost: 1, type: '仄', typeClass: 'type-ze', desc: `造成1点${K.SH}，选择一张牌放入${K.CS}`, isAttack: true, rarity: 'low', cardType: '武卡', effect: () => { Combat.dealDmg(1); Game.showToast('触发沉沙'); } },
             'c15': { id: 'c15', name: '撩剑', cost: 1, type: '仄', typeClass: 'type-ze', desc: `${K.FX}造成4点${K.SH}3次`, isAttack: true, rarity: 'low', cardType: '武卡', effect: () => { Combat.dealDmg(4, true); setTimeout(()=>Combat.dealDmg(4, true), 150); setTimeout(()=>Combat.dealDmg(4, true), 300); } },
             'c16': { id: 'c16', name: '抗衡', cost: 1, type: '平', typeClass: 'type-ping', desc: `获得3点${K.CSHOU}`, rarity: 'low', cardType: '功卡', effect: () => Combat.addBlock(3) },
             'c17': { id: 'c17', name: '斡旋', cost: 0, type: '平', typeClass: 'type-ping', desc: `${K.FX}抽取1张卡牌`, rarity: 'low', cardType: '功卡', effect: () => Combat.draw(1) },
@@ -579,15 +588,15 @@
             // [ 22-40: 中阶秘籍 ]
             'c22': { id: 'c22', name: '歃血为盟', cost: 2, type: '平', typeClass: 'type-ping', desc: `打出后进入${K.CS}，失去1点血量，对所有敌人给予三层${K.YS}和${K.XR}`, rarity: 'mid', cardType: '功卡', effect: () => { Combat.takeDmg(1, true); State.combat.enemy.weak += 3; State.combat.enemy.vuln += 3; Game.updateUI(); } },
             'c23': { id: 'c23', name: '一转攻势', cost: 1, type: '仄', typeClass: 'type-ze', desc: `${K.GF}，你每失去3点力，获得1点力`, rarity: 'mid', cardType: '功卡', effect: () => { Game.showToast('一转攻势生效'); } },
-            'c24': { id: 'c24', name: '束手就擒', cost: 1, type: '平', typeClass: 'type-ping', desc: `打出后进入${K.CS}，你本回合失去2点力，所有敌人失去6点力`, rarity: 'mid', cardType: '功卡', effect: () => { State.combat.player.turnStr -= 2; Game.showToast('敌我力量削弱'); } },
+            'c24': { id: 'c24', name: '束手就擒', cost: 1, type: '平', typeClass: 'type-ping', desc: `打出后进入${K.CS}，本回合失去2点力，敌人失去6点力`, rarity: 'mid', cardType: '功卡', effect: () => { State.combat.player.turnStr -= 2; Game.showToast('敌我力量削弱'); } },
             'c25': { id: 'c25', name: '厉兵秣马', cost: 0, type: '仄', typeClass: 'type-ze', desc: `在手牌中加一张${K.DW}，${K.FX}抽取三张卡牌`, rarity: 'mid', cardType: '功卡', effect: () => { State.combat.hand.push('c_duwu'); Combat.draw(3); } },
             'c26': { id: 'c26', name: '万夫莫开', cost: 2, type: '平', typeClass: 'type-ping', desc: `获得8点${K.CSHOU}，给所有敌人一层${K.XR}`, rarity: 'mid', cardType: '功卡', effect: () => { Combat.addBlock(8); State.combat.enemy.weak += 1; Game.updateUI(); } },
             'c27': { id: 'c27', name: '摧枯拉朽', cost: 2, type: '仄', typeClass: 'type-ze', desc: `保留，造成5点${K.SH}，敌人每失去10%的血量，此牌的${K.SH}增加3`, isAttack: true, rarity: 'mid', cardType: '武卡', effect: () => { let d = 5 + Math.floor((1 - State.combat.enemy.hp/State.combat.enemy.maxHp)*10)*3; Combat.dealDmg(d); } },
-            'c28': { id: 'c28', name: '白虹贯日', cost: 1, type: '平', typeClass: 'type-ping', desc: `打出后进入${K.CS}，造成5点${K.SH}，对血量最高的敌人造成双倍${K.SH}`, isAttack: true, rarity: 'mid', cardType: '武卡', effect: () => Combat.dealDmg(10) },
+            'c28': { id: 'c28', name: '白虹贯日', cost: 1, type: '平', typeClass: 'type-ping', desc: `打出后进入${K.CS}，造成5点${K.SH}，对血量最高敌人造成双倍${K.SH}`, isAttack: true, rarity: 'mid', cardType: '武卡', effect: () => Combat.dealDmg(5) },
             'c29': { id: 'c29', name: '峨眉剑法', cost: 1, type: '仄', typeClass: 'type-ze', desc: `${K.GF}，你每打出3张武卡，${K.FX}抽取1张卡牌`, rarity: 'mid', cardType: '功卡', effect: () => { State.combat.player.emei = true; Game.showToast('峨眉剑法生效'); } },
             'c30': { id: 'c30', name: '以逸待劳', cost: 2, type: '平', typeClass: 'type-ping', desc: `获得5点${K.CSHOU}，下回合额外获得2点气`, rarity: 'mid', cardType: '功卡', effect: () => { Combat.addBlock(5); State.combat.player.nextTurnEnergy = 2; } },
             'c31': { id: 'c31', name: '一剑封喉', cost: 2, type: '平', typeClass: 'type-ping', desc: `造成17点${K.SH}`, isAttack: true, rarity: 'mid', cardType: '武卡', effect: () => Combat.dealDmg(17) },
-            'c32': { id: 'c32', name: '波诡云谲', cost: 1, type: '平', typeClass: 'type-ping', desc: `打出后进入${K.CS}，将1张随机的武卡加入到你的手牌，这张武卡本回合耗气为0`, rarity: 'mid', cardType: '功卡', effect: () => { Combat.draw(1); } },
+            'c32': { id: 'c32', name: '波诡云谲', cost: 1, type: '平', typeClass: 'type-ping', desc: `打出后进入${K.CS}，随机1张武卡加入手牌，其本回合耗气为0`, rarity: 'mid', cardType: '功卡', effect: () => { Combat.draw(1); } },
             'c33': { id: 'c33', name: '流星落月', cost: 1, type: '仄', typeClass: 'type-ze', desc: `${K.GF}，对敌人的溢出${K.SH}转移到一名随机的其他敌人身上`, rarity: 'mid', cardType: '功卡', effect: () => { Game.showToast('流星落月生效'); } },
             'c34': { id: 'c34', name: '坚壁清野', cost: 2, type: '仄', typeClass: 'type-ze', desc: `${K.GF}，你可以跨回合保留15点${K.CSHOU}`, rarity: 'mid', cardType: '功卡', effect: () => { State.combat.player.keepBlock = 15; Game.showToast('坚壁清野生效'); } },
             'c35': { id: 'c35', name: '付之一炬', cost: 1, type: '仄', typeClass: 'type-ze', desc: `将一张手牌放入${K.CS}，抽取1张卡牌`, rarity: 'mid', cardType: '功卡', effect: () => { Combat.draw(1); } },
@@ -599,7 +608,7 @@
             
             // [ 41-50: 高阶绝学 ]
             'c41': { id: 'c41', name: '万剑归宗', cost: 3, type: '平', typeClass: 'type-ping', desc: `打出后进入${K.CS}，打出你手牌的所有武卡，同时加入他们的${K.JX}到你的手牌，耗气为0`, rarity: 'high', cardType: '功卡', effect: () => Combat.playAllAttacks() },
-            'c42': { id: 'c42', name: '城焚烬余', cost: 2, type: '平', typeClass: 'type-ping', desc: `打出后进入${K.CS}，将所有手牌放入${K.CS}，然后对所有敌人造成-3点${K.SH}x次(x为沉沙牌数)`, isAttack: true, rarity: 'high', cardType: '武卡', effect: () => { Combat.dealDmg(-3); setTimeout(()=>Combat.dealDmg(-3), 200); } },
+            'c42': { id: 'c42', name: '城焚烬余', cost: 2, type: '平', typeClass: 'type-ping', desc: `打出后进入${K.CS}，手牌全部放入${K.CS}，对所有敌人造成-3点${K.SH}X次(X为沉沙牌数)`, isAttack: true, rarity: 'high', cardType: '武卡', effect: () => { Combat.dealDmg(-3); setTimeout(()=>Combat.dealDmg(-3), 200); } },
             'c43': { id: 'c43', name: '折戟沉沙', cost: 1, type: '平', typeClass: 'type-ping', desc: `打出后进入${K.CS}，将${K.CS}中的至多两张卡牌加入你的手牌`, rarity: 'high', cardType: '功卡', effect: () => Combat.draw(2) },
             'c44': { id: 'c44', name: '唇枪舌剑', cost: 3, type: '仄', typeClass: 'type-ze', desc: `${K.GF}，你每打出一张仄牌，就对随机一名敌人造成-5点${K.SH}`, rarity: 'high', cardType: '功卡', effect: () => { State.combat.player.chunQiang = true; Game.showToast('唇枪舌剑生效'); } },
             'c45': { id: 'c45', name: '固若金汤', cost: 3, type: '平', typeClass: 'type-ping', desc: `${K.GF}，你每打出一张平牌，获得-4点${K.CSHOU}`, rarity: 'high', cardType: '功卡', effect: () => { State.combat.player.guRuo = true; Game.showToast('固若金汤生效'); } },
@@ -682,7 +691,7 @@
                 $('info-wuxing').innerText = State.wuxing.toFixed(1);
                 $('info-agi').innerText = State.agi;
                 
-                $('info-deck-count').innerText = `共 ${State.deck.length} 张残卷`;
+                $('info-deck-count').innerText = State.deck.length; // 修复 Bug: 显示卡组总数
                 $('info-weapon').innerHTML = State.weapon ? `<span style="color:var(--gold); font-weight:bold;">${State.weapon}</span>` : '空缺';
                 $('info-poetry').innerHTML = State.poetry.length > 0 ? State.poetry.map(p => `<div>「${p}」</div>`).join('') : '暂无搜集';
                 $('info-relics').innerHTML = State.relics.length ? State.relics.map(r => `<div style="background:#111; padding:8px 15px; border:1px solid #555; border-radius:5px; color:var(--gold); font-size:14px;">${r}</div>`).join('') : '空空如也';
@@ -702,7 +711,7 @@
                 Game.toggleModal('deck-panel');
                 const grid = $('deck-grid');
                 grid.innerHTML = '';
-                $('deck-detail-count').innerText = State.deck.length;
+                $('deck-detail-count').innerText = State.deck.length; // 此处已修正 HTML ID 绑定
 
                 State.deck.forEach(cId => {
                     grid.appendChild(Game.createCardDOM(CardDB[cId]));
@@ -782,7 +791,7 @@
                     }
                 }
                 
-                Settlement.currentRewards.weapon = isElite ? '【绣剑】' : null; // 契合 PDF 设定
+                Settlement.currentRewards.weapon = isElite ? '【绣剑】' : null;
                 Settlement.currentRewards.relic = isElite ? '【八卦护心镜】' : null;
                 const poetryChance = isElite ? 0.8 : 0.3;
                 Settlement.currentRewards.poetry = Math.random() < poetryChance ? '感时花溅泪' : null;
@@ -1181,6 +1190,15 @@
                 if(State.combat.player.takeDmgDouble && !ignoreBlock) dmg *= 2;
                 
                 if(!ignoreBlock) {
+                    while(dmg > 0) {
+                        const dodgeIdx = State.combat.hand.indexOf('c2'); // 闪避检测
+                        if(dodgeIdx !== -1) {
+                            State.combat.hand.splice(dodgeIdx, 1); State.combat.discardPile.push('c2');
+                            dmg -= 5; Game.showToast('闪避生效！抵消 5 伤'); Combat.floatText('player', '闪避', 'block');
+                        } else break;
+                    }
+                    if(dmg <= 0) { Combat.renderHand(); return; }
+
                     if(State.combat.player.block > 0) {
                         if(State.combat.player.block >= dmg) { State.combat.player.block -= dmg; dmg = 0; Combat.floatText('player', '持守', 'block'); }
                         else { dmg -= State.combat.player.block; State.combat.player.block = 0; }
