@@ -1160,6 +1160,7 @@
                 });
             },
             dealDmg: (base, isFixed = false) => {
+                if(!State.combat.inCombat) return;
                 AudioSys.playSFX('assets/sfx_hit.mp3'); 
                 if (State.combat.player.cantDmg) { Game.showToast("止战：本回合无法造成伤害！"); return; }
                 
@@ -1183,6 +1184,7 @@
                 $('screen-combat').classList.add('hit-stop');
                 $('enemy').classList.add('shake');
                 setTimeout(() => { $('screen-combat').classList.remove('hit-stop'); $('enemy').classList.remove('shake'); }, 300);
+                Combat.checkDeath();
             },
             takeDmg: (dmg, ignoreBlock = false) => {
                 // 自身易伤增伤
