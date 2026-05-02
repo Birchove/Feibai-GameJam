@@ -183,7 +183,7 @@
         /* ================= 战斗结算界面 ================= */
         #screen-settlement .screen-content { 
             display: flex; flex-direction: column; align-items: center; 
-            background: url('../assets/event_bg.png') center/cover, var(--ink-bg); 
+            background: url('../assets/event_bg.png') center/cover, var(--ink-bg);
             padding: 40px 40px 80px 40px; overflow-y: auto; justify-content: flex-start;
         }
         .settlement-title { font-size: 48px; color: var(--blood-red); margin-bottom: 30px; letter-spacing: 10px; text-shadow: 0 0 15px rgba(139,24,24,0.8); flex-shrink: 0; }
