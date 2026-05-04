@@ -21,6 +21,8 @@ const Combat = {
                 e.id = enemyData.id; e.name = enemyData.name; e.hp = e.maxHp = enemyData.hp;
                 e.turnCounter = 1; e.weak = 0; e.vuln = 0; e.stun = false; e.dataKey = fightId;
                 $('enemy-sprite').style.background = enemyData.sprite;
+                // 开发者模式：敌人 HP 设为 10000，便于测试伤害
+                if (State._dev) { e.hp = e.maxHp = 10000; }
                 
                 Game.navTo('screen-combat');
                 Game.updateUI();
@@ -435,7 +437,20 @@ const Combat = {
             dealDmg: (base, isFixed = false) => {
                 AudioSys.playSFX('assets/sfx_hit.mp3'); 
                 if (State.combat.player.cantDmg) { Game.showToast("止战：本回合无法造成伤害！"); return; }
-                
+
+                // 开发者模式 · 一击必杀：直接清空敌人 HP
+                if (State._dev && State._devOneShot) {
+                    const killAmt = State.combat.enemy.hp;
+                    if (killAmt > 0) {
+                        State.combat.enemy.hp = 0;
+                        Combat.floatText('enemy', `-${killAmt}`, 'crit');
+                        $('screen-combat').classList.add('hit-stop');
+                        $('enemy').classList.add('shake');
+                        setTimeout(() => { $('screen-combat').classList.remove('hit-stop'); $('enemy').classList.remove('shake'); }, 300);
+                    }
+                    return;
+                }
+
                 const p = State.combat.player;
                 // 计算：基础 + 角色力 + 战斗力 + 本回合力 + 武器力 + 本回合伤害修饰；若固定则仅算基础
                 let dmg = isFixed ? base : base + State.str + (p.combatStr || 0) + (p.turnStr || 0) + (p.wStr || 0);
@@ -471,7 +486,10 @@ const Combat = {
                 }
                 
                 if(dmg > 0) {
-                    State.hp = Math.max(0, State.hp - dmg);
+                    let nextHp = State.hp - dmg;
+                    // 开发者模式 · 不死：HP 最低保留 1
+                    if (State._dev && State._devGod && nextHp < 1) nextHp = 1;
+                    State.hp = Math.max(0, nextHp);
                     Combat.floatText('player', `-${dmg}`, 'crit');
                     $('player').classList.add('shake'); setTimeout(()=>$('player').classList.remove('shake'), 300);
                 }
@@ -562,13 +580,17 @@ const Combat = {
             },
             enemyTurn: () => {
                 const e = State.combat.enemy;
-                if(e.stun) { Game.showToast('敌人囿于旋风中无法行动！'); }
-                else {
+                // 开发者模式 · 跳过敌方回合（敌人 turnCounter 不递增，意图序列保持原节奏）
+                if (State._dev && State._devSkipEnemy) {
+                    Game.showToast('开发者模式：敌方回合已跳过');
+                } else if (e.stun) {
+                    Game.showToast('敌人囿于旋风中无法行动！');
+                } else {
                     const enemyData = EnemyDB[e.dataKey] || Object.values(EnemyDB).find(data => data.id === e.id);
                     if(enemyData) enemyData.act(e);
                 }
                 
-                e.turnCounter++;
+                if (!(State._dev && State._devSkipEnemy)) e.turnCounter++;
                 if(State.hp > 0 && e.hp > 0) { State.combat.turn++; setTimeout(Combat.startTurn, 1000); }
             },
             updateStatusBar: () => {

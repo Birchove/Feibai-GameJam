@@ -343,3 +343,76 @@
             .pz-char { width: 34px; height: 34px; font-size: 20px; }
             .ping-ze-tracker { font-size: 20px; gap: 10px; top: 60px; }
         }
+
+        /* —— 开发者模式 —— */
+        #abar-title.dev-tap-flash { animation: devTapFlash 0.18s ease; }
+        @keyframes devTapFlash {
+            0%   { color: #fff; text-shadow: 0 0 12px var(--gold-light); }
+            100% { color: #888; text-shadow: none; }
+        }
+        #dev-abar-btn { color: var(--gold-light); }
+
+        #dev-confirm.modal { z-index: 1000; }
+        .dev-confirm-box {
+            background: var(--ink-panel, #15151a);
+            border: 1px solid var(--gold);
+            border-radius: 10px;
+            padding: 30px 40px;
+            min-width: 420px;
+            max-width: 560px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.85), 0 0 30px rgba(184,134,11,0.25) inset;
+            text-align: center;
+        }
+        .dev-confirm-title { color: var(--gold-light); font-size: 24px; letter-spacing: 4px; margin-bottom: 14px; font-weight: bold; }
+        .dev-confirm-text { color: #ccc; font-size: 15px; line-height: 1.7; margin-bottom: 22px; }
+        .dev-confirm-btns { display: flex; gap: 24px; justify-content: center; }
+
+        #dev-panel.modal { z-index: 999; }
+        .dev-panel-box {
+            width: 80%;
+            max-width: 980px;
+            height: 86%;
+            background: var(--ink-panel, #15151a);
+            border: 1px solid var(--gold);
+            border-radius: 10px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            padding: 28px 30px 22px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.9), 0 0 30px rgba(184,134,11,0.18) inset;
+        }
+        .dev-panel-title {
+            color: var(--gold-light);
+            font-size: 22px;
+            letter-spacing: 6px;
+            text-align: center;
+            border-bottom: 1px solid #333;
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+            font-weight: bold;
+        }
+        .dev-panel-body { flex: 1; overflow-y: auto; padding-right: 8px; }
+        .dev-panel-body::-webkit-scrollbar { width: 8px; }
+        .dev-panel-body::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+
+        .dev-section { border: 1px solid #2a2a30; border-radius: 6px; padding: 12px 16px; margin-bottom: 14px; background: rgba(20,20,25,0.6); }
+        .dev-section-title { color: var(--gold); font-size: 16px; font-weight: bold; letter-spacing: 2px; margin-bottom: 10px; border-bottom: 1px dashed #333; padding-bottom: 6px; }
+        .dev-section.dev-disabled { opacity: 0.7; }
+        .dev-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 6px 0; color: #ddd; font-size: 14px; }
+        .dev-row label { color: #aaa; font-size: 13px; min-width: 64px; }
+        .dev-toggle-row label { min-width: auto; color: #ddd; cursor: pointer; }
+        .dev-row input[type="text"], .dev-row input[type="number"], .dev-row select {
+            background: #0d0d12;
+            border: 1px solid #333;
+            color: #eee;
+            font: inherit;
+            padding: 4px 8px;
+            border-radius: 4px;
+            min-width: 100px;
+            max-width: 280px;
+        }
+        .dev-row input[type="number"] { width: 90px; }
+        .dev-row input:focus, .dev-row select:focus { outline: none; border-color: var(--gold); }
+        .dev-row .dev-btn { padding: 6px 14px !important; font-size: 14px !important; border: 1px solid #444; border-radius: 4px; cursor: pointer; }
+        .dev-row .dev-btn:hover { transform: none; border-bottom: 1px solid var(--gold); }
+        .dev-mute { color: #888; font-size: 12px; }

@@ -68,7 +68,7 @@
 
     <div id="abar" style="display: none;">
         <div class="abar-btn" onclick="Game.toggleModal('info-panel')"><i class="fa-solid fa-address-card"></i></div>
-        <div style="font-size: 24px; letter-spacing: 10px; color: #888;">冥 府 游 记</div>
+        <div id="abar-title" style="font-size: 24px; letter-spacing: 10px; color: #888; user-select: none; cursor: default;" onclick="DevSys && DevSys.tap && DevSys.tap()">冥 府 游 记</div>
         <div class="abar-btn" onclick="Game.toggleModal('settings-panel')"><i class="fa-solid fa-gear"></i></div>
     </div>
 
@@ -295,5 +295,6 @@
     <script src="js/systems/settlement.js"></script>
     <script src="js/systems/map.js"></script>
     <script src="js/systems/fx.js"></script>
+    <script src="js/systems/dev.js"></script>
 </body>
 </html>
