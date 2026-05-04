@@ -56,9 +56,10 @@ const Game = {
                 State.class = cls; State.hp = init.hp; State.maxHp = init.maxHp; State.gold = 100; State.mapNodeIndex = 0; State.relics = [];
                 State.str = init.str; State.def = init.def; State.agi = init.agi;
                 State.weapon = ''; State.poetry = []; State.wuxing = init.wuxing; 
-                // 流派开局自带诗句（剑：吴钩霜雪明）
-                if (cls === '剑' && typeof PoetryDB !== 'undefined' && PoetryDB.wuGouShuangXueMing) {
-                    State.poetry.push('wuGouShuangXueMing');
+                // 流派开局自带诗句与武器（剑：吴钩霜雪明 + 绣剑）
+                if (cls === '剑') {
+                    if (typeof PoetryDB !== 'undefined' && PoetryDB.wuGouShuangXueMing) State.poetry.push('wuGouShuangXueMing');
+                    if (typeof WeaponDB !== 'undefined' && WeaponDB.xiuJian) State.weapon = 'xiuJian';
                 }
                 // 严格遵循初始卡组设定
                 State.deck = ['c1','c1','c1','c1', 'c2','c2','c2','c2', 'c3', 'c4']; 
@@ -70,13 +71,41 @@ const Game = {
                 $('info-class').innerText = State.class || '无';
                 $('info-hp').innerText = `${State.hp}/${State.maxHp}`;
                 $('info-gold').innerText = State.gold;
-                $('info-str').innerText = State.str;
-                $('info-def').innerText = State.def;
+                // 武器属性加成（仅当装备武器时）
+                const weaponData = (State.weapon && typeof WeaponDB !== 'undefined') ? WeaponDB[State.weapon] : null;
+                const wStr = weaponData ? (weaponData.str || 0) : 0;
+                const wDef = weaponData ? (weaponData.def || 0) : 0;
+                // 战斗中可读到 combatStr / combatDef
+                const inCombat = !!(State.combat && State.combat.inCombat);
+                const cStr = inCombat ? (State.combat.player.combatStr || 0) : 0;
+                const cDef = inCombat ? (State.combat.player.combatDef || 0) : 0;
+                const renderAttr = (base, w, c) => {
+                    const total = base + w + c;
+                    const extra = (w || c) ? ` <span style="color:var(--gold); font-size:14px;">(${base}${w ? '+'+w : ''}${c ? (c>=0?'+':'')+c : ''})</span>` : '';
+                    return `${total}${extra}`;
+                };
+                $('info-str').innerHTML = renderAttr(State.str, wStr, cStr);
+                $('info-def').innerHTML = renderAttr(State.def, wDef, cDef);
                 $('info-wuxing').innerText = State.wuxing.toFixed(1);
                 $('info-agi').innerText = State.agi;
                 
                 $('info-deck-count').innerText = State.deck.length; // 修复 Bug: 显示卡组总数
-                $('info-weapon').innerHTML = State.weapon ? `<span style="color:var(--gold); font-weight:bold;">${State.weapon}</span>` : '空缺';
+                // 中心栏：角色基础力/御（解释左侧 11(5+6) 中的 5）
+                const baseStrEl = $('info-base-str'); if (baseStrEl) baseStrEl.innerText = State.str;
+                const baseDefEl = $('info-base-def'); if (baseDefEl) baseDefEl.innerText = State.def;
+                // 武器栏：名字 + 力/防 属性
+                const weaponName = weaponData ? weaponData.name : (State.weapon || '');
+                if (weaponData) {
+                    $('info-weapon').innerHTML = `
+                        <div style="font-family:'Ma Shan Zheng',cursive; font-size:24px; color:var(--gold-light); letter-spacing:2px; text-shadow:0 0 6px rgba(184,134,11,0.5);">${weaponName}</div>
+                        <div style="margin-top:10px; display:flex; gap:14px; font-size:15px;">
+                            <span style="color:#aaa;">力 <span style="color:#fff; font-weight:bold;">${weaponData.str || 0}</span></span>
+                            <span style="color:#aaa;">御 <span style="color:#fff; font-weight:bold;">${weaponData.def || 0}</span></span>
+                        </div>
+                    `;
+                } else {
+                    $('info-weapon').innerHTML = weaponName ? `<span style="color:var(--gold); font-weight:bold;">${weaponName}</span>` : '空缺';
+                }
                 const poetryBox = $('info-poetry');
                 poetryBox.innerHTML = '';
                 if (State.poetry.length > 0) {
@@ -131,6 +160,19 @@ const Game = {
                     }
                 });
             },
+            // 渲染卡面描述：把 {V_ATK} / {V_DEF} 占位替换为带 hover 计算过程的动态数值
+            renderCardDesc: (cd) => {
+                let desc = cd.desc || '';
+                if (desc.indexOf('{V_ATK}') !== -1 && cd.atkBase !== undefined && typeof Combat !== 'undefined' && Combat.previewAtk) {
+                    const { value, tip } = Combat.previewAtk(cd);
+                    desc = desc.split('{V_ATK}').join(`<span class="kw" data-tip="${tip}">${value}</span>`);
+                }
+                if (desc.indexOf('{V_DEF}') !== -1 && cd.defBase !== undefined && typeof Combat !== 'undefined' && Combat.previewDef) {
+                    const { value, tip } = Combat.previewDef(cd);
+                    desc = desc.split('{V_DEF}').join(`<span class="kw" data-tip="${tip}">${value}</span>`);
+                }
+                return desc;
+            },
             createCardDOM: (cd, count = 0) => {
                 const el = document.createElement('div');
                 el.className = 'deck-card';
@@ -141,7 +183,7 @@ const Game = {
                     <div class="card-name">${cd.name}</div>
                     <div class="card-category">${cd.cardType}</div>
                     <div class="asset-placeholder card-img" style="background: url('assets/card_${cd.id}.png') center/cover, #222; border:none;"></div>
-                    <div class="card-desc">${cd.desc}</div>
+                    <div class="card-desc">${Game.renderCardDesc(cd)}</div>
                 `;
                 el.innerHTML = html;
                 bindKeywordTooltips(el);

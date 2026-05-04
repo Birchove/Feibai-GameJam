@@ -23,7 +23,11 @@ const DragSys = {
                 const inHitZone = DragSys.currPt.y < window.innerHeight * 0.6; 
                 
                 const cd = DragSys.cardData;
-                if(inHitZone && State.energy >= cd.cost && State.combat.isPlayerTurn && !State.combat.player.cantPlay) { 
+                // 取手牌项的有效 cost（镜像等可能通过 costOverride 使其为 0）
+                const handItemRaw = (State.combat && State.combat.hand) ? State.combat.hand[DragSys.index] : null;
+                const handItem = handItemRaw ? (typeof handItemRaw === 'string' ? { cardId: handItemRaw } : handItemRaw) : null;
+                const effCost = (handItem && handItem.costOverride !== undefined) ? handItem.costOverride : cd.cost;
+                if(inHitZone && State.energy >= effCost && State.combat.isPlayerTurn && !State.combat.player.cantPlay) { 
                     el.style.display = 'none'; 
                     Combat.playCard(DragSys.index); 
                 } else {

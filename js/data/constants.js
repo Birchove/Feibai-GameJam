@@ -8,7 +8,8 @@ const K = {
             XR: `<span class="kw" data-tip="造成的伤害降低30%">虚弱</span>`,
             YS: `<span class="kw" data-tip="受到的伤害增加50%">易伤</span>`,
             DW: `<span class="kw" data-tip="占用卡组流转空间，不可被打出">黩武</span>`,
-            CSHOU: `<span class="kw" data-tip="抵挡敌方伤害，回合结束时清零。&#10;实际量 = 卡面数值 + 角色【御】 + 武器【御】">持守</span>`,
-            SH: `<span class="kw" data-tip="扣除敌方气血。&#10;实际量 = 卡面数值 + 角色【力】 + 武器【力】">伤害</span>`,
+            BL: `<span class="kw" data-tip="本回合结束时不入弃牌堆，留在手牌中">保留</span>`,
+            CSHOU: `持守`,
+            SH: `伤害`,
             LBMM: `<span class="kw" data-tip="在手牌中加一张黩武，固定抽取三张卡牌">厉兵秣马</span>`
         };

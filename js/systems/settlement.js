@@ -113,7 +113,7 @@ const Settlement = {
                 }
 
                 Settlement.createBox('weapon', r.weapon ? `获得 ${r.weapon.name}` : null, () => {
-                    State.weapon = r.weapon.name; Game.showToast(`装备武器：${r.weapon.name}`);
+                    State.weapon = r.weapon.id; Game.showToast(`装备武器：${r.weapon.name}`);
                 });
 
                 Settlement.createBox('relic', r.relic ? `获得 ${r.relic.name}` : null, () => {

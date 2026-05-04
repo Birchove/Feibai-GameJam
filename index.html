@@ -98,8 +98,11 @@
             <div class="info-col" style="padding: 0; display: flex; justify-content: center; align-items: center; background-color: #1a1a20; position: relative;">
                 <div style="position: absolute; top:0; left:0; width:100%; height:100%; background: url('assets/info_character.png') center/cover no-repeat; opacity: 0.9;"></div>
                 <div style="color: #444; font-size: 24px; font-weight: bold; z-index: 1; pointer-events: none;">[ 人体形貌 ]</div>
-                <div style="position:absolute; bottom:30px; z-index: 2; background:rgba(10,10,12,0.85); padding:8px 30px; border-radius:30px; border:1px solid #444; font-size: 18px; box-shadow: 0 5px 15px rgba(0,0,0,0.8); white-space: nowrap;">
-                    <span style="color:#aaa;">气血: </span><span id="info-hp" style="color:var(--blood-red); font-weight:bold; margin-left:5px;">50/50</span>
+                <div style="position:absolute; bottom:30px; z-index: 2; background:rgba(10,10,12,0.85); padding:8px 24px; border-radius:30px; border:1px solid #444; font-size: 16px; box-shadow: 0 5px 15px rgba(0,0,0,0.8); white-space: nowrap; display:flex; gap:18px; align-items:center;">
+                    <span><span style="color:#aaa;">气血</span> <span id="info-hp" style="color:var(--blood-red); font-weight:bold; margin-left:5px;">50/50</span></span>
+                    <span style="color:#444;">|</span>
+                    <span><span style="color:#aaa;">力</span> <span id="info-base-str" style="color:#fff; font-weight:bold; margin-left:5px;">5</span></span>
+                    <span><span style="color:#aaa;">御</span> <span id="info-base-def" style="color:#fff; font-weight:bold; margin-left:5px;">5</span></span>
                 </div>
             </div>
             
@@ -108,21 +111,21 @@
                     <span style="font-size: 20px; color: #aaa;">钱财: </span><span id="info-gold" style="font-size:26px; color: var(--gold); font-weight: bold; margin-left:10px;">100</span>
                 </div>
 
-                <div style="display: flex; gap: 20px; margin-bottom: 20px; flex: 1;">
-                    <div class="equip-slot">
-                        <div class="equip-title">武器</div>
-                        <div id="info-weapon" class="equip-box" style="flex: 1; height: 100%;" onclick="Game.showToast('选择武器...')">空</div>
-                    </div>
-                    <div class="equip-slot">
-                        <div class="equip-title" style="color: var(--blood-red); font-weight:bold;">诗句残篇</div>
-                        <div id="info-poetry" class="equip-box" style="flex: 1; height: 100%; flex-direction:column; padding:10px; font-size:16px; color:#ddd; font-family:'Ma Shan Zheng',cursive; line-height:1.6; text-align:center;">空</div>
-                    </div>
+                <div class="equip-slot" style="flex: 1; margin-bottom: 20px; display: flex; flex-direction: column;">
+                    <div class="equip-title" style="color: var(--blood-red); font-weight:bold;">诗句残篇</div>
+                    <div id="info-poetry" class="equip-box" style="flex: 1; height: 100%; flex-direction:column; padding:10px; font-size:16px; color:#ddd; font-family:'Ma Shan Zheng',cursive; line-height:1.6; text-align:center;">空</div>
                 </div>
 
-                <div class="equip-slot" style="flex: 1;">
-                    <div class="equip-title" style="align-self: flex-start;">法宝</div>
-                    <div id="info-relics" class="equip-box" style="flex: 1; height: 100%; display: flex; flex-direction: row; gap: 10px; flex-wrap: wrap; padding: 15px; align-items: flex-start; justify-content: flex-start;">
-                        空空如也
+                <div style="display: flex; gap: 20px; flex: 1;">
+                    <div class="equip-slot" style="flex: 1; display: flex; flex-direction: column;">
+                        <div class="equip-title">武器</div>
+                        <div id="info-weapon" class="equip-box" style="flex: 1; height: 100%; flex-direction:column; padding:10px;" onclick="Game.showToast('选择武器...')">空</div>
+                    </div>
+                    <div class="equip-slot" style="flex: 1; display: flex; flex-direction: column;">
+                        <div class="equip-title">法宝</div>
+                        <div id="info-relics" class="equip-box" style="flex: 1; height: 100%; display: flex; flex-direction: row; gap: 10px; flex-wrap: wrap; padding: 15px; align-items: flex-start; justify-content: flex-start;">
+                            空空如也
+                        </div>
                     </div>
                 </div>
             </div>
@@ -142,6 +145,17 @@
             <div class="close-btn" onclick="Game.toggleModal('pile-panel');"><i class="fa-solid fa-xmark"></i></div>
             <div class="info-title" style="border:none;" id="pile-title">牌堆 (0)</div>
             <div id="pile-grid" style="flex: 1; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 20px; justify-content: flex-start; align-content: flex-start; padding: 20px 10px;"></div>
+        </div>
+    </div>
+
+    <div id="card-picker" class="modal">
+        <div id="card-picker-content" style="width: 80%; height: 80%; background: var(--ink-panel); border: 1px solid #444; border-radius: 12px; position: relative; display: flex; flex-direction: column; padding: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.9);">
+            <div class="info-title" style="border:none;" id="card-picker-title">请选择卡牌</div>
+            <div id="card-picker-grid" style="flex: 1; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 20px; justify-content: flex-start; align-content: flex-start; padding: 20px 10px;"></div>
+            <div style="display:flex; gap:30px; justify-content:center; padding-top:10px;">
+                <div class="btn-g" id="card-picker-confirm" style="padding: 10px 30px; font-size:18px;">确认</div>
+                <div class="btn-g" id="card-picker-cancel" style="padding: 10px 30px; font-size:18px; border-color:#555;">取消</div>
+            </div>
         </div>
     </div>
 
@@ -219,6 +233,7 @@
             <div class="combat-bottom">
                 <div class="pile" id="draw-pile" onclick="Combat.viewPile('draw')" style="cursor:pointer;" title="点击查看抽牌堆">抽牌堆<br><span id="draw-count">0</span></div>
                 <div class="hand" id="hand-container"></div>
+                <div class="pile" id="exhaust-pile" onclick="Combat.viewPile('exhaust')" style="cursor:pointer;" title="点击查看沉沙堆">沉沙堆<br><span id="exhaust-count">0</span></div>
                 <div class="pile" id="discard-pile" onclick="Combat.viewPile('discard')" style="cursor:pointer;" title="点击查看弃牌堆">弃牌堆<br><span id="discard-count">0</span></div>
                 <button id="end-turn-btn" onclick="Combat.endTurn()">结束回合</button>
             </div>

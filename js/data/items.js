@@ -1,6 +1,7 @@
 // Item data dictionary
 const WeaponDB = {
-    xiuJian: { id: 'xiuJian', name: '\u3010\u7ee3\u5251\u3011', str: 6, def: 6 }
+    xiuJian: { id: 'xiuJian', name: '\u7ee3\u5251', str: 6, def: 6 },
+    xuanYuan: { id: 'xuanYuan', name: '\u8f69\u8f95', str: 10, def: 10 }
 };
 
 const RelicDB = {
@@ -11,7 +12,7 @@ const RelicDB = {
 // PoetryDB 已迁移至 js/data/poetry.js（含平仄/效果/触发）
 
 const ItemPools = {
-    eliteWeapons: ['xiuJian'],
+    eliteWeapons: ['xuanYuan'],
     eliteRelics: ['baguaMirror'],
     poetry: ['ganShi']
 };
