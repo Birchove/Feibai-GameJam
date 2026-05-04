@@ -50,6 +50,34 @@ const DragSys = {
         function resize() { $('bgCanvas').width = $('fxCanvas').width = window.innerWidth; $('bgCanvas').height = $('fxCanvas').height = window.innerHeight; }
         window.addEventListener('resize', resize); resize(); DragSys.drawFx(); 
 
+        // 诗韵触发特效（DOM 覆盖层，独立于 fxCanvas，避免被 DragSys 帧清屏）
+        const Fx = {
+            poetryBurst: (text) => {
+                if (!text) return;
+                const overlay = document.createElement('div');
+                overlay.className = 'poetry-burst';
+
+                const ring = document.createElement('div');
+                ring.className = 'poetry-burst-ring';
+                overlay.appendChild(ring);
+
+                const ringInner = document.createElement('div');
+                ringInner.className = 'poetry-burst-ring inner';
+                overlay.appendChild(ringInner);
+
+                Array.from(text).forEach((ch, i) => {
+                    const span = document.createElement('span');
+                    span.className = 'poetry-burst-char';
+                    span.textContent = ch;
+                    span.style.animationDelay = `${i * 0.08}s`;
+                    overlay.appendChild(span);
+                });
+
+                document.body.appendChild(overlay);
+                setTimeout(() => { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }, 1400);
+            }
+        };
+
         const bgCtx = $('bgCanvas').getContext('2d');
         const bgParticles = Array.from({length: 40}, () => ({ x: rand(0, window.innerWidth), y: rand(0, window.innerHeight), r: rand(10, 80), vx: rand(-2, 2)*0.1, vy: rand(-2, 2)*0.1, a: rand(1, 5)*0.01 }));
         function drawBg() {

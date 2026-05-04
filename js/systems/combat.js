@@ -138,6 +138,7 @@ const Combat = {
                     State.combat.pzHistory.push(cd.type);
                     if(State.combat.pzHistory.length > 5) State.combat.pzHistory.shift();
                     Combat.renderPZ();
+                    Combat.checkPoetryTrigger();
                 }
 
                 State.combat.hand.splice(index, 1);
@@ -149,12 +150,77 @@ const Combat = {
             },
             renderPZ: () => {
                 const tr = $('pz-tracker'); tr.innerHTML = '';
-                State.combat.pzHistory.forEach(char => {
+                const hist = State.combat.pzHistory;
+                const matchLen = Combat.computeLongestMatchLen();
+                hist.forEach((char, i) => {
                     const s = document.createElement('span'); s.className = 'pz-char'; s.innerText = char;
                     s.style.color = char === '平' ? '#9ca3af' : 'var(--blood-red)';
+                    if (matchLen > 0 && i >= hist.length - matchLen) s.classList.add('pz-match');
                     tr.appendChild(s);
                 });
-                if(State.combat.pzHistory.length > 0) AudioSys.playSFX('assets/sfx_pingze.mp3'); 
+                if(hist.length > 0) AudioSys.playSFX('assets/sfx_pingze.mp3'); 
+            },
+            // 计算 pzHistory 的最长后缀，使其同时为某条已携带诗句 pattern 的前缀（多诗时取最大）
+            computeLongestMatchLen: () => {
+                if (typeof PoetryDB === 'undefined' || !State.poetry || State.poetry.length === 0) return 0;
+                const hist = State.combat.pzHistory;
+                if (!hist || hist.length === 0) return 0;
+                let bestK = 0;
+                for (const pid of State.poetry) {
+                    const pd = PoetryDB[pid];
+                    if (!pd || !pd.pattern) continue;
+                    const k = Combat.longestSuffixPrefix(hist, pd.pattern);
+                    if (k > bestK) bestK = k;
+                }
+                return bestK;
+            },
+            longestSuffixPrefix: (hist, pattern) => {
+                const maxK = Math.min(hist.length, pattern.length);
+                for (let k = maxK; k >= 1; k--) {
+                    let ok = true;
+                    for (let i = 0; i < k; i++) {
+                        if (hist[hist.length - k + i] !== pattern[i]) { ok = false; break; }
+                    }
+                    if (ok) return k;
+                }
+                return 0;
+            },
+            // 检查 pzHistory 末尾是否完整命中任一已携带诗句的 pattern；命中则触发并消耗一张最早的平仄。
+            // 多条诗句平仄相同则同帧并发触发；总共仅消耗一次。
+            checkPoetryTrigger: () => {
+                if (typeof PoetryDB === 'undefined' || !State.poetry || State.poetry.length === 0) return;
+                const hist = State.combat.pzHistory;
+                if (!hist || hist.length === 0) return;
+
+                const triggered = [];
+                for (const pid of State.poetry) {
+                    const pd = PoetryDB[pid];
+                    if (!pd || !pd.pattern || typeof pd.trigger !== 'function') continue;
+                    const N = pd.pattern.length;
+                    if (hist.length < N) continue;
+                    let match = true;
+                    for (let i = 0; i < N; i++) {
+                        if (hist[hist.length - N + i] !== pd.pattern[i]) { match = false; break; }
+                    }
+                    if (match) triggered.push(pd);
+                }
+
+                if (triggered.length === 0) return;
+
+                // 延迟 400ms：让 pz-tracker 上「全金圈 + 弹跳」先呈现给玩家，再结算
+                setTimeout(() => {
+                    if (!State.combat.inCombat) return;
+                    triggered.forEach(pd => {
+                        Game.showToast(`诗韵触发：${pd.text}`);
+                        if (typeof Fx !== 'undefined' && Fx.poetryBurst) Fx.poetryBurst(pd.text);
+                        try { pd.trigger(); } catch (e) { console.error('Poetry trigger error:', e); }
+                    });
+                    // 仅消耗最早一张平仄（与触发条数无关）
+                    State.combat.pzHistory.shift();
+                    Combat.renderPZ();
+                    Game.updateUI();
+                    Combat.checkDeath();
+                }, 400);
             },
             playAllAttacks: () => {
                 const attackIds = [];

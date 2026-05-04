@@ -121,7 +121,7 @@ const Settlement = {
                 });
 
                 Settlement.createBox('poetry', r.poetry ? `\u5bfb\u5f97\u8bd7\u5377\uff1a\n\u300c${r.poetry.text}\u300d` : null, () => {
-                    State.poetry.push(r.poetry.text); Game.showToast(`\u9886\u609f\u8bd7\u53e5\uff1a${r.poetry.text}`);
+                    State.poetry.push(r.poetry.id); Game.showToast(`\u9886\u609f\u8bd7\u53e5\uff1a${r.poetry.text}`);
                 });
             },
             createBox: (type, text, claimCb) => {

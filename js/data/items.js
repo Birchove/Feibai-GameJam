@@ -8,9 +8,7 @@ const RelicDB = {
     buddha: { id: 'buddha', name: '\u3010\u4f5b\u50cf\u3011\u5f00\u5c40\u9707\u6151', desc: '\u5f00\u5c40\u5bf9\u654c\u4eba\u9020\u621010\u70b9\u4f24\u5bb3\u3002' }
 };
 
-const PoetryDB = {
-    ganShi: { id: 'ganShi', text: '\u611f\u65f6\u82b1\u6e85\u6cea' }
-};
+// PoetryDB 已迁移至 js/data/poetry.js（含平仄/效果/触发）
 
 const ItemPools = {
     eliteWeapons: ['xiuJian'],

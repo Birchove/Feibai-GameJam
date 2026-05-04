@@ -56,6 +56,10 @@ const Game = {
                 State.class = cls; State.hp = init.hp; State.maxHp = init.maxHp; State.gold = 100; State.mapNodeIndex = 0; State.relics = [];
                 State.str = init.str; State.def = init.def; State.agi = init.agi;
                 State.weapon = ''; State.poetry = []; State.wuxing = init.wuxing; 
+                // 流派开局自带诗句（剑：吴钩霜雪明）
+                if (cls === '剑' && typeof PoetryDB !== 'undefined' && PoetryDB.wuGouShuangXueMing) {
+                    State.poetry.push('wuGouShuangXueMing');
+                }
                 // 严格遵循初始卡组设定
                 State.deck = ['c1','c1','c1','c1', 'c2','c2','c2','c2', 'c3', 'c4']; 
                 MapSys.renderMap();
@@ -73,7 +77,16 @@ const Game = {
                 
                 $('info-deck-count').innerText = State.deck.length; // 修复 Bug: 显示卡组总数
                 $('info-weapon').innerHTML = State.weapon ? `<span style="color:var(--gold); font-weight:bold;">${State.weapon}</span>` : '空缺';
-                $('info-poetry').innerHTML = State.poetry.length > 0 ? State.poetry.map(p => `<div>「${p}」</div>`).join('') : '暂无搜集';
+                const poetryBox = $('info-poetry');
+                poetryBox.innerHTML = '';
+                if (State.poetry.length > 0) {
+                    State.poetry.forEach(p => {
+                        poetryBox.appendChild(Game.createPoetryCardDOM(p));
+                    });
+                    bindKeywordTooltips(poetryBox);
+                } else {
+                    poetryBox.innerHTML = '暂无搜集';
+                }
                 $('info-relics').innerHTML = State.relics.length ? State.relics.map(r => `<div style="background:#111; padding:8px 15px; border:1px solid #555; border-radius:5px; color:var(--gold); font-size:14px;">${r}</div>`).join('') : '空空如也';
             },
             updateUI: () => {
@@ -132,6 +145,26 @@ const Game = {
                 `;
                 el.innerHTML = html;
                 bindKeywordTooltips(el);
+                return el;
+            },
+            createPoetryCardDOM: (id) => {
+                const pd = (typeof PoetryDB !== 'undefined') ? PoetryDB[id] : null;
+                const el = document.createElement('div');
+                el.className = 'poetry-card';
+                if(!pd) {
+                    el.innerHTML = `<div class="poetry-text">「${id}」</div>`;
+                    return el;
+                }
+                const patternStr = pd.pattern ? pd.pattern.join(' ') : '—';
+                const triggerTip = pd.pattern
+                    ? `连续打出「${pd.pattern.join('')}」时（最近五张平仄即满足），${pd.effectDesc}。每次满足都会触发，并消耗最早一张平仄。`
+                    : '尚未参悟其用。';
+                el.innerHTML = `
+                    <div class="poetry-text">${pd.text}</div>
+                    <div class="poetry-source">${pd.source || ''}</div>
+                    <div class="poetry-pattern">${patternStr}</div>
+                    <div class="poetry-effect"><span class="kw" data-tip="${triggerTip}">诗韵触发</span> · ${pd.effectDesc || '—'}</div>
+                `;
                 return el;
             }
         };
