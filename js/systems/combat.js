@@ -274,15 +274,7 @@ const Combat = {
                 if(State.combat.player.takeDmgDouble && !ignoreBlock) dmg *= 2;
                 
                 if(!ignoreBlock) {
-                    while(dmg > 0) {
-                        const dodgeIdx = State.combat.hand.indexOf('c2'); // 闪避检测
-                        if(dodgeIdx !== -1) {
-                            State.combat.hand.splice(dodgeIdx, 1); State.combat.discardPile.push('c2');
-                            dmg -= 5; Game.showToast('闪避生效！抵消 5 伤'); Combat.floatText('player', '闪避', 'block');
-                        } else break;
-                    }
-                    if(dmg <= 0) { Combat.renderHand(); return; }
-
+                    // 注：闪避已改为仅可主动打出（凑平仄），不再于此自动弃置抵伤
                     if(State.combat.player.block > 0) {
                         if(State.combat.player.block >= dmg) { State.combat.player.block -= dmg; dmg = 0; Combat.floatText('player', '持守', 'block'); }
                         else { dmg -= State.combat.player.block; State.combat.player.block = 0; }
