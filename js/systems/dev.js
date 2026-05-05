@@ -126,7 +126,7 @@ const DevSys = {
         const relicKeys = (typeof RelicDB !== 'undefined') ? Object.keys(RelicDB) : [];
         const eventKeys = (typeof Events !== 'undefined') ? Object.keys(Events) : [];
         const enemyKeys = (typeof EnemyDB !== 'undefined') ? Object.keys(EnemyDB) : [];
-        const nodes = (typeof MapNodes !== 'undefined') ? MapNodes : [];
+        const nodes = typeof MapSys !== 'undefined' && MapSys.getNodes ? MapSys.getNodes() : [];
 
         const optWeapon = `<option value="">无</option>` + weaponKeys.map(k => `<option value="${k}" ${State.weapon === k ? 'selected' : ''}>${WeaponDB[k].name} (力${WeaponDB[k].str || 0}/御${WeaponDB[k].def || 0})</option>`).join('');
         // 法宝单选：选中条件用 RelicDB[k].name 是否在 State.relics 中
@@ -134,7 +134,10 @@ const DevSys = {
         const optRelic = `<option value="">无</option>` + relicKeys.map(k => `<option value="${k}" ${curRelicKey === k ? 'selected' : ''}>${RelicDB[k].name}</option>`).join('');
         const optCard = cardKeys.map(k => `<option value="${k}">${CardDB[k].name} · ${CardDB[k].type || '-'} · ${CardDB[k].cardType || ''}</option>`).join('');
         const optEvent = eventKeys.map(k => `<option value="${k}">${k} - ${Events[k].name}</option>`).join('');
-        const optEnemy = enemyKeys.map(k => `<option value="${k}">${k} - ${EnemyDB[k].name} (HP ${EnemyDB[k].hp})</option>`).join('');
+        const optEnemy = enemyKeys.map(k => {
+            const spec = EncounterDB[k];
+            return `<option value="${k}">${k}${spec && spec.rewardTier ? ' · ' + spec.rewardTier : ''}</option>`;
+        }).join('');
         const optNode = nodes.map(n => `<option value="${n.id}">#${n.id} ${n.name} (${n.ev})</option>`).join('');
 
         body.innerHTML = `
@@ -373,17 +376,25 @@ const DevSys = {
         const tgt = document.getElementById('dev-status-target').value;
         const name = document.getElementById('dev-status-name').value;
         const val = parseInt(document.getElementById('dev-status-val').value || '0', 10) || 0;
-        const obj = tgt === 'player' ? State.combat.player : State.combat.enemy;
+        let obj;
+        if (tgt === 'player') obj = State.combat.player;
+        else {
+            const liv = Combat._livingIndices();
+            const idx = liv.length ? liv[0] : 0;
+            obj = State.combat.enemies[idx];
+            if (!obj) { Game.showToast('无存活敌人'); return; }
+        }
         if (name === 'stun') obj.stun = !!val;
         else obj[name] = Math.max(0, val);
         if (typeof Combat.updateStatusBar === 'function') Combat.updateStatusBar();
+        if (typeof Combat.renderEnemies === 'function') Combat.renderEnemies();
         Game.updateUI();
         Game.showToast(`已对${tgt === 'player' ? '玩家' : '敌人'}施加 ${name}=${val}`);
     },
 
     instantWin: () => {
         if (!State.combat || !State.combat.inCombat) { Game.showToast('需在战斗中'); return; }
-        State.combat.enemy.hp = 0;
+        State.combat.enemies.forEach(e => { if (e) e.hp = 0; });
         Game.updateUI();
         Combat.checkDeath();
         DevSys.closePanel();
@@ -401,7 +412,7 @@ const DevSys = {
         const idx = parseInt(document.getElementById('dev-node').value, 10);
         if (!Number.isFinite(idx)) return;
         // 跳转：直接进入该节点逻辑（与正常点击节点一致）
-        const node = MapNodes.find(n => n.id === idx);
+        const node = MapSys.getNodes().find(n => n.id === idx);
         if (!node) return;
         // 退出战斗状态防干扰
         if (State.combat && State.combat.inCombat) State.combat.inCombat = false;

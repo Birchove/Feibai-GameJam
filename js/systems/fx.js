@@ -27,11 +27,28 @@ const DragSys = {
                 const handItemRaw = (State.combat && State.combat.hand) ? State.combat.hand[DragSys.index] : null;
                 const handItem = handItemRaw ? (typeof handItemRaw === 'string' ? { cardId: handItemRaw } : handItemRaw) : null;
                 const effCost = (handItem && handItem.costOverride !== undefined) ? handItem.costOverride : cd.cost;
-                if(inHitZone && State.energy >= effCost && State.combat.isPlayerTurn && !State.combat.player.cantPlay) { 
+                const canAfford = State.energy >= effCost && State.combat.isPlayerTurn && !State.combat.player.cantPlay;
+                const c35ok = cd.id !== 'c35' || State.combat.hand.length >= 2;
+                if(inHitZone && canAfford && c35ok) { 
+                    let hitIdx = -1;
+                    if (State.combat.enemies && State.combat.enemies.length) {
+                        State.combat.enemies.forEach((en, i) => {
+                            if (!en || en.hp <= 0) return;
+                            const slot = document.getElementById(`enemy-slot-${i}`);
+                            if (!slot) return;
+                            const r = slot.getBoundingClientRect();
+                            if (DragSys.currPt.x >= r.left && DragSys.currPt.x <= r.right && DragSys.currPt.y >= r.top && DragSys.currPt.y <= r.bottom) hitIdx = i;
+                        });
+                    }
+                    if (hitIdx < 0) {
+                        hitIdx = (typeof Combat !== 'undefined' && Combat._primaryTargetIdx) ? Combat._primaryTargetIdx() : 0;
+                    }
+                    State.combat.selectedTargetIndex = hitIdx;
                     el.style.display = 'none'; 
                     Combat.playCard(DragSys.index); 
                 } else {
-                    if (inHitZone) Game.showToast("无法打出此牌");
+                    if (inHitZone && cd.id === 'c35' && !c35ok) Game.showToast('付之一炬：需另有可焚之手牌');
+                    else if (inHitZone) Game.showToast("无法打出此牌");
                     el.style.transition = 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
                     el.style.transform = 'translate(0, 0) rotate(0)';
                     setTimeout(() => { el.style.position = 'relative'; el.style.left='0'; el.style.top='0'; el.style.transition=''; }, 300);

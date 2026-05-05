@@ -3,8 +3,10 @@ const Settlement = {
             selectedCardIds: [],
             maxCardPicks: 1,
 
-            show: (enemyId) => {
-                const isElite = enemyId === 'e2';
+            show: (rewardTier) => {
+                const isElite = rewardTier === 'elite';
+
+                State._settlementFromVillageAmbush = !!State.combat.encounterKey && State.combat.encounterKey === 'enc_village_ambush';
                 
                 Settlement.currentRewards.gold = isElite ? rand(40, 60) : rand(20, 40);
                 Settlement.currentRewards.wuxing = isElite ? 0.5 : 0.2;
@@ -37,6 +39,10 @@ const Settlement = {
                 Settlement.currentRewards.relic = isElite ? Items.randomRelic() : null;
                 const poetryChance = isElite ? 0.8 : 0.3;
                 Settlement.currentRewards.poetry = Math.random() < poetryChance ? Items.randomPoetry() : null;
+
+                const qibuId = State._qibuPoetryReward;
+                State._qibuPoetryReward = null;
+                Settlement.currentRewards.qibuPoetry = (qibuId && typeof PoetryDB !== 'undefined' && PoetryDB[qibuId]) ? PoetryDB[qibuId] : null;
 
                 Settlement.render();
                 Game.navTo('screen-settlement');
@@ -123,6 +129,12 @@ const Settlement = {
                 Settlement.createBox('poetry', r.poetry ? `\u5bfb\u5f97\u8bd7\u5377\uff1a\n\u300c${r.poetry.text}\u300d` : null, () => {
                     State.poetry.push(r.poetry.id); Game.showToast(`\u9886\u609f\u8bd7\u53e5\uff1a${r.poetry.text}`);
                 });
+
+                Settlement.createBox('qibu', r.qibuPoetry ? `七步成诗·本场参得残篇：\n「${r.qibuPoetry.text}」\n（已记入佚札）` : null, () => {
+                    if (!State.poetry.includes(r.qibuPoetry.id)) State.poetry.push(r.qibuPoetry.id);
+                    Game.updateInfoPanel();
+                    Game.showToast(`领悟残篇：${r.qibuPoetry.text}`);
+                });
             },
             createBox: (type, text, claimCb) => {
                 const box = $(`reward-${type}-box`);
@@ -153,7 +165,14 @@ const Settlement = {
                 $('screen-settlement').classList.add('active');
             },
             leave: () => {
+                const pending = State._villagePendingChapter;
+                const fromAmbush = State._settlementFromVillageAmbush;
+                State._settlementFromVillageAmbush = false;
                 MapSys.renderMap();
                 Game.navTo('screen-map');
+                if (fromAmbush && pending !== undefined && pending !== null) {
+                    State._villagePendingChapter = undefined;
+                    setTimeout(() => Village_postFightRewards(pending), 400);
+                }
             }
         };

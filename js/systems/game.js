@@ -53,7 +53,10 @@ const Game = {
             initGame: (cls) => {
                 const clsData = Object.values(ClassDB).find(c => c.name === cls) || ClassDB.sword;
                 const init = clsData.initial;
-                State.class = cls; State.hp = init.hp; State.maxHp = init.maxHp; State.gold = 100; State.mapNodeIndex = 0; State.relics = [];
+                State._qibuPoetryReward = null;
+                State.class = cls; State.hp = init.hp; State.maxHp = init.maxHp; State.gold = 100; State.mapNodeIndex = 0; State.mapChapter = 0; State.relics = [];
+                State._villagePendingChapter = undefined;
+                State._settlementFromVillageAmbush = false;
                 State.str = init.str; State.def = init.def; State.agi = init.agi;
                 State.weapon = ''; State.poetry = []; State.wuxing = init.wuxing; 
                 // 流派开局自带诗句与武器（剑：吴钩霜雪明 + 绣剑）
@@ -124,9 +127,8 @@ const Game = {
                 $('player-hp-text').innerHTML = `${State.hp}/${State.maxHp} <span style="color:#60a5fa">${State.combat.player.block > 0 ? `(+${State.combat.player.block}持守)` : ''}</span>`;
                 $('player-hp-fill').style.width = `${(State.hp/State.maxHp)*100}%`;
                 if(State.combat.inCombat) {
-                    $('enemy-hp-text').innerText = `${State.combat.enemy.hp}/${State.combat.enemy.maxHp}`;
-                    $('enemy-hp-fill').style.width = `${(State.combat.enemy.hp/State.combat.enemy.maxHp)*100}%`;
-                    Combat.updateStatusBar(); 
+                    Combat.renderEnemies();
+                    Combat.updateStatusBar();
                 }
             },
             viewDeck: () => {

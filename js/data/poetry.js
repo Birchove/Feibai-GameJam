@@ -10,9 +10,8 @@ const PoetryDB = {
         pattern: ['平', '平', '平', '仄', '平'],
         effectDesc: '对所有敌人造成 30 点伤害',
         trigger: function () {
-            if (typeof Combat !== 'undefined' && Combat.dealDmg) {
-                // 暂以单敌处理；后续多敌时同步扩展为遍历所有敌人
-                Combat.dealDmg(30, true);
+            if (typeof Combat !== 'undefined' && Combat.dealDmgAll) {
+                Combat.dealDmgAll(30, true);
             }
         }
     },
