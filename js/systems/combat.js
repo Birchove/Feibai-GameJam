@@ -220,6 +220,9 @@ const Combat = {
         State.combat._incenseCount = 0;
         State.combat.playerHpLost = 0;
         State.combat._ritualSkullFired = false;
+        State.combat.ganShiEchoEnemyPhase = false;
+        State.combat._ganShiReflecting = false;
+        State.combat._ganShiReflectHandled = false;
 
         const weaponData = (typeof WeaponDB !== 'undefined' && State.weapon) ? WeaponDB[State.weapon] : null;
         const wStr = weaponData ? (weaponData.str || 0) : 0;
@@ -249,7 +252,7 @@ const Combat = {
         if (State.relics.includes('【佛像】') || State.relics.includes('【佛像】开局震慑')) {
             setTimeout(() => {
                 if (!State.combat.inCombat) return;
-                Game.showToast('佛像明光：诸邪各受 11 点罚击');
+                Game.showToast('【佛像】明光开示：诸邪各受 11 点罚击');
                 Combat.dealDmgAll(11, true);
             }, 500);
         }
@@ -277,7 +280,10 @@ const Combat = {
         if (State.relics.includes('【八卦护心镜】')) {
             const n = State.combat.turn || 1;
             const blk = Math.max(0, 10 - 2 * n);
-            if (blk > 0) Combat.addBlock(blk, true);
+            if (blk > 0) {
+                Combat.addBlock(blk, true);
+                Game.showToast(`【八卦护心镜】镜光成壁 +${blk} 持守`);
+            }
         }
 
         if (State.relics.includes('【香炉】')) {
@@ -285,7 +291,7 @@ const Combat = {
             if (State.combat._incenseCount >= 6) {
                 State.combat._incenseCount = 0;
                 State.combat.player.incorporealStacks = (State.combat.player.incorporealStacks || 0) + 1;
-                Game.showToast('香炉：无实体+1（香炉计数已重置；层数每我方回合−1，敌方本回合未伤你也不顺延保留）');
+                Game.showToast('【香炉】无实体+1（计数已重置；层数每我方回合−1）');
             }
         }
 
@@ -636,7 +642,7 @@ const Combat = {
         const p = State.combat.player;
         const goesExhaust = !GONGFA_CARD_IDS.has(cardId) && (item.isMirror || cd.toExhaust);
         if (State.relics.includes('【枯木树枝】') && goesExhaust && Math.random() < 0.5) {
-            Game.showToast('枯木回光：再演一次');
+            Game.showToast('【枯木树枝】枯木回光：再演一次');
             p._inRepeat = true;
             try { cd.effect(); } catch (err) { console.error(err); }
             p._inRepeat = false;
@@ -750,31 +756,78 @@ const Combat = {
         }
     },
 
+    /** 感时花溅泪：按当前意图分类，仅在诗韵标记的敌方行动轮内生效 */
+    ganShiIntentKind: (en) => {
+        if (!en) return 'other';
+        const s = Combat.getIntentText(en) || '';
+        if (/虚弱咒/.test(s)) return 'weak';
+        /* 咒缚等仍出伤但 intentGlow 可能落在 wait，需按攻势反噬处理 */
+        if (/咒缚/.test(s)) return 'atk';
+        const glow = Combat.intentGlowKind(en);
+        if (glow === 'wait') return 'wait';
+        if (glow === 'atk') return 'atk';
+        return 'other';
+    },
+
+    /** 敌方吃下一轮「等量」攻势（仅数值与格挡，不含玩家蓄势/武力） */
+    applyEnemySelfStrike: (enemy, amount) => {
+        if (!enemy || enemy.hp <= 0 || !amount || amount < 1) return;
+        const idx = State.combat.enemies.indexOf(enemy);
+        if (idx < 0) return;
+        AudioSys.playSFX('assets/sfx_hit.mp3');
+        let remaining = amount;
+        if (remaining > 0 && (enemy.block || 0) > 0) {
+            const useBlock = Math.min(enemy.block, remaining);
+            enemy.block -= useBlock;
+            remaining -= useBlock;
+        }
+        const toHp = Math.min(enemy.hp, remaining);
+        enemy.hp -= toHp;
+        Combat.floatTextSlot(idx, `反噬 ${amount}`, 'gan-shi');
+        Combat.pulseEnemySlot(idx, 'hit');
+        $('screen-combat').classList.add('hit-stop');
+        setTimeout(() => { $('screen-combat').classList.remove('hit-stop'); }, 300);
+        Combat._removeDeadEnemies();
+        Combat.renderEnemies();
+        Game.updateUI();
+        Combat.checkDeath();
+    },
+
+    pzHighlightByPoem: () => {
+        const blade = new Set();
+        const tear = new Set();
+        if (typeof PoetryDB === 'undefined' || !State.poetry || !State.poetry.length) return { blade, tear };
+        const hist = State.combat.pzHistory;
+        if (!hist || !hist.length) return { blade, tear };
+        State.poetry.forEach((pid) => {
+            const pd = PoetryDB[pid];
+            if (!pd || !pd.pattern) return;
+            const k = Combat.longestSuffixPrefix(hist, pd.pattern);
+            if (k <= 0) return;
+            const variant = pd.fxVariant === 'tear' ? 'tear' : 'blade';
+            for (let i = hist.length - k; i < hist.length; i++) {
+                if (variant === 'tear') tear.add(i);
+                else blade.add(i);
+            }
+        });
+        return { blade, tear };
+    },
+
     renderPZ: () => {
         const tr = $('pz-tracker'); tr.innerHTML = '';
         const hist = State.combat.pzHistory;
-        const matchLen = Combat.computeLongestMatchLen();
+        const { blade: bIdx, tear: tIdx } = Combat.pzHighlightByPoem();
         hist.forEach((char, i) => {
             const s = document.createElement('span'); s.className = 'pz-char'; s.innerText = char;
             s.style.color = char === '平' ? '#9ca3af' : 'var(--blood-red)';
-            if (matchLen > 0 && i >= hist.length - matchLen) s.classList.add('pz-match');
+            const wb = bIdx.has(i);
+            const wt = tIdx.has(i);
+            if (wb && wt) s.classList.add('pz-match-both');
+            else if (wb) s.classList.add('pz-match-blade');
+            else if (wt) s.classList.add('pz-match-tear');
             tr.appendChild(s);
         });
         if (hist.length > 0) AudioSys.playSFX('assets/sfx_pingze.mp3');
-    },
-
-    computeLongestMatchLen: () => {
-        if (typeof PoetryDB === 'undefined' || !State.poetry || State.poetry.length === 0) return 0;
-        const hist = State.combat.pzHistory;
-        if (!hist || hist.length === 0) return 0;
-        let bestK = 0;
-        for (const pid of State.poetry) {
-            const pd = PoetryDB[pid];
-            if (!pd || !pd.pattern) continue;
-            const k = Combat.longestSuffixPrefix(hist, pd.pattern);
-            if (k > bestK) bestK = k;
-        }
-        return bestK;
     },
 
     longestSuffixPrefix: (hist, pattern) => {
@@ -813,7 +866,7 @@ const Combat = {
             if (!State.combat.inCombat) return;
             triggered.forEach(pd => {
                 Game.showToast(`诗韵触发：${pd.text}`);
-                if (typeof Fx !== 'undefined' && Fx.poetryBurst) Fx.poetryBurst(pd.text);
+                if (typeof Fx !== 'undefined' && Fx.poetryBurst) Fx.poetryBurst(pd.text, pd.fxVariant || 'blade');
                 try { pd.trigger(); } catch (err) { console.error('Poetry trigger error:', err); }
             });
             State.combat.pzHistory.shift();
@@ -922,6 +975,7 @@ const Combat = {
             dmg = Math.floor(dmg * mult);
             State.momentum = 0;
             isCrit = true;
+            if (State.relics && State.relics.includes('【红缨枪】')) Game.showToast('【红缨枪】势满：杀伤加倍');
         }
         if (State.combat.player.dmgDouble) dmg *= 2;
 
@@ -1087,6 +1141,7 @@ const Combat = {
     yanLuowangStrikeAndJunxing: async (attacker, rawDmg) => {
         if (!State.combat.inCombat) return;
         Combat.takeDmg(rawDmg, false, attacker);
+        if (State.combat._ganShiReflectHandled) return;
         if (!State.combat.inCombat || State.hp <= 0) return;
         await Combat.showJunxingModal();
     },
@@ -1098,6 +1153,7 @@ const Combat = {
     },
 
     takeDmg: (dmg, ignoreBlock = false, attacker) => {
+        State.combat._ganShiReflectHandled = false;
         if (attacker) {
             const pen = (attacker.shushouQin || 0) + (attacker.atkDownThisRound || 0);
             if (pen) dmg = Math.max(0, dmg - pen);
@@ -1106,6 +1162,25 @@ const Combat = {
         if (attacker && (attacker.qieNuoStacks || 0) > 0) {
             dmg = Math.floor(dmg * Math.pow(0.8, attacker.qieNuoStacks));
         }
+
+        if (!ignoreBlock && attacker && State.combat.ganShiEchoEnemyPhase && !State.combat._ganShiReflecting) {
+            const gk = Combat.ganShiIntentKind(attacker);
+            if (gk === 'atk' && dmg > 0) {
+                let rd = dmg;
+                if (attacker.arch === 'yan_luo_wang') rd = Math.floor(rd);
+                State.combat._ganShiReflecting = true;
+                try {
+                    Combat.applyEnemySelfStrike(attacker, rd);
+                    State.combat._ganShiReflectHandled = true;
+                    Game.showToast('感时花溅泪：泪尽锋折，还施彼身');
+                } finally {
+                    State.combat._ganShiReflecting = false;
+                }
+                Game.updateUI(); Combat.renderHand(); Combat.checkDeath();
+                return;
+            }
+        }
+
         if (State.combat.player.vuln > 0 && !ignoreBlock) dmg = Math.floor(dmg * 1.5);
         if (State.combat.player.takeDmgDouble && !ignoreBlock) dmg *= 2;
         if (attacker && attacker.arch === 'yan_luo_wang') dmg = Math.floor(dmg);
@@ -1143,7 +1218,7 @@ const Combat = {
                 if (State.relics.includes('【仪式头骨】') && State.combat.playerHpLost >= 10 && !State.combat._ritualSkullFired) {
                     State.combat._ritualSkullFired = true;
                     State.combat.player.combatStr += 4;
-                    Game.showToast('仪式头骨：剧痛砺志，武力+4');
+                    Game.showToast('【仪式头骨】剧痛砺志：武力+4');
                 }
             }
 
@@ -1240,6 +1315,14 @@ const Combat = {
         State.combat.isPlayerTurn = false;
         $('end-turn-btn').className = '';
         $('end-turn-btn').innerText = '敌方回合';
+        // 「当前回合」类增益在回合结束立即失效（例如：满江红）
+        State.combat.player.dmgDouble = false;
+        State.combat.player.takeDmgDouble = false;
+        for (let i = 0; i < State.combat.hand.length; i++) {
+            const raw = State.combat.hand[i];
+            if (!raw || typeof raw === 'string') continue;
+            if (raw.costOverride !== undefined) delete raw.costOverride;
+        }
 
         for (let i = State.combat.hand.length - 1; i >= 0; i--) {
             const it = Combat.normalizeHandItem(State.combat.hand[i]);
@@ -1264,6 +1347,7 @@ const Combat = {
 
     enemyTurn: () => {
         const finishPhase = () => {
+            State.combat.ganShiEchoEnemyPhase = false;
             const p = State.combat.player;
             if (p.deathRoundsRemaining > 0) {
                 p.deathRoundsRemaining -= 1;
@@ -1297,8 +1381,21 @@ const Combat = {
                 } else {
                     const arch = Combat._arch(e);
                     if (arch) {
-                        const ret = arch.act(e);
-                        if (ret && typeof ret.then === 'function') await ret;
+                        let skipAct = false;
+                        if (State.combat.ganShiEchoEnemyPhase) {
+                            const gk = Combat.ganShiIntentKind(e);
+                            if (gk === 'weak') {
+                                e.weak = (e.weak || 0) + 1;
+                                Game.showToast('感时花溅泪：咒如潮退，反缚其主');
+                                Combat.pulseEnemyEntity(e);
+                                Combat.updateEnemyIntent();
+                                skipAct = true;
+                            }
+                        }
+                        if (!skipAct) {
+                            const ret = arch.act(e);
+                            if (ret && typeof ret.then === 'function') await ret;
+                        }
                     }
                 }
                 if (!(State._dev && State._devSkipEnemy)) e.turnCounter++;
@@ -1373,7 +1470,7 @@ const Combat = {
             if (State.relics.includes('【落魄灵魂】')) {
                 State.hp = Math.min(State.maxHp, State.hp + 1);
                 State.gold += 15;
-                Game.showToast('落魄灵魂：魂火微暖，+1 气血，+15 钱');
+                Game.showToast('【落魄灵魂】魂火微暖：+1 气血，+15 钱');
             }
             State._qibuPoetryReward = State.combat.qibuPoetryId || null;
             State.combat.qibuPoetryId = null;

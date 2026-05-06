@@ -31,9 +31,13 @@ const MapNodes = MapChapters[0];
 function Village_pickOffer() {
     const offer = [];
     const keysW = typeof WeaponDB !== 'undefined' ? Object.keys(WeaponDB) : [];
-    const keysR = typeof RelicDB !== 'undefined' ? Object.keys(RelicDB) : [];
+    const keysRAll = typeof RelicDB !== 'undefined' ? Object.keys(RelicDB) : [];
     if (keysW.length) offer.push({ type: 'weapon', key: keysW[rand(0, keysW.length - 1)], price: 90 + rand(0, 40) });
-    if (keysR.length) offer.push({ type: 'relic', key: keysR[rand(0, keysR.length - 1)], price: 110 + rand(0, 50) });
+    if (keysRAll.length) {
+        const owned = new Set(State.relics || []);
+        const keysR = keysRAll.filter((k) => RelicDB[k] && !owned.has(RelicDB[k].name));
+        if (keysR.length) offer.push({ type: 'relic', key: keysR[rand(0, keysR.length - 1)], price: 110 + rand(0, 50) });
+    }
     return offer;
 }
 
@@ -66,9 +70,17 @@ function Village_openShopModal(onDone) {
         $(`vshop-buy-${i}`).onclick = (ev) => {
             ev.stopPropagation();
             if (State.gold < o.price) { Game.showToast('钱财不足'); return; }
+            if (o.type === 'weapon') {
+                Game.tryAcquireWeapon(o.key, (ok) => {
+                    if (!ok) return;
+                    State.gold -= o.price;
+                    Game.showToast('成交');
+                    finish();
+                });
+                return;
+            }
             State.gold -= o.price;
-            if (o.type === 'weapon') State.weapon = o.key;
-            else State.relics.push(RelicDB[o.key].name);
+            if (!State.relics.includes(RelicDB[o.key].name)) State.relics.push(RelicDB[o.key].name);
             Game.showToast('成交');
             finish();
         };

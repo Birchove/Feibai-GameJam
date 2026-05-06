@@ -96,6 +96,61 @@
         .poetry-card .poetry-source { font-size: 11px; color: #888; }
         .poetry-card .poetry-pattern { font-size: 13px; color: #cbb47a; letter-spacing: 6px; padding: 2px 4px; border-top: 1px dashed #4a3a20; border-bottom: 1px dashed #4a3a20; margin: 2px 0; font-family: 'Noto Serif SC','Georgia',serif; }
         .poetry-card .poetry-effect { font-size: 12px; color: #ddd; line-height: 1.4; text-align: center; }
+        #info-detail-body { align-items: stretch; justify-content: flex-start; }
+        .info-detail-empty {
+            color: #777;
+            text-align: center;
+            padding: 30px 10px;
+            border: 1px dashed #444;
+            border-radius: 8px;
+            background: rgba(20, 20, 24, 0.75);
+        }
+        .info-detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 14px;
+            width: 100%;
+        }
+        .info-detail-entry {
+            background: linear-gradient(135deg, #1a1a22, #101016);
+            border: 1px solid #555;
+            border-radius: 8px;
+            padding: 12px;
+            min-height: 155px;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.45);
+            transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+        }
+        .info-detail-entry:hover {
+            transform: translateY(-4px);
+            border-color: var(--gold);
+            box-shadow: 0 0 14px rgba(184,134,11,0.22);
+        }
+        .info-detail-entry-title {
+            color: var(--gold-light);
+            font-size: 20px;
+            letter-spacing: 2px;
+            line-height: 1.3;
+            margin-bottom: 8px;
+            font-family: 'Ma Shan Zheng', cursive;
+            border-bottom: 1px solid #333;
+            padding-bottom: 6px;
+        }
+        .info-detail-entry-meta {
+            color: #8b8b96;
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+        .info-detail-entry-line {
+            color: #d6c189;
+            font-size: 13px;
+            letter-spacing: 3px;
+            margin-bottom: 8px;
+        }
+        .info-detail-entry-desc {
+            color: #c9c9d3;
+            font-size: 13px;
+            line-height: 1.6;
+        }
 
         /* ================= 核心：卡牌与 Hover 术语特效 ================= */
         .kw { position: relative; text-decoration: underline dashed var(--blood-red); cursor: help; font-weight: bold; color: #e5e7eb; }
@@ -362,13 +417,35 @@
             pointer-events: none;
             transition: border-color 0.25s ease, box-shadow 0.25s ease, opacity 0.25s ease;
         }
-        /* 金色水墨圈：满足前缀的最长后缀 */
-        .pz-char.pz-match::before {
+        /* 金色（吴钩）：圆环扩张 */
+        .pz-char.pz-match-blade::before {
             border-color: var(--gold-light);
             box-shadow: 0 0 10px rgba(255,215,0,0.55), inset 0 0 4px rgba(184,134,11,0.35);
             opacity: 1;
         }
-        .pz-char.pz-match { animation: pzMatchPulse 0.4s ease; }
+        .pz-char.pz-match-blade { animation: pzMatchPulse 0.4s ease; }
+        /* 青泪（感时）：柔边椭圆 + 虚线 */
+        .pz-char.pz-match-tear::before {
+            border-color: #5eead4;
+            border-style: dashed;
+            border-radius: 45% 55% 48% 52%;
+            box-shadow: 0 0 12px rgba(45,212,191,0.45), inset 0 0 6px rgba(20,184,166,0.25);
+            opacity: 1;
+        }
+        .pz-char.pz-match-tear { animation: pzMatchPulseTear 0.45s ease; }
+        @keyframes pzMatchPulseTear { 0% { transform: scale(1) skewX(0);} 50% { transform: scale(1.12) skewX(-2deg);} 100% { transform: scale(1) skewX(0);} }
+        /* 双诗同时缀连：双色描边 */
+        .pz-char.pz-match-both::before {
+            border: 2px solid rgba(255, 215, 0, 0.95);
+            border-radius: 50%;
+            background: transparent;
+            box-shadow:
+                0 0 0 2px rgba(45, 212, 191, 0.92),
+                0 0 14px rgba(255,215,0,0.35),
+                0 0 12px rgba(45,212,191,0.4);
+            opacity: 1;
+        }
+        .pz-char.pz-match-both { animation: pzMatchPulse 0.4s ease; }
         @keyframes pzPop { 0% { transform: scale(0); } 100% { transform: scale(1); } }
         @keyframes pzMatchPulse { 0% { transform: scale(1);} 50% { transform: scale(1.15);} 100% { transform: scale(1);} }
         
@@ -385,6 +462,7 @@
         .dmg-text { position: absolute; color: white; font-size: 40px; font-weight: bold; -webkit-text-stroke: 2px black; pointer-events: none; animation: floatUp 2.4s forwards; z-index: 100; font-family: 'Georgia', serif; }
         .dmg-text.crit { color: var(--blood-red); font-size: 50px; }
         .dmg-text.block { color: #60a5fa; }
+        .dmg-text.gan-shi { color: #2dd4bf; font-size: 38px; -webkit-text-stroke: 1px #0f172a; text-shadow: 0 0 12px rgba(45,212,191,0.7); }
         @keyframes floatUp { 0% { transform: translateY(0) scale(1); opacity: 1; } 55% { opacity: 1; } 100% { transform: translateY(-120px) scale(1.35); opacity: 0; } }
 
         /* ================= 战斗结算界面 ================= */
@@ -427,6 +505,7 @@
             display: flex; gap: 14px; align-items: center; justify-content: center;
             font-family: 'Ma Shan Zheng', cursive;
         }
+        .poetry-burst--tear { flex-direction: column; gap: 20px; }
         .poetry-burst-char {
             font-size: 96px; line-height: 1;
             color: var(--gold-light);
@@ -434,6 +513,34 @@
             opacity: 0;
             animation: poetryCharIn 1.2s ease-out forwards;
             filter: drop-shadow(0 4px 6px rgba(0,0,0,0.7));
+        }
+        .poetry-burst-char--tear {
+            color: #a5f3fc;
+            text-shadow: 0 0 18px rgba(34,211,238,0.85), 0 0 36px rgba(6,182,212,0.45), 2px 4px 0 rgba(15,23,42,0.9);
+            animation: poetryCharInTear 1.35s ease-out forwards;
+        }
+        @keyframes poetryCharInTear {
+            0%   { opacity: 0; transform: translateY(-16px) scale(0.65); filter: blur(10px) drop-shadow(0 4px 6px rgba(0,0,0,0.5)); }
+            25%  { opacity: 1; transform: translateY(4px) scale(1.02); filter: blur(0); }
+            65%  { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(28px) scale(1.08); filter: blur(5px); }
+        }
+        .poetry-burst-drip-root {
+            position: absolute; top: 12%; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 10px; pointer-events: none;
+        }
+        .poetry-burst-drop {
+            width: 6px; height: 22px;
+            border-radius: 40% 40% 60% 60%;
+            background: linear-gradient(180deg, rgba(165,243,252,0.95), rgba(6,182,212,0.35));
+            opacity: 0;
+            animation: poetryDropFall 1s ease-in forwards;
+            box-shadow: 0 0 8px rgba(34,211,238,0.7);
+        }
+        @keyframes poetryDropFall {
+            0%   { opacity: 0; transform: translateY(-30px) scaleY(0.4); }
+            20%  { opacity: 1; }
+            100% { opacity: 0; transform: translateY(120px) scaleY(1.2); }
         }
         @keyframes poetryCharIn {
             0%   { opacity: 0; transform: translateY(-30px) scale(0.55); filter: blur(8px) drop-shadow(0 4px 6px rgba(0,0,0,0.7)); }

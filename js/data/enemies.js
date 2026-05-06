@@ -479,14 +479,23 @@ const EncounterDB = {
         if (k === 'ku_hai_guan_li') return [{ arch: 'ku_hai_guan_li' }];
         return [{ arch: k }];
     }},
-    enc_strong_random_wide: { rewardTier: 'elite', units: () => {
-        const roll = Math.random();
-        if (roll < 0.15) return [{ arch: 'ku_hai_guan_li' }];
-        if (roll < 0.35) return EncounterDB.enc_chi_four.units;
-        if (roll < 0.55) return EncounterDB.enc_ye_xun_pair.units;
-        const k = _pick(['ye_ku_gui', 'yin_sha', 'diao_si_gui']);
-        return [{ arch: k }];
-    }},
+    enc_strong_random_wide: {
+        /** 山路随机：强敌为精英结算，弱敌为小怪结算（不掉法宝） */
+        spawn: () => {
+            const roll = Math.random();
+            if (roll < 0.15) return { rewardTier: 'elite', units: [{ arch: 'ku_hai_guan_li' }] };
+            if (roll < 0.35) {
+                const raw = EncounterDB.enc_chi_four.units;
+                return { rewardTier: 'elite', units: raw.map((u) => ({ arch: u.arch })) };
+            }
+            if (roll < 0.55) {
+                const raw = EncounterDB.enc_ye_xun_pair.units;
+                return { rewardTier: 'elite', units: raw.map((u) => ({ arch: u.arch })) };
+            }
+            const k = _pick(['ye_ku_gui', 'yin_sha', 'diao_si_gui']);
+            return { rewardTier: 'normal', units: [{ arch: k }] };
+        }
+    },
     enc_village_ambush: { rewardTier: 'elite', units: [{ arch: 'village_strong_rand' }] }
 };
 
@@ -499,6 +508,10 @@ function Encounter_resolveUnits(spec) {
 function Encounter_spawnList(encounterId) {
     const spec = EncounterDB[encounterId];
     if (!spec) return null;
+    if (typeof spec.spawn === 'function') {
+        const pack = spec.spawn();
+        return { rewardTier: pack.rewardTier, units: pack.units };
+    }
     return { rewardTier: spec.rewardTier, units: Encounter_resolveUnits(spec) };
 }
 

@@ -93,29 +93,41 @@ const DragSys = {
 
         // 诗韵触发特效（DOM 覆盖层，独立于 fxCanvas，避免被 DragSys 帧清屏）
         const Fx = {
-            poetryBurst: (text) => {
+            poetryBurst: (text, variant = 'blade') => {
                 if (!text) return;
+                const v = variant === 'tear' ? 'tear' : 'blade';
                 const overlay = document.createElement('div');
-                overlay.className = 'poetry-burst';
+                overlay.className = `poetry-burst poetry-burst--${v}`;
 
-                const ring = document.createElement('div');
-                ring.className = 'poetry-burst-ring';
-                overlay.appendChild(ring);
-
-                const ringInner = document.createElement('div');
-                ringInner.className = 'poetry-burst-ring inner';
-                overlay.appendChild(ringInner);
+                if (v === 'blade') {
+                    const ring = document.createElement('div');
+                    ring.className = 'poetry-burst-ring';
+                    overlay.appendChild(ring);
+                    const ringInner = document.createElement('div');
+                    ringInner.className = 'poetry-burst-ring inner';
+                    overlay.appendChild(ringInner);
+                } else {
+                    const drip = document.createElement('div');
+                    drip.className = 'poetry-burst-drip-root';
+                    for (let j = 0; j < 5; j++) {
+                        const d = document.createElement('div');
+                        d.className = 'poetry-burst-drop';
+                        d.style.animationDelay = `${j * 0.06}s`;
+                        drip.appendChild(d);
+                    }
+                    overlay.appendChild(drip);
+                }
 
                 Array.from(text).forEach((ch, i) => {
                     const span = document.createElement('span');
-                    span.className = 'poetry-burst-char';
+                    span.className = `poetry-burst-char poetry-burst-char--${v}`;
                     span.textContent = ch;
-                    span.style.animationDelay = `${i * 0.08}s`;
+                    span.style.animationDelay = `${i * (v === 'tear' ? 0.1 : 0.08)}s`;
                     overlay.appendChild(span);
                 });
 
                 document.body.appendChild(overlay);
-                setTimeout(() => { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }, 1400);
+                setTimeout(() => { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }, v === 'tear' ? 1650 : 1400);
             }
         };
 

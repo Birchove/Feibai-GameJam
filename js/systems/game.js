@@ -19,6 +19,137 @@ const Game = {
                     if(id === 'info-panel') Game.updateInfoPanel();
                 }
             },
+            closeInfoDetail: () => {
+                const detail = $('info-detail-panel');
+                const info = $('info-panel');
+                if (detail) detail.classList.remove('active');
+                if (info) {
+                    Game.updateInfoPanel();
+                    info.classList.add('active');
+                }
+            },
+            openInfoDetail: (kind) => {
+                document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
+                const panel = $('info-detail-panel');
+                const body = $('info-detail-body');
+                const title = $('info-detail-title');
+                if (!panel || !body || !title) return;
+                body.innerHTML = '';
+                if (kind === 'poetry') {
+                    title.innerText = '诗句残篇';
+                    if (!State.poetry || State.poetry.length === 0) {
+                        body.innerHTML = '<div class="info-detail-empty">暂无搜集</div>';
+                    } else {
+                        const grid = document.createElement('div');
+                        grid.className = 'info-detail-grid';
+                        State.poetry.forEach((pid) => {
+                            const pd = (typeof PoetryDB !== 'undefined') ? PoetryDB[pid] : null;
+                            const card = document.createElement('div');
+                            card.className = 'info-detail-entry';
+                            if (!pd) {
+                                card.innerHTML = `<div class="info-detail-entry-title">「${pid}」</div>`;
+                            } else {
+                                card.innerHTML = `
+                                    <div class="info-detail-entry-title">「${pd.text}」</div>
+                                    <div class="info-detail-entry-meta">${pd.source || ''}</div>
+                                    <div class="info-detail-entry-line">平仄：${(pd.pattern || []).join(' ')}</div>
+                                    <div class="info-detail-entry-desc">${pd.effectDesc || '—'}</div>
+                                `;
+                            }
+                            grid.appendChild(card);
+                        });
+                        body.appendChild(grid);
+                    }
+                } else if (kind === 'relics') {
+                    title.innerText = '法宝';
+                    if (!State.relics || State.relics.length === 0) {
+                        body.innerHTML = '<div class="info-detail-empty">空空如也</div>';
+                    } else {
+                        const grid = document.createElement('div');
+                        grid.className = 'info-detail-grid';
+                        State.relics.forEach((name) => {
+                            const card = document.createElement('div');
+                            card.className = 'info-detail-entry';
+                            let desc = '暂无释义';
+                            if (typeof RelicDB !== 'undefined') {
+                                const rk = Object.keys(RelicDB).find((x) => RelicDB[x] && RelicDB[x].name === name);
+                                if (rk && RelicDB[rk].desc) desc = RelicDB[rk].desc;
+                            }
+                            card.innerHTML = `<div class="info-detail-entry-title">${name}</div><div class="info-detail-entry-desc">${desc}</div>`;
+                            grid.appendChild(card);
+                        });
+                        body.appendChild(grid);
+                    }
+                }
+                bindKeywordTooltips(body);
+                panel.classList.add('active');
+            },
+            getWeaponLabel: (key) => {
+                if (!key || typeof WeaponDB === 'undefined' || !WeaponDB[key]) return '空手';
+                const w = WeaponDB[key];
+                return `${w.name}（力${w.str || 0}，御${w.def || 0}）`;
+            },
+            promptWeaponReplace: (currentKey, nextKey, onDecision) => {
+                const cur = (typeof WeaponDB !== 'undefined') ? WeaponDB[currentKey] : null;
+                const nxt = (typeof WeaponDB !== 'undefined') ? WeaponDB[nextKey] : null;
+                if (!nxt) {
+                    if (typeof onDecision === 'function') onDecision(false);
+                    return;
+                }
+                const modal = document.createElement('div');
+                modal.className = 'modal active';
+                modal.style.zIndex = '520';
+                modal.id = 'weapon-replace-modal-temp';
+                modal.innerHTML = `
+                    <div class="kuhai-flee-box" style="max-width:540px;">
+                        <div class="kuhai-flee-title">神兵更替</div>
+                        <div class="kuhai-flee-text">
+                            当前已装备：<span style="color:var(--gold-light);">${Game.getWeaponLabel(currentKey)}</span><br>
+                            是否替换为：<span style="color:var(--gold-light);">${Game.getWeaponLabel(nextKey)}</span>
+                        </div>
+                        <div class="kuhai-flee-row">
+                            <div class="btn-g" id="weapon-replace-confirm" style="font-size:16px;">确认替换</div>
+                            <div class="btn-g" id="weapon-replace-cancel" style="font-size:16px;border-color:#555;">保持原武器</div>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+                const close = (ok) => {
+                    modal.classList.remove('active');
+                    setTimeout(() => { if (modal.parentNode) modal.parentNode.removeChild(modal); }, 40);
+                    if (typeof onDecision === 'function') onDecision(!!ok);
+                };
+                $('weapon-replace-confirm').onclick = (ev) => { ev.stopPropagation(); close(true); };
+                $('weapon-replace-cancel').onclick = (ev) => { ev.stopPropagation(); close(false); };
+            },
+            tryAcquireWeapon: (nextKey, onDone) => {
+                if (!nextKey || typeof WeaponDB === 'undefined' || !WeaponDB[nextKey]) {
+                    if (typeof onDone === 'function') onDone(false);
+                    return;
+                }
+                const currentKey = State.weapon || '';
+                if (!currentKey) {
+                    State.weapon = nextKey;
+                    Game.showToast(`装备神兵：${Game.getWeaponLabel(nextKey)}`);
+                    if (typeof onDone === 'function') onDone(true);
+                    return;
+                }
+                if (currentKey === nextKey) {
+                    Game.showToast(`当前已装备同款神兵：${Game.getWeaponLabel(currentKey)}`);
+                    if (typeof onDone === 'function') onDone(true);
+                    return;
+                }
+                Game.promptWeaponReplace(currentKey, nextKey, (ok) => {
+                    if (!ok) {
+                        Game.showToast('未更换武器');
+                        if (typeof onDone === 'function') onDone(false);
+                        return;
+                    }
+                    State.weapon = nextKey;
+                    Game.showToast(`已更换神兵：${Game.getWeaponLabel(nextKey)}`);
+                    if (typeof onDone === 'function') onDone(true);
+                });
+            },
             selectSave: (slot) => {
                 if(slot === 2) { Game.initGame('剑'); return; } 
                 $('pv-overlay').style.display = 'flex';
@@ -113,14 +244,30 @@ const Game = {
                 const poetryBox = $('info-poetry');
                 poetryBox.innerHTML = '';
                 if (State.poetry.length > 0) {
-                    State.poetry.forEach(p => {
-                        poetryBox.appendChild(Game.createPoetryCardDOM(p));
-                    });
-                    bindKeywordTooltips(poetryBox);
+                    const line = State.poetry.map((pid) => ((typeof PoetryDB !== 'undefined' && PoetryDB[pid]) ? PoetryDB[pid].text : pid)).join(' · ');
+                    poetryBox.innerHTML = `<div style="font-size:20px;letter-spacing:2px;line-height:1.5;">${line}</div><div style="color:#666;font-size:12px;margin-top:10px;">${State.poetry.length} 篇 · 点击框内预览</div>`;
                 } else {
                     poetryBox.innerHTML = '暂无搜集';
                 }
-                $('info-relics').innerHTML = State.relics.length ? State.relics.map(r => `<div style="background:#111; padding:8px 15px; border:1px solid #555; border-radius:5px; color:var(--gold); font-size:14px;">${r}</div>`).join('') : '空空如也';
+                const relicBox = $('info-relics');
+                relicBox.innerHTML = '';
+                if (State.relics.length > 0) {
+                    const wrap = document.createElement('div');
+                    wrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-content:flex-start;';
+                    State.relics.forEach((r) => {
+                        const sp = document.createElement('span');
+                        sp.textContent = r;
+                        sp.style.cssText = 'background:#111;padding:6px 12px;border:1px solid #555;border-radius:6px;color:var(--gold);font-size:13px;';
+                        wrap.appendChild(sp);
+                    });
+                    relicBox.appendChild(wrap);
+                    const hint = document.createElement('div');
+                    hint.style.cssText = 'color:#666;font-size:12px;text-align:center;margin-top:4px;';
+                    hint.innerText = '点击框内预览';
+                    relicBox.appendChild(hint);
+                } else {
+                    relicBox.innerHTML = '<span style="color:#666;">空空如也</span>';
+                }
             },
             updateUI: () => {
                 $('ui-energy').innerText = State.energy; $('ui-max-energy').innerText = State.maxEnergy;

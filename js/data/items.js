@@ -18,12 +18,18 @@ const RelicDB = {
 
 const ItemPools = {
     eliteWeapons: ['xuanYuan'],
-    eliteRelics: ['baguaMirror'],
-    poetry: ['ganShi']
+    eliteRelics: ['baguaMirror', 'buddha', 'lacquerIncense', 'fallenSoul', 'ritualSkull', 'redSpear', 'deadwoodBranch'],
+    poetry: ['ganShi', 'wuGouShuangXueMing']
 };
 
 const Items = {
     randomWeapon: (pool = ItemPools.eliteWeapons) => WeaponDB[pool[rand(0, pool.length - 1)]],
-    randomRelic: (pool = ItemPools.eliteRelics) => RelicDB[pool[rand(0, pool.length - 1)]],
+    /** @param {Set<string>} [ownedNames] 已拥有法宝全名，排除后随机 */
+    randomRelic: (pool = ItemPools.eliteRelics, ownedNames) => {
+        let keys = (pool && pool.length) ? pool.slice() : ItemPools.eliteRelics.slice();
+        if (ownedNames && ownedNames.size) keys = keys.filter((k) => RelicDB[k] && !ownedNames.has(RelicDB[k].name));
+        if (!keys.length) return null;
+        return RelicDB[keys[rand(0, keys.length - 1)]];
+    },
     randomPoetry: (pool = ItemPools.poetry) => PoetryDB[pool[rand(0, pool.length - 1)]]
 };

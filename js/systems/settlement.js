@@ -41,7 +41,8 @@ const Settlement = {
                 }
                 
                 Settlement.currentRewards.weapon = isElite ? Items.randomWeapon() : null;
-                Settlement.currentRewards.relic = isElite ? Items.randomRelic() : null;
+                const ownedRelicNames = new Set(State.relics || []);
+                Settlement.currentRewards.relic = isElite ? Items.randomRelic(ItemPools.eliteRelics, ownedRelicNames) : null;
                 const poetryChance = isElite ? 0.8 : 0.3;
                 Settlement.currentRewards.poetry = Math.random() < poetryChance ? Items.randomPoetry() : null;
 
@@ -123,12 +124,20 @@ const Settlement = {
                     cContent.appendChild(btnContainer);
                 }
 
-                Settlement.createBox('weapon', r.weapon ? `获得 ${r.weapon.name}` : null, () => {
-                    State.weapon = r.weapon.id; Game.showToast(`装备武器：${r.weapon.name}`);
+                Settlement.createBox('weapon', r.weapon ? `获得 ${r.weapon.name}（力${r.weapon.str || 0}，御${r.weapon.def || 0}）` : null, (done) => {
+                    Game.tryAcquireWeapon(r.weapon.id, (ok) => {
+                        if (typeof done === 'function') done(!!ok);
+                    });
+                    return false;
                 });
 
-                Settlement.createBox('relic', r.relic ? `获得 ${r.relic.name}` : null, () => {
-                    State.relics.push(r.relic.name); Game.showToast(`获得法宝：${r.relic.name}`);
+                Settlement.createBox('relic', r.relic ? `获得 ${r.relic.name}\n${r.relic.desc || ''}` : null, () => {
+                    if (State.relics.includes(r.relic.name)) {
+                        Game.showToast('已拥有该法宝');
+                        return;
+                    }
+                    State.relics.push(r.relic.name);
+                    Game.showToast(`获得法宝：${r.relic.name}`);
                 });
 
                 Settlement.createBox('poetry', r.poetry ? `\u5bfb\u5f97\u8bd7\u5377\uff1a\n\u300c${r.poetry.text}\u300d` : null, () => {
@@ -153,7 +162,13 @@ const Settlement = {
                     content.innerHTML = `<div style="font-size:18px; margin-bottom:15px; white-space:pre-wrap;">${text}</div>`;
                     const btn = document.createElement('div');
                     btn.className = 'reward-claim-btn'; btn.innerText = '领取';
-                    btn.onclick = () => { claimCb(); box.classList.add('claimed'); };
+                    btn.onclick = () => {
+                        const finalize = (ok = true) => {
+                            if (ok) box.classList.add('claimed');
+                        };
+                        const ret = claimCb(finalize);
+                        if (ret !== false) finalize(true);
+                    };
                     content.appendChild(btn);
                 }
             },
