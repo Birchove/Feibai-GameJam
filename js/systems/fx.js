@@ -24,7 +24,9 @@ const DragSys = {
                 if (typeof hideKeywordTooltip === 'function') hideKeywordTooltip();
                 if (typeof Combat !== 'undefined' && Combat.clearDragBattleHint) Combat.clearDragBattleHint();
                 const el = DragSys.cardEl; el.classList.remove('dragging');
-                const inHitZone = DragSys.currPt.y < window.innerHeight * 0.6; 
+                const stage = $('game-viewport');
+                const stageRect = stage ? stage.getBoundingClientRect() : { top: 0, height: window.innerHeight };
+                const inHitZone = DragSys.currPt.y < stageRect.top + stageRect.height * 0.6; 
                 
                 const cd = DragSys.cardData;
                 if (cd.unplayable) {
@@ -75,7 +77,10 @@ const DragSys = {
                 }
             },
             drawFx: () => {
-                const ctx = DragSys.ctx; ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+                const ctx = DragSys.ctx;
+                const cw = $('fxCanvas').width || window.innerWidth;
+                const ch = $('fxCanvas').height || window.innerHeight;
+                ctx.clearRect(0, 0, cw, ch);
                 if(DragSys.paths.length > 1) {
                     ctx.beginPath(); ctx.moveTo(DragSys.paths[0].x, DragSys.paths[0].y);
                     for(let i=1; i<DragSys.paths.length; i++) {
@@ -88,7 +93,13 @@ const DragSys = {
             }
         };
 
-        function resize() { $('bgCanvas').width = $('fxCanvas').width = window.innerWidth; $('bgCanvas').height = $('fxCanvas').height = window.innerHeight; }
+        function resize() {
+            const stage = $('game-viewport');
+            const w = stage ? stage.clientWidth : window.innerWidth;
+            const h = stage ? stage.clientHeight : window.innerHeight;
+            $('bgCanvas').width = $('fxCanvas').width = w;
+            $('bgCanvas').height = $('fxCanvas').height = h;
+        }
         window.addEventListener('resize', resize); resize(); DragSys.drawFx(); 
 
         // 诗韵触发特效（DOM 覆盖层，独立于 fxCanvas，避免被 DragSys 帧清屏）
@@ -132,14 +143,16 @@ const DragSys = {
         };
 
         const bgCtx = $('bgCanvas').getContext('2d');
-        const bgParticles = Array.from({length: 40}, () => ({ x: rand(0, window.innerWidth), y: rand(0, window.innerHeight), r: rand(10, 80), vx: rand(-2, 2)*0.1, vy: rand(-2, 2)*0.1, a: rand(1, 5)*0.01 }));
+        const bgParticles = Array.from({length: 40}, () => ({ x: rand(0, $('bgCanvas').width || window.innerWidth), y: rand(0, $('bgCanvas').height || window.innerHeight), r: rand(10, 80), vx: rand(-2, 2)*0.1, vy: rand(-2, 2)*0.1, a: rand(1, 5)*0.01 }));
         function drawBg() {
-            bgCtx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+            const cw = $('bgCanvas').width || window.innerWidth;
+            const ch = $('bgCanvas').height || window.innerHeight;
+            bgCtx.clearRect(0, 0, cw, ch);
             bgParticles.forEach(p => {
                 bgCtx.beginPath(); bgCtx.arc(p.x, p.y, p.r, 0, Math.PI*2); bgCtx.fillStyle = `rgba(200, 200, 200, ${p.a})`; bgCtx.fill();
                 p.x += p.vx; p.y += p.vy;
-                if(p.x < 0 || p.x > window.innerWidth) p.vx *= -1;
-                if(p.y < 0 || p.y > window.innerHeight) p.vy *= -1;
+                if(p.x < 0 || p.x > cw) p.vx *= -1;
+                if(p.y < 0 || p.y > ch) p.vy *= -1;
             });
             requestAnimationFrame(drawBg);
         }

@@ -126,8 +126,10 @@ const CardDB = {
             'c36': { id: 'c36', name: '封刀挂剑', cost: 1, type: '仄', typeClass: 'type-ze', desc: `${K.GF}，你每失去力时，${K.FX}抽取2张卡牌`, rarity: 'mid', cardType: '功卡', effect: () => { State.combat.player.fengDao = true; Game.showToast('封刀挂剑生效'); } },
             'c37': { id: 'c37', name: '七步成诗', cost: 0, type: '平', typeClass: 'type-ping', toExhaust: true, desc: `打出后进入${K.CS}，本场战斗必将获得随机1份诗句残篇`, rarity: 'mid', cardType: '功卡', effect: () => {
                 const ids = (typeof PoetryDB !== 'undefined') ? Object.keys(PoetryDB) : [];
-                if (!ids.length) { Game.showToast('七步成诗：暂无残篇库'); return; }
-                State.combat.qibuPoetryId = ids[rand(0, ids.length - 1)];
+                const owned = new Set(State.poetry || []);
+                const avail = ids.filter((id) => !owned.has(id));
+                if (!avail.length) { Game.showToast('七步成诗：已穷尽残篇，不再重复获得'); return; }
+                State.combat.qibuPoetryId = avail[rand(0, avail.length - 1)];
                 Game.showToast('七步成诗：战后结算领取残篇');
             } },
             'c38': { id: 'c38', name: '投笔从戎', cost: 1, type: '平', typeClass: 'type-ping', atkBase: 0, desc: `对一名敌人造成{V_ATK}点${K.SH}，本回合你的所有手牌不分平仄`, isAttack: true, rarity: 'mid', cardType: '武卡', effect: () => { Combat.dealDmg(0); State.combat.player.ignorePZ = true; } },

@@ -36,7 +36,7 @@ const EnemyArchetypes = {
         },
         act: (e) => {
             if (e.turnCounter % 2 !== 0) {
-                State.combat.player.weak += 1;
+                if (typeof Combat !== 'undefined' && Combat.applyPlayerWeakCurse) Combat.applyPlayerWeakCurse(1);
                 Game.showToast('受到虚弱咒！造成的伤害降低');
             } else {
                 Combat.takeDmg(8, false, e);
@@ -64,7 +64,7 @@ const EnemyArchetypes = {
                 e._nextAtkRoll = rand(6, 8);
                 Combat.takeDmg(dmg, false, e);
             } else {
-                State.combat.player.weak += 1;
+                if (typeof Combat !== 'undefined' && Combat.applyPlayerWeakCurse) Combat.applyPlayerWeakCurse(1);
                 Game.showToast('虚弱咒缠身……');
             }
         }
@@ -155,7 +155,7 @@ const EnemyArchetypes = {
         act: (e) => {
             if (e.turnCounter % 2 !== 0) {
                 if (e._chiMeiNext === 'weak') {
-                    State.combat.player.weak += 1;
+                    if (typeof Combat !== 'undefined' && Combat.applyPlayerWeakCurse) Combat.applyPlayerWeakCurse(1);
                     Game.showToast('虚弱咒！');
                 } else {
                     Combat.takeDmg(6, false, e);

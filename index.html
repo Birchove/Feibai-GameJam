@@ -15,12 +15,13 @@
         <p style="color: #ccc; margin-top: 10px; font-size: 16px;">为了获得最佳游玩体验，请将手机横屏游玩</p>
     </div>
 
+    <div id="game-viewport">
     <canvas id="bgCanvas"></canvas>
     <div class="vignette"></div>
 
     <div id="screen-main" class="screen active">
         <div class="game-title">飞白</div>
-        <div class="btn-g" onclick="Game.navTo('screen-saves')">开始旅程</div>
+        <div id="main-journey-btn" class="btn-g" onclick="Game.onMainJourneyClick()">开始旅程</div>
         <div class="btn-g" onclick="Game.showToast('选项功能开发中')">选项</div>
         <div class="btn-g" onclick="Game.showGallery()">三生石</div>
         <div class="btn-g" onclick="Game.showToast('结束运行')">退出旅程</div>
@@ -171,7 +172,7 @@
         <div class="btn-g" onclick="Game.toggleModal('settings-panel')">回到旅程</div>
         <div class="btn-g" onclick="Game.navTo('screen-class'); Game.toggleModal('settings-panel')">重新开始</div>
         <div class="btn-g" onclick="Game.showToast('选项...')">选项</div>
-        <div class="btn-g" onclick="document.getElementById('abar').style.display='none'; Game.navTo('screen-main'); Game.toggleModal('settings-panel')">主菜单</div>
+        <div class="btn-g" onclick="Game.goMainMenuFromSettings()">主菜单</div>
         <div class="btn-g" onclick="Game.showToast('退出')">退出旅程</div>
     </div>
 
@@ -289,6 +290,7 @@
 
     <canvas id="fxCanvas"></canvas>
     <div id="toast">提示信息</div>
+    </div>
     <script src="js/core/utils.js"></script>
     <script src="js/core/state.js"></script>
     <script src="js/core/audio.js"></script>

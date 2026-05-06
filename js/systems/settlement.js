@@ -42,9 +42,11 @@ const Settlement = {
                 
                 Settlement.currentRewards.weapon = isElite ? Items.randomWeapon() : null;
                 const ownedRelicNames = new Set(State.relics || []);
-                Settlement.currentRewards.relic = isElite ? Items.randomRelic(ItemPools.eliteRelics, ownedRelicNames) : null;
+                const relicFromCombat = State.combat && State.combat.encounterKey === 'enc_xiu_luo';
+                Settlement.currentRewards.relic = relicFromCombat ? Items.randomRelic(ItemPools.eliteRelics, ownedRelicNames) : null;
                 const poetryChance = isElite ? 0.8 : 0.3;
-                Settlement.currentRewards.poetry = Math.random() < poetryChance ? Items.randomPoetry() : null;
+                const ownedPoetryIds = new Set(State.poetry || []);
+                Settlement.currentRewards.poetry = Math.random() < poetryChance ? Items.randomPoetry(ItemPools.poetry, ownedPoetryIds) : null;
 
                 const qibuId = State._qibuPoetryReward;
                 State._qibuPoetryReward = null;
@@ -141,7 +143,12 @@ const Settlement = {
                 });
 
                 Settlement.createBox('poetry', r.poetry ? `\u5bfb\u5f97\u8bd7\u5377\uff1a\n\u300c${r.poetry.text}\u300d` : null, () => {
-                    State.poetry.push(r.poetry.id); Game.showToast(`\u9886\u609f\u8bd7\u53e5\uff1a${r.poetry.text}`);
+                    if (!State.poetry.includes(r.poetry.id)) {
+                        State.poetry.push(r.poetry.id);
+                        Game.showToast(`\u9886\u609f\u8bd7\u53e5\uff1a${r.poetry.text}`);
+                    } else {
+                        Game.showToast('已参悟该诗句');
+                    }
                 });
 
                 Settlement.createBox('qibu', r.qibuPoetry ? `七步成诗·本场参得残篇：\n「${r.qibuPoetry.text}」\n（已记入佚札）` : null, () => {

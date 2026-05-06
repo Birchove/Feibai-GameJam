@@ -134,7 +134,20 @@ const Events = {
     vn1: { name: '我', texts: ['似乎有些记忆……', '想起了些什么……', '好像是……被杀了……', '我要杀出……阎王殿……'], opts: [] },
     vn2: { name: '冥府茶楼店小二', texts: ['小店……恭迎……客官……\n有何……吩咐？'], opts: [
         { text: '歇息一会 (回复35%已损生命)', cb: () => { const heal = Math.floor((State.maxHp - State.hp) * 0.35); Combat.heal(heal); } },
-        { text: '活动筋骨 (支付100钱，删一张牌 - 暂未实装)', cb: () => Game.showToast('功能开发中') },
+        { text: '活动筋骨 (支付100钱，删一张牌)', cb: () => {
+            if (State.gold < 100) {
+                Game.showToast('钱财不足（需100钱）');
+                return false;
+            }
+            Game.openDeckRemovePicker((ok) => {
+                if (!ok) return;
+                State.gold -= 100;
+                Game.showToast('活动筋骨：删去一张牌，花费100钱');
+                MapSys.renderMap();
+                Game.navTo('screen-map');
+            });
+            return false;
+        } },
         { text: '凑凑热闹 (获得卡牌“破阵子”)', cb: () => { State.deck.push('c6'); Game.showToast('获得 破阵子'); } }
     ]},
     vn3: { name: '我', texts: ['破庙中心有一尊小佛像', '要做些什么？'], opts: [
@@ -250,7 +263,7 @@ const Events = {
                 text: '踏桥归去',
                 cb: () => {
                     Game.showToast('魂光渐远……');
-                    setTimeout(() => Game.navTo('screen-main'), 2200);
+                    setTimeout(() => { Game.clearJourneyCheckpoint(); Game.navTo('screen-main'); }, 2200);
                     return false;
                 }
             }

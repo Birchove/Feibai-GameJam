@@ -1,5 +1,7 @@
 const State = {
             _qibuPoetryReward: null,
+            _hasJourneyCheckpoint: false,
+            _resumeScreenId: '',
             class: '', gold: 100, hp: 50, maxHp: 50, energy: 3, maxEnergy: 3, momentum: 0, 
             str: 5, def: 5, wuxing: 2.5, agi: 1,  
             weapon: '', poetry: [], 

@@ -227,7 +227,7 @@ const Combat = {
         const weaponData = (typeof WeaponDB !== 'undefined' && State.weapon) ? WeaponDB[State.weapon] : null;
         const wStr = weaponData ? (weaponData.str || 0) : 0;
         const wDef = weaponData ? (weaponData.def || 0) : 0;
-        State.combat.player = { block: 0, dmgMod: 0, cantPlay: false, cantDmg: false, weak: 0, vuln: 0, turnStr: 0, turnDef: 0, turnDmgMod: 0, combatStr: 0, combatDef: 0, wStr, wDef, jianBiQingYe: false, nianNuJiao: false, dmgDouble: false, takeDmgDouble: false, daoGuang: false, ignorePZ: false, cantDmgNextTurn: false, deathRoundsRemaining: 0, lostStrAcc: 0, emei: false, emeiCount: 0, fengDao: false, yiZhuan: false, chunQiang: false, guRuo: false, _inRepeat: false, cursedNextPlayer: false, yanJunxingBloodCount: 0, yanJunxingNextStr: 0, incorporealStacks: 0 };
+        State.combat.player = { block: 0, dmgMod: 0, cantPlay: false, cantDmg: false, weak: 0, weakNextTurn: 0, vuln: 0, turnStr: 0, turnDef: 0, turnDmgMod: 0, combatStr: 0, combatDef: 0, wStr, wDef, jianBiQingYe: false, nianNuJiao: false, dmgDouble: false, takeDmgDouble: false, daoGuang: false, ignorePZ: false, cantDmgNextTurn: false, deathRoundsRemaining: 0, lostStrAcc: 0, emei: false, emeiCount: 0, fengDao: false, yiZhuan: false, chunQiang: false, guRuo: false, _inRepeat: false, cursedNextPlayer: false, yanJunxingBloodCount: 0, yanJunxingNextStr: 0, incorporealStacks: 0 };
         State.combat.shanjia = 0;
         State.combat._snapshot = null;
         State.combat._prevSnapshot = null;
@@ -317,6 +317,12 @@ const Combat = {
 
         if (State.combat.player.weak > 0) State.combat.player.weak--;
         if (State.combat.player.vuln > 0) State.combat.player.vuln--;
+        if ((State.combat.player.weakNextTurn || 0) > 0) {
+            const gain = State.combat.player.weakNextTurn;
+            State.combat.player.weak += gain;
+            State.combat.player.weakNextTurn = 0;
+            Game.showToast(`虚弱咒显化：本回合虚弱 ${gain}`);
+        }
 
         State.combat.enemies.forEach((e) => {
             if (!e) return;
@@ -372,7 +378,7 @@ const Combat = {
 
         Combat.refreshEnemyIntentLocks();
 
-        Combat.draw(State.combat.turn === 1 ? 6 : 3);
+        Combat.draw(5);
 
         State.combat._prevSnapshot = State.combat._snapshot || null;
         State.combat._snapshot = {
@@ -523,7 +529,17 @@ const Combat = {
     _handPileToEntry: (cardId) => {
         const entry = { cardId };
         if (cardId === 'c_jingkong') entry.retainTurnsLeft = 3;
+        const cd = CardDB[cardId];
+        if (cd && cd.keep) entry.retain = true;
         return entry;
+    },
+
+    shouldRetainAcrossTurn: (item) => {
+        if (!item || item.isMirror) return false;
+        if (item.retainTurnsLeft != null) return true;
+        if (item.retain) return true;
+        const cd = CardDB[item.cardId];
+        return !!(cd && cd.keep);
     },
 
     draw: (amt) => {
@@ -580,6 +596,8 @@ const Combat = {
                 }
                 if (item.retainTurnsLeft != null) {
                     extraDesc += `<div style="font-size:11px;color:#93c5fd;margin-top:4px;text-align:center;">保留：剩 ${item.retainTurnsLeft} 个我方回合后沉沙</div>`;
+                } else if (Combat.shouldRetainAcrossTurn(item)) {
+                    extraDesc += `<div style="font-size:11px;color:#93c5fd;margin-top:4px;text-align:center;">保留：跨回合留存</div>`;
                 }
                 const el = Game.createCardDOM(cd, 0, { forHand: true, effCost, isMirror: !!item.isMirror, extraDescHtml: extraDesc });
                 el.dataset.index = index;
@@ -756,6 +774,14 @@ const Combat = {
         }
     },
 
+    /** 敌方虚弱咒：在下个我方回合生效，仅持续该回合 */
+    applyPlayerWeakCurse: (stacks = 1) => {
+        if (!State.combat || !State.combat.player || stacks <= 0) return;
+        const p = State.combat.player;
+        p.weakNextTurn = (p.weakNextTurn || 0) + stacks;
+        Game.updateUI();
+    },
+
     /** 感时花溅泪：按当前意图分类，仅在诗韵标记的敌方行动轮内生效 */
     ganShiIntentKind: (en) => {
         if (!en) return 'other';
@@ -791,6 +817,18 @@ const Combat = {
         Combat.renderEnemies();
         Game.updateUI();
         Combat.checkDeath();
+    },
+
+    /** 感时花溅泪：将虚弱咒反缚给敌人自身，并立即刷新状态栏显示 */
+    applyEnemyWeakCurse: (enemy, stacks = 1) => {
+        if (!enemy || enemy.hp <= 0 || stacks <= 0) return;
+        const idx = State.combat.enemies.indexOf(enemy);
+        if (idx < 0) return;
+        enemy.weak = (enemy.weak || 0) + stacks;
+        Combat.pulseEnemyEntity(enemy);
+        Combat.floatTextSlot(idx, `虚弱+${stacks}`, 'block');
+        Combat.renderEnemies();
+        Game.updateUI();
     },
 
     pzHighlightByPoem: () => {
@@ -1329,7 +1367,12 @@ const Combat = {
             if (it.isMirror) {
                 State.combat.hand.splice(i, 1);
                 State.combat.exhaustPile.push(it.cardId);
+                continue;
             }
+            if (it.costOverride !== undefined) delete it.costOverride;
+            if (Combat.shouldRetainAcrossTurn(it)) continue;
+            State.combat.hand.splice(i, 1);
+            State.combat.discardPile.push(it.cardId);
         }
 
         Combat.renderHand();
@@ -1385,10 +1428,9 @@ const Combat = {
                         if (State.combat.ganShiEchoEnemyPhase) {
                             const gk = Combat.ganShiIntentKind(e);
                             if (gk === 'weak') {
-                                e.weak = (e.weak || 0) + 1;
-                                Game.showToast('感时花溅泪：咒如潮退，反缚其主');
-                                Combat.pulseEnemyEntity(e);
-                                Combat.updateEnemyIntent();
+                                // 现有减层时机在我方回合开始；此处+2可确保玩家回合可见，并保留到敌方下次行动
+                                Combat.applyEnemyWeakCurse(e, 2);
+                                Game.showToast(`感时花溅泪：${e.name} 反受虚弱咒`);
                                 skipAct = true;
                             }
                         }
@@ -1416,6 +1458,7 @@ const Combat = {
             pBar.innerHTML += `<div class="status-icon">⚔ ${totalStr}<div class="status-tooltip">${strDetail.replace(/\n/g, '<br>')}</div></div>`;
             pBar.innerHTML += `<div class="status-icon">🛡 ${totalDef}<div class="status-tooltip">${defDetail.replace(/\n/g, '<br>')}</div></div>`;
             if (p.weak > 0) pBar.innerHTML += `<div class="status-icon">📉<div class="status-tooltip">虚弱 (剩余 ${p.weak} 回合)</div></div>`;
+            if ((p.weakNextTurn || 0) > 0) pBar.innerHTML += `<div class="status-icon">📉⏳<div class="status-tooltip">虚弱咒：下回合生效 (${p.weakNextTurn})</div></div>`;
             if (p.vuln > 0) pBar.innerHTML += `<div class="status-icon">💔<div class="status-tooltip">易伤 (剩余 ${p.vuln} 回合)</div></div>`;
             if (p.cantPlay) pBar.innerHTML += `<div class="status-icon">🛑<div class="status-tooltip">禁锢</div></div>`;
             if (p.cantDmg) pBar.innerHTML += `<div class="status-icon">🕊️<div class="status-tooltip">止战</div></div>`;
@@ -1465,7 +1508,7 @@ const Combat = {
             State.combat.inCombat = false;
             Game.showToast('胜败乃兵家常事，大侠请重新来过', 4200);
             AudioSys.stopBGM();
-            setTimeout(() => Game.navTo('screen-main'), 4200);
+            setTimeout(() => { Game.clearJourneyCheckpoint(); Game.navTo('screen-main'); }, 4200);
         } else if (State.combat.inCombat && Combat._livingIndices().length === 0) {
             if (State.relics.includes('【落魄灵魂】')) {
                 State.hp = Math.min(State.maxHp, State.hp + 1);

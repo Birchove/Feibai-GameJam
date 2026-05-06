@@ -31,5 +31,11 @@ const Items = {
         if (!keys.length) return null;
         return RelicDB[keys[rand(0, keys.length - 1)]];
     },
-    randomPoetry: (pool = ItemPools.poetry) => PoetryDB[pool[rand(0, pool.length - 1)]]
+    /** @param {Set<string>} [ownedIds] 已拥有诗句 ID，排除后随机 */
+    randomPoetry: (pool = ItemPools.poetry, ownedIds) => {
+        let keys = (pool && pool.length) ? pool.slice() : ItemPools.poetry.slice();
+        if (ownedIds && ownedIds.size) keys = keys.filter((k) => !ownedIds.has(k));
+        if (!keys.length) return null;
+        return PoetryDB[keys[rand(0, keys.length - 1)]];
+    }
 };

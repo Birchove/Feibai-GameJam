@@ -1,9 +1,39 @@
 const Game = {
+            refreshMainMenuCTA: () => {
+                const btn = $('main-journey-btn');
+                if (!btn) return;
+                btn.innerText = State._hasJourneyCheckpoint ? '继续旅程' : '开始旅程';
+            },
+            onMainJourneyClick: () => {
+                if (State._hasJourneyCheckpoint && State._resumeScreenId) {
+                    Game.navTo(State._resumeScreenId);
+                    return;
+                }
+                Game.navTo('screen-saves');
+            },
+            goMainMenuFromSettings: () => {
+                const active = document.querySelector('.screen.active');
+                if (active && active.id && active.id !== 'screen-main') {
+                    State._resumeScreenId = active.id;
+                    State._hasJourneyCheckpoint = true;
+                }
+                const panel = $('settings-panel');
+                if (panel) panel.classList.remove('active');
+                document.querySelectorAll('.modal').forEach((m) => m.classList.remove('active'));
+                Game.navTo('screen-main');
+                Game.refreshMainMenuCTA();
+            },
+            clearJourneyCheckpoint: () => {
+                State._hasJourneyCheckpoint = false;
+                State._resumeScreenId = '';
+                Game.refreshMainMenuCTA();
+            },
             navTo: (screenId) => {
                 if (typeof hideKeywordTooltip === 'function') hideKeywordTooltip();
                 document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
                 $(screenId).classList.add('active');
                 $('abar').style.display = ['screen-map', 'screen-event', 'screen-combat', 'screen-settlement'].includes(screenId) ? 'flex' : 'none';
+                if (screenId === 'screen-main') Game.refreshMainMenuCTA();
             },
             showToast: (msg, durationMs = 2000) => {
                 const t = $('toast'); t.innerText = msg; t.style.opacity = 1;
@@ -198,6 +228,9 @@ const Game = {
                 }
                 // 严格遵循初始卡组设定
                 State.deck = ['c1','c1','c1','c1', 'c2','c2','c2','c2', 'c3', 'c4']; 
+                State._hasJourneyCheckpoint = true;
+                State._resumeScreenId = 'screen-map';
+                Game.refreshMainMenuCTA();
                 MapSys.renderMap();
                 AudioSys.playBGM('assets/bgm_map.mp3'); 
                 Game.navTo('screen-map');
