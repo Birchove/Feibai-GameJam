@@ -41,6 +41,16 @@ const Game = {
             },
             toggleModal: (id) => {
                 const el = $(id);
+                if (!el) return;
+                if (id === 'info-panel') {
+                    if (el.classList.contains('active')) {
+                        el.classList.remove('active');
+                    } else {
+                        el.classList.add('active');
+                        Game.updateInfoPanel();
+                    }
+                    return;
+                }
                 if (el.classList.contains('active')) {
                     el.classList.remove('active');
                 } else {
@@ -59,7 +69,8 @@ const Game = {
                 }
             },
             openInfoDetail: (kind) => {
-                document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
+                const info = $('info-panel');
+                if (info) info.classList.remove('active');
                 const panel = $('info-detail-panel');
                 const body = $('info-detail-body');
                 const title = $('info-detail-title');
@@ -144,13 +155,23 @@ const Game = {
                     </div>
                 `;
                 document.body.appendChild(modal);
+                const recConfirm = $('weapon-replace-confirm');
+                const recCancel = $('weapon-replace-cancel');
+                if (cur && nxt && recConfirm && recCancel) {
+                    const curStr = cur.str || 0; const curDef = cur.def || 0;
+                    const nxtStr = nxt.str || 0; const nxtDef = nxt.def || 0;
+                    const allBetter = nxtStr > curStr && nxtDef > curDef;
+                    const allWorse = nxtStr < curStr && nxtDef < curDef;
+                    if (allBetter) recConfirm.classList.add('reco-choice');
+                    else if (allWorse) recCancel.classList.add('reco-choice');
+                }
                 const close = (ok) => {
                     modal.classList.remove('active');
                     setTimeout(() => { if (modal.parentNode) modal.parentNode.removeChild(modal); }, 40);
                     if (typeof onDecision === 'function') onDecision(!!ok);
                 };
-                $('weapon-replace-confirm').onclick = (ev) => { ev.stopPropagation(); close(true); };
-                $('weapon-replace-cancel').onclick = (ev) => { ev.stopPropagation(); close(false); };
+                if (recConfirm) recConfirm.onclick = (ev) => { ev.stopPropagation(); close(true); };
+                if (recCancel) recCancel.onclick = (ev) => { ev.stopPropagation(); close(false); };
             },
             tryAcquireWeapon: (nextKey, onDone) => {
                 if (!nextKey || typeof WeaponDB === 'undefined' || !WeaponDB[nextKey]) {
@@ -182,6 +203,8 @@ const Game = {
             },
             selectSave: (slot) => {
                 if(slot === 2) { Game.initGame('剑'); return; } 
+                // 空存档进入新局：重置已选流派，避免沿用上次残留
+                State.class = '';
                 $('pv-overlay').style.display = 'flex';
                 const video = $('pv-video');
                 video.play().catch(e=>{}); 
@@ -193,6 +216,11 @@ const Game = {
                 const video = $('pv-video');
                 video.pause(); video.currentTime = 0; video.onended = null;  
                 AudioSys.stopBGM();
+                State.class = '';
+                document.querySelectorAll('.class-btn').forEach(b => b.classList.remove('selected'));
+                $('class-enter').style.opacity = 0;
+                $('class-icon').innerText = '❓';
+                $('class-desc').innerText = '请选择流派（当前仅开放：剑）';
                 Game.navTo('screen-class');
             },
             selectClass: (cls, desc) => {
@@ -209,7 +237,11 @@ const Game = {
                 document.querySelector('.class-center').onmouseout = () => $('class-icon').style.color = '#ccc';
             },
             enterMap: () => {
-                if(!State.class) return Game.showToast('请先选择流派');
+                if(!State.class) return Game.showToast('请先选择流派（当前仅开放：剑）');
+                if (State.class !== '剑') {
+                    Game.showToast('当前版本仅开放“剑”流派，请选择“剑”开始旅程');
+                    return;
+                }
                 Game.initGame(State.class);
             },
             initGame: (cls) => {
@@ -424,7 +456,8 @@ const Game = {
                 let html = '';
                 if (count > 0) html += `<div class="card-count-badge">x${count}</div>`;
                 const mirrorHtml = opts.isMirror ? ' <span class="mirror-tag">镜</span>' : '';
-                const cat = cd.cardType || '—';
+                const catRaw = cd.cardType || '—';
+                const cat = catRaw === '功法' ? '功卡' : catRaw;
                 const extra = opts.extraDescHtml || '';
                 html += `
                     <div class="card-cost">${effCost}</div><div class="card-type ${cd.typeClass}">${cd.type}</div>

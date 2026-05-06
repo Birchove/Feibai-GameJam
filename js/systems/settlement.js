@@ -121,8 +121,27 @@ const Settlement = {
                 
                 if(r.cards.length > 0) {
                     const btnContainer = document.createElement('div');
-                    btnContainer.style.width = '100%'; btnContainer.style.display = 'flex'; btnContainer.style.justifyContent = 'center';
+                    btnContainer.style.width = '100%';
+                    btnContainer.style.display = 'flex';
+                    btnContainer.style.justifyContent = 'center';
+                    btnContainer.style.gap = '14px';
                     btnContainer.appendChild(claimBtn);
+
+                    const skipBtn = document.createElement('div');
+                    skipBtn.className = 'reward-claim-btn';
+                    skipBtn.style.borderColor = '#555';
+                    skipBtn.style.background = 'rgba(80,80,88,0.18)';
+                    skipBtn.innerText = '空过（不选卡）';
+                    skipBtn.onclick = () => {
+                        Settlement.selectedCardIds = [];
+                        cContent.querySelectorAll('.reward-card-wrapper.selected').forEach((el) => el.classList.remove('selected'));
+                        cBox.classList.add('claimed');
+                        claimBtn.classList.add('disabled');
+                        claimBtn.onclick = null;
+                        skipBtn.onclick = null;
+                        Game.showToast('本次未领取卡牌');
+                    };
+                    btnContainer.appendChild(skipBtn);
                     cContent.appendChild(btnContainer);
                 }
 

@@ -399,7 +399,10 @@ const Combat = {
         list.innerHTML = '';
         const living = State.combat.enemies.filter((e) => e && e.hp > 0).length;
         list.className = 'enemy-list';
-        if (living >= 4) list.classList.add('enemy-layout-grid');
+        const liveEnemies = State.combat.enemies.filter((e) => e && e.hp > 0);
+        const allChiFour = living === 4 && liveEnemies.every((e) => e.arch === 'chi_mei_single');
+        if (allChiFour) list.classList.add('enemy-layout-chi-four');
+        else if (living >= 4) list.classList.add('enemy-layout-grid');
         else if (living === 3) list.classList.add('enemy-layout-triple');
 
         State.combat.enemies.forEach((en, i) => {

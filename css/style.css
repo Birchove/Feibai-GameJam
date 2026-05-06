@@ -39,6 +39,11 @@
         /* ================= UI 组件 ================= */
         .btn-g { background: linear-gradient(90deg, transparent, rgba(30,30,35,0.8), transparent); border: 1px solid transparent; color: #ccc; padding: 15px 40px; font-size: 24px; cursor: pointer; transition: all 0.3s; font-family: inherit; text-align: center; }
         .btn-g:hover { border-bottom: 1px solid var(--blood-red); color: white; text-shadow: 0 0 10px var(--blood-red); transform: scale(1.05); }
+        .btn-g.reco-choice {
+            border-color: var(--gold-light) !important;
+            color: var(--gold-light) !important;
+            box-shadow: 0 0 14px rgba(255, 215, 0, 0.35), inset 0 0 10px rgba(184,134,11,0.2);
+        }
         .asset-placeholder { display: flex; justify-content: center; align-items: center; background: rgba(30,30,30,0.5); border: 1px dashed #555; color: #888; font-size: 14px; text-align: center; padding: 10px; }
 
         /* ================= 前期界面 ================= */
@@ -322,6 +327,26 @@
             max-width: 110px;
             font-size: 11px;
         }
+        /* 四魑魅专用：更扁、占高更小，避免压到下方手牌区 */
+        .enemy-list.enemy-layout-chi-four {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 108px));
+            gap: 4px 12px;
+            justify-content: center;
+            align-content: end;
+            max-width: min(100%, 248px);
+        }
+        .enemy-list.enemy-layout-chi-four .entity-sprite { width: 92px; height: 114px; }
+        .enemy-list.enemy-layout-chi-four .hp-container { width: 92px; height: 10px; }
+        .enemy-list.enemy-layout-chi-four .intent {
+            position: relative; top: auto; left: auto; font-size: 10px;
+            padding: 2px 4px; max-width: 96px; white-space: normal; line-height: 1.2; margin-bottom: 1px;
+        }
+        .enemy-list.enemy-layout-chi-four .enemy-name-tag { max-width: 94px; font-size: 10px; line-height: 1.15; }
+        .enemy-list.enemy-layout-chi-four .status-bar { flex-wrap: wrap; max-width: 92px; height: auto; min-height: 18px; gap: 2px; margin-top: 1px; }
+        .enemy-list.enemy-layout-chi-four .status-icon { font-size: 11px; padding: 0 3px; }
+        .enemy-list.enemy-layout-chi-four .hp-text { top: -16px; font-size: 10px; }
+        .enemy-list.enemy-layout-chi-four .hp-text .hp-pct { font-size: 9px; }
         .entity.enemy-slot {
             transition: box-shadow 0.25s, transform 0.25s, outline-color 0.2s;
             border-radius: 8px;

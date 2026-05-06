@@ -13,7 +13,7 @@ const CardDB = {
                 if (en && en.hp > 0) { en.stun = true; Game.showToast('敌人被旋风困住！'); }
             } },
             'c8': { id: 'c8', name: '水调歌头', cost: 2, type: '平', typeClass: 'type-ping', atkBase: 0, desc: `造成{V_ATK}点${K.SH}2次，抽取(1+轻功)张卡牌`, rarity: 'mid', cardType: '词牌', effect: () => { Combat.dealDmg(0); setTimeout(()=>Combat.dealDmg(0), 200); Combat.draw(1 + State.agi); } },
-            'c9': { id: 'c9', name: '念奴娇', cost: 2, type: '平', typeClass: 'type-ping', desc: `${K.GF}，每回合开始失去1点生命，从弃牌堆打出1卡（本场打出后不再入手）`, rarity: 'mid', cardType: '功法', effect: () => { State.combat.player.nianNuJiao = true; Game.showToast('功法发动：念奴娇'); } },
+            'c9': { id: 'c9', name: '念奴娇', cost: 2, type: '平', typeClass: 'type-ping', desc: `${K.GF}，每回合开始失去1点生命，从弃牌堆打出1卡（本场打出后不再入手）`, rarity: 'mid', cardType: '功卡', effect: () => { State.combat.player.nianNuJiao = true; Game.showToast('功法发动：念奴娇'); } },
             'c10': { id: 'c10', name: '满江红', cost: 0, type: '平', typeClass: 'type-ping', toExhaust: true, desc: `打出后进入${K.CS}，抽取卡牌，本回合${K.SH}翻倍，受到的${K.SH}也翻倍`, rarity: 'mid', cardType: '词牌', effect: () => { Combat.draw(1); State.combat.player.dmgDouble = true; State.combat.player.takeDmgDouble = true; } },
             
             // [ 11-21: 低阶残卷-补充 ]
