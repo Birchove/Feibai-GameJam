@@ -97,24 +97,28 @@ const EnemyArchetypes = {
         sprite: "url('assets/enemy_2.png') center/cover, #222",
         rollHp: () => rand(58, 62),
         init: (e) => { e._lsPhase = 0; },
-        intent: (e) => {
+        displayIntent: (e) => {
             const ph = e._lsPhase % 3;
             if (ph === 0) {
                 const d = typeof Combat !== 'undefined' && Combat.enemyDmgAfterShushou ? Combat.enemyDmgAfterShushou(e, 13) : 13;
                 return `意图: 攻击 (${d})`;
             }
             if (ph === 1) {
-                const d = typeof Combat !== 'undefined' && Combat.enemyDmgAfterShushou ? Combat.enemyDmgAfterShushou(e, 5) : 5;
-                return `意图: 脓毒或御骸 (50%攻${d} / 50%持守+10)`;
+                if (e._lanNext === 'atk') {
+                    const d = typeof Combat !== 'undefined' && Combat.enemyDmgAfterShushou ? Combat.enemyDmgAfterShushou(e, 5) : 5;
+                    return `意图: 脓毒攻 (${d})`;
+                }
+                return '意图: 御骸（+10持守）';
             }
             return '意图: 尸皮硬化 (+4力 +10持守)';
         },
+        intent: (e) => EnemyArchetypes.lan_shi_guai.displayIntent(e),
         act: (e) => {
             const ph = e._lsPhase % 3;
             if (ph === 0) {
                 Combat.takeDmg(13, false, e);
             } else if (ph === 1) {
-                if (Math.random() < 0.5) Combat.takeDmg(5, false, e);
+                if (e._lanNext === 'atk') Combat.takeDmg(5, false, e);
                 else {
                     e.block = (e.block || 0) + 10;
                     Game.showToast('烂尸怪御起腐甲');
@@ -134,21 +138,28 @@ const EnemyArchetypes = {
         displayId: 'm_chimei',
         name: '魑魅魍魉',
         sprite: "url('assets/enemy_1.png') center/cover, #222",
-        rollHp: () => rand(24, 32),
-        intent: (e) => {
+        rollHp: () => rand(12, 16),
+        displayIntent: (e) => {
             if (e.turnCounter % 2 !== 0) {
-                const d = typeof Combat !== 'undefined' && Combat.enemyDmgAfterShushou ? Combat.enemyDmgAfterShushou(e, 6) : 6;
-                return `意图: 咒缚 (75%虚弱咒 / 25%攻${d})`;
+                if (e._chiMeiNext === 'weak') return '意图: 虚弱咒';
+                if (e._chiMeiNext === 'atk') {
+                    const d = typeof Combat !== 'undefined' && Combat.enemyDmgAfterShushou ? Combat.enemyDmgAfterShushou(e, 6) : 6;
+                    return `意图: 攻击 (${d})`;
+                }
+                return '意图: 咒缚…';
             }
             const d = typeof Combat !== 'undefined' && Combat.enemyDmgAfterShushou ? Combat.enemyDmgAfterShushou(e, 4) : 4;
-            return `意图: 撕扯 (${d})`;
+            return `意图: 攻袭 (${d})`;
         },
+        intent: (e) => EnemyArchetypes.chi_mei_single.displayIntent(e),
         act: (e) => {
             if (e.turnCounter % 2 !== 0) {
-                if (Math.random() < 0.75) {
+                if (e._chiMeiNext === 'weak') {
                     State.combat.player.weak += 1;
                     Game.showToast('虚弱咒！');
-                } else Combat.takeDmg(6, false, e);
+                } else {
+                    Combat.takeDmg(6, false, e);
+                }
             } else Combat.takeDmg(4, false, e);
         }
     },
@@ -280,17 +291,153 @@ const EnemyArchetypes = {
             }
         }
     },
-    xiu_luo_place: {
-        displayId: 'm_xiuluo',
-        name: '修罗场守厄',
+    hei_wu_chang: {
+        displayId: 'm_heiwu',
+        name: '黑无常',
         sprite: "url('assets/enemy_2.png') center/cover, #222",
-        rollHp: () => 1000,
-        intent: (e) => {
-            const d = typeof Combat !== 'undefined' && Combat.enemyDmgAfterShushou ? Combat.enemyDmgAfterShushou(e, 20) : 20;
-            return `意图: 业刀 (占位 ${d})`;
+        rollHp: () => 161,
+        init: (e) => { e._wuChangRagePhase = null; },
+        displayIntent: (e) => {
+            if (e._wuChangRagePhase === 'prep') return '意图: 煞气凝结…';
+            if (e._wuChangRagePhase === 'berserk') {
+                const d = 22 + (e.str || 0);
+                const td = typeof Combat !== 'undefined' && Combat.enemyDmgAfterShushou ? Combat.enemyDmgAfterShushou(e, d) : d;
+                return `意图: 狂乱罚击 (${td})`;
+            }
+            if (e.turnCounter % 2 !== 0) {
+                const d = typeof Combat !== 'undefined' && Combat.enemyDmgAfterShushou ? Combat.enemyDmgAfterShushou(e, 11) : 11;
+                return `意图: 索命 (${d}) · 弃牌恐魇`;
+            }
+            return '意图: 聚怨为甲 · 双煞增力';
         },
+        intent: (e) => EnemyArchetypes.hei_wu_chang.displayIntent(e),
         act: (e) => {
-            Combat.takeDmg(20, false, e);
+            if (e._wuChangRagePhase === 'prep') {
+                Game.showToast('黑无常：同伴既殁，且在阴风凝煞一瞬……');
+                e._wuChangRagePhase = 'berserk';
+                return;
+            }
+            if (e._wuChangRagePhase === 'berserk') {
+                const d = 22 + (e.str || 0);
+                Combat.takeDmg(d, false, e);
+                e.str = (e.str || 0) + 2;
+                e.hp = Math.min(e.maxHp, e.hp + 10);
+                Game.showToast('黑无常狂化');
+                return;
+            }
+            if (e.turnCounter % 2 !== 0) {
+                Combat.takeDmg(11, false, e);
+                State.combat.discardPile.push('c_jingkong');
+                Game.showToast('阴魇入梦：惊恐堕入弃牌堆');
+            } else {
+                const blk = Math.max(0, Math.floor((State.maxHp - State.hp) / 2));
+                e.block = (e.block || 0) + blk;
+                State.combat.enemies.forEach((o) => {
+                    if (o && o.hp > 0 && (o.arch === 'hei_wu_chang' || o.arch === 'bai_wu_chang')) o.str = (o.str || 0) + 1;
+                });
+            }
+        }
+    },
+    bai_wu_chang: {
+        displayId: 'm_baiwu',
+        name: '白无常',
+        sprite: "url('assets/enemy_1.png') center/cover, #222",
+        rollHp: () => 241,
+        init: (e) => { e._wuChangRagePhase = null; },
+        displayIntent: (e) => {
+            if (e._wuChangRagePhase === 'prep') return '意图: 煞气凝结…';
+            if (e._wuChangRagePhase === 'berserk') {
+                const d = 22 + (e.str || 0);
+                const td = typeof Combat !== 'undefined' && Combat.enemyDmgAfterShushou ? Combat.enemyDmgAfterShushou(e, d) : d;
+                return `意图: 狂乱罚击 (${td})`;
+            }
+            if (e.turnCounter % 2 !== 0) {
+                const blk = Math.floor(State.hp / 2);
+                return `意图: 借汝生气为御 (${blk}) · 回合末双煞回生`;
+            }
+            const d = typeof Combat !== 'undefined' && Combat.enemyDmgAfterShushou ? Combat.enemyDmgAfterShushou(e, 9) : 9;
+            return `意图: 还魂鞭 (${d}) · 啖伤回命`;
+        },
+        intent: (e) => EnemyArchetypes.bai_wu_chang.displayIntent(e),
+        act: (e) => {
+            if (e._wuChangRagePhase === 'prep') {
+                Game.showToast('白无常：怨恨如丝，转眼即成绞索……');
+                e._wuChangRagePhase = 'berserk';
+                return;
+            }
+            if (e._wuChangRagePhase === 'berserk') {
+                const d = 22 + (e.str || 0);
+                Combat.takeDmg(d, false, e);
+                e.str = (e.str || 0) + 2;
+                e.hp = Math.min(e.maxHp, e.hp + 10);
+                Game.showToast('白无常狂化');
+                return;
+            }
+            if (e.turnCounter % 2 !== 0) {
+                const blk = Math.max(0, Math.floor(State.hp / 2));
+                e.block = (e.block || 0) + blk;
+                State.combat.enemies.forEach((o) => {
+                    if (o && o.hp > 0 && (o.arch === 'hei_wu_chang' || o.arch === 'bai_wu_chang')) {
+                        o.hp = Math.min(o.maxHp, o.hp + 1);
+                    }
+                });
+                Game.showToast('双无常各回复 1 点命火');
+            } else {
+                const hp0 = State.hp;
+                Combat.takeDmg(9, false, e);
+                const lost = Math.max(0, hp0 - State.hp);
+                e.hp = Math.min(e.maxHp, e.hp + lost);
+            }
+        }
+    },
+
+    yan_luo_wang: {
+        displayId: 'm_yanluo',
+        name: '阎罗王',
+        sprite: "url('assets/enemy_2.png') center/cover, #222",
+        rollHp: () => 444,
+        init: (e) => { e.shehun = 0; e.junxing = true; },
+        displayIntent: (e) => {
+            const ph = ((e.turnCounter - 1) % 4) + 1;
+            if (ph === 1) return '意图: 冥律 · 摄魂四层 / 峻刑';
+            if (ph === 2) {
+                const raw = typeof Combat !== 'undefined' && Combat.enemyDmgAfterShushou ? Combat.enemyDmgAfterShushou(e, 44) : 44;
+                const d = Math.floor(raw);
+                return `意图: 量罪罚击 (${d})`;
+            }
+            if (ph === 3) {
+                const raw = typeof Combat !== 'undefined' && Combat.enemyDmgAfterShushou ? Combat.enemyDmgAfterShushou(e, 11) : 11;
+                const d = Math.floor(raw);
+                return `意图: 薄惩 (${d})`;
+            }
+            return '意图: 再缚摄魂 · 观簿续刑';
+        },
+        intent: (e) => EnemyArchetypes.yan_luo_wang.displayIntent(e),
+        act: (e) => {
+            const ph = ((e.turnCounter - 1) % 4) + 1;
+            if (ph === 1) {
+                e.shehun = (e.shehun || 0) + 4;
+                e.junxing = true;
+                Game.showToast('阎罗王：摄魂萦体，峻刑铭骨');
+            } else if (ph === 2) {
+                if (typeof Combat !== 'undefined' && Combat.yanLuowangStrikeAndJunxing) return Combat.yanLuowangStrikeAndJunxing(e, 44);
+                Combat.takeDmg(44, false, e);
+            } else if (ph === 3) {
+                if (typeof Combat !== 'undefined' && Combat.yanLuowangStrikeAndJunxing) return Combat.yanLuowangStrikeAndJunxing(e, 11);
+                Combat.takeDmg(11, false, e);
+            } else {
+                e.shehun = (e.shehun || 0) + 4;
+                const m = (typeof State !== 'undefined' && State.combat) ? (State.combat.turn || 1) : 1;
+                const thr = 111 * (4 - Math.floor(m / 4));
+                if (thr > 0 && e.hp >= thr) {
+                    e.shehun += 4;
+                    Game.showToast(`阎罗王：魂册未罄，再叠摄魂（阈 ${thr}）`);
+                }
+            }
+            if ((e.shehun || 0) > 0) {
+                e.str = (e.str || 0) + e.shehun;
+                e.block = (e.block || 0) + 2 * e.shehun;
+            }
         }
     },
 
@@ -317,7 +464,8 @@ const StrongSoloPool = ['ye_ku_gui', 'yin_sha', 'ku_hai_guan_li', 'diao_si_gui']
 const EncounterDB = {
     fight1: { rewardTier: 'normal', units: [{ arch: 'legacy_fight1' }] },
     fight2: { rewardTier: 'elite', units: [{ arch: 'legacy_fight2' }] },
-    enc_xiu_luo: { rewardTier: 'elite', units: [{ arch: 'xiu_luo_place' }] },
+    enc_xiu_luo: { rewardTier: 'elite', units: [{ arch: 'hei_wu_chang' }, { arch: 'bai_wu_chang' }] },
+    enc_yan_luo_wang: { rewardTier: 'elite', units: [{ arch: 'yan_luo_wang' }] },
     enc_double_weak: { rewardTier: 'normal', units: () => {
         const a = _pick(WeakArchPool);
         let b = _pick(WeakArchPool);
@@ -372,6 +520,8 @@ function Combat_createEnemyInstance(archKey, slotIndex) {
         block: 0,
         str: 0,
         shushouQin: 0,
+        atkDownThisRound: 0,
+        qieNuoStacks: 0,
         sprite: def.sprite,
         _nextAtkRoll: null,
         _lsPhase: 0,

@@ -9,20 +9,31 @@ const DragSys = {
                 el.style.left = `${rect.left}px`; el.style.top = `${rect.top}px`;
                 document.onmousemove = DragSys.move; document.onmouseup = DragSys.end;
                 document.ontouchmove = (ev) => DragSys.move(ev.touches[0]); document.ontouchend = DragSys.end;
+                if (typeof Combat !== 'undefined' && Combat.clearDragBattleHint) Combat.clearDragBattleHint();
             },
             move: (e) => {
                 if(!DragSys.isDragging) return;
                 const dx = e.clientX - DragSys.startPt.x; const dy = e.clientY - DragSys.startPt.y;
                 DragSys.cardEl.style.transform = `translate(${dx}px, ${dy}px) rotate(${dx*0.05}deg)`;
                 DragSys.paths.push({ x: e.clientX, y: e.clientY, life: 1.0 }); DragSys.currPt = { x: e.clientX, y: e.clientY };
+                if (typeof Combat !== 'undefined' && Combat.updateDragBattleHint) Combat.updateDragBattleHint(DragSys.cardData, DragSys.currPt);
             },
             end: (e) => {
                 if(!DragSys.isDragging) return;
                 DragSys.isDragging = false; document.onmousemove = null; document.onmouseup = null; document.ontouchmove = null; document.ontouchend = null;
+                if (typeof hideKeywordTooltip === 'function') hideKeywordTooltip();
+                if (typeof Combat !== 'undefined' && Combat.clearDragBattleHint) Combat.clearDragBattleHint();
                 const el = DragSys.cardEl; el.classList.remove('dragging');
                 const inHitZone = DragSys.currPt.y < window.innerHeight * 0.6; 
                 
                 const cd = DragSys.cardData;
+                if (cd.unplayable) {
+                    Game.showToast('此牌不可打出');
+                    el.style.transition = 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                    el.style.transform = 'translate(0, 0) rotate(0)';
+                    setTimeout(() => { el.style.position = 'relative'; el.style.left = '0'; el.style.top = '0'; el.style.transition = ''; }, 300);
+                    return;
+                }
                 // 取手牌项的有效 cost（镜像等可能通过 costOverride 使其为 0）
                 const handItemRaw = (State.combat && State.combat.hand) ? State.combat.hand[DragSys.index] : null;
                 const handItem = handItemRaw ? (typeof handItemRaw === 'string' ? { cardId: handItemRaw } : handItemRaw) : null;
@@ -39,6 +50,15 @@ const DragSys = {
                             const r = slot.getBoundingClientRect();
                             if (DragSys.currPt.x >= r.left && DragSys.currPt.x <= r.right && DragSys.currPt.y >= r.top && DragSys.currPt.y <= r.bottom) hitIdx = i;
                         });
+                    }
+                    const liv = (typeof Combat !== 'undefined' && Combat._livingIndices) ? Combat._livingIndices() : [];
+                    const needTgt = typeof Combat !== 'undefined' && Combat.cardNeedsEnemyTarget && Combat.cardNeedsEnemyTarget(cd);
+                    if (needTgt && liv.length > 1 && hitIdx < 0) {
+                        Game.showToast('请将攻击拖至目标敌人');
+                        el.style.transition = 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                        el.style.transform = 'translate(0, 0) rotate(0)';
+                        setTimeout(() => { el.style.position = 'relative'; el.style.left='0'; el.style.top='0'; el.style.transition=''; }, 300);
+                        return;
                     }
                     if (hitIdx < 0) {
                         hitIdx = (typeof Combat !== 'undefined' && Combat._primaryTargetIdx) ? Combat._primaryTargetIdx() : 0;

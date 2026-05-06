@@ -1,12 +1,13 @@
 const Game = {
             navTo: (screenId) => {
+                if (typeof hideKeywordTooltip === 'function') hideKeywordTooltip();
                 document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
                 $(screenId).classList.add('active');
                 $('abar').style.display = ['screen-map', 'screen-event', 'screen-combat', 'screen-settlement'].includes(screenId) ? 'flex' : 'none';
             },
-            showToast: (msg) => {
+            showToast: (msg, durationMs = 2000) => {
                 const t = $('toast'); t.innerText = msg; t.style.opacity = 1;
-                setTimeout(() => t.style.opacity = 0, 2000);
+                setTimeout(() => { t.style.opacity = 0; }, durationMs);
             },
             toggleModal: (id) => {
                 const el = $(id);
@@ -141,6 +142,63 @@ const Game = {
                     grid.appendChild(Game.createCardDOM(CardDB[cId]));
                 });
             },
+            /** 地图/事件：从 State.deck 移除一张；onDone(ok) 确认时 ok=true */
+            openDeckRemovePicker: (onDone) => {
+                const deck = State.deck;
+                if (!deck || deck.length === 0) {
+                    Game.showToast('卡组已空');
+                    if (typeof onDone === 'function') onDone(false);
+                    return;
+                }
+                const panel = $('card-picker');
+                const grid = $('card-picker-grid');
+                const title = $('card-picker-title');
+                const confirmBtn = $('card-picker-confirm');
+                const cancelBtn = $('card-picker-cancel');
+                let selectedIdx = -1;
+
+                title.innerText = '选择一张牌从卡组永久移除';
+                grid.innerHTML = '';
+
+                deck.forEach((cid, idx) => {
+                    const cdef = CardDB[cid];
+                    if (!cdef) return;
+                    const wrap = document.createElement('div');
+                    wrap.className = 'picker-card-wrapper';
+                    wrap.appendChild(Game.createCardDOM(cdef));
+                    wrap.onclick = () => {
+                        grid.querySelectorAll('.picker-card-wrapper.selected').forEach((el) => el.classList.remove('selected'));
+                        selectedIdx = idx;
+                        wrap.classList.add('selected');
+                    };
+                    grid.appendChild(wrap);
+                });
+
+                document.querySelectorAll('.modal').forEach((m) => m.classList.remove('active'));
+                panel.classList.add('active');
+
+                const close = () => {
+                    panel.classList.remove('active');
+                    confirmBtn.onclick = null;
+                    cancelBtn.onclick = null;
+                };
+                confirmBtn.onclick = () => {
+                    if (selectedIdx < 0) {
+                        Game.showToast('未选择');
+                        return;
+                    }
+                const removed = State.deck.splice(selectedIdx, 1)[0];
+                const nm = CardDB[removed] ? CardDB[removed].name : removed;
+                close();
+                Game.showToast(`已从卡组移除：${nm}`);
+                if (typeof Game.updateInfoPanel === 'function') Game.updateInfoPanel();
+                if (typeof onDone === 'function') onDone(true);
+                };
+                cancelBtn.onclick = () => {
+                    close();
+                    if (typeof onDone === 'function') onDone(false);
+                };
+            },
             showGallery: () => {
                 Game.navTo('screen-gallery');
                 $('gallery-low').innerHTML = ''; $('gallery-mid').innerHTML = ''; $('gallery-high').innerHTML = ''; $('gallery-token').innerHTML = '';
@@ -175,17 +233,25 @@ const Game = {
                 }
                 return desc;
             },
-            createCardDOM: (cd, count = 0) => {
+            createCardDOM: (cd, count = 0, opts = {}) => {
                 const el = document.createElement('div');
-                el.className = 'deck-card';
+                const effCost = (opts.effCost !== undefined && opts.effCost !== null) ? opts.effCost : cd.cost;
+                const forHand = !!opts.forHand;
+                let cls = forHand ? 'card' : 'deck-card';
+                if (cd.rarity === 'mid') cls += ' mid-rarity-card';
+                if (cd.rarity === 'high') cls += ' high-rarity-card';
+                el.className = cls;
                 let html = '';
-                if(count > 0) html += `<div class="card-count-badge">x${count}</div>`;
+                if (count > 0) html += `<div class="card-count-badge">x${count}</div>`;
+                const mirrorHtml = opts.isMirror ? ' <span class="mirror-tag">镜</span>' : '';
+                const cat = cd.cardType || '—';
+                const extra = opts.extraDescHtml || '';
                 html += `
-                    <div class="card-cost">${cd.cost}</div><div class="card-type ${cd.typeClass}">${cd.type}</div>
-                    <div class="card-name">${cd.name}</div>
-                    <div class="card-category">${cd.cardType}</div>
+                    <div class="card-cost">${effCost}</div><div class="card-type ${cd.typeClass}">${cd.type}</div>
+                    <div class="card-name">${cd.name}${mirrorHtml}</div>
+                    <div class="card-category">${cat}</div>
                     <div class="asset-placeholder card-img" style="background: url('assets/card_${cd.id}.png') center/cover, #222; border:none;"></div>
-                    <div class="card-desc">${Game.renderCardDesc(cd)}</div>
+                    <div class="card-desc">${Game.renderCardDesc(cd)}${extra}</div>
                 `;
                 el.innerHTML = html;
                 bindKeywordTooltips(el);

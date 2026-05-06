@@ -7,7 +7,11 @@ const Settlement = {
                 const isElite = rewardTier === 'elite';
 
                 State._settlementFromVillageAmbush = !!State.combat.encounterKey && State.combat.encounterKey === 'enc_village_ambush';
-                
+                if (State._settlementFromVillageAmbush && State.deck && !State.deck.includes('c9')) {
+                    State.deck.push('c9');
+                    Game.showToast('荒村厄除：念奴娇已写入残卷');
+                }
+
                 Settlement.currentRewards.gold = isElite ? rand(40, 60) : rand(20, 40);
                 Settlement.currentRewards.wuxing = isElite ? 0.5 : 0.2;
                 
@@ -16,6 +20,7 @@ const Settlement = {
                 Settlement.selectedCardIds = [];
 
                 const allKeys = Object.keys(CardDB).filter(k => CardDB[k].rarity !== 'equip' && CardDB[k].rarity !== 'token');
+                const rewardKeyPool = State._settlementFromVillageAmbush ? allKeys.filter((k) => k !== 'c9') : allKeys;
                 Settlement.currentRewards.cards = [];
                 
                 const getRandomCardByRarity = () => {
@@ -24,7 +29,7 @@ const Settlement = {
                     if(roll > 0.45 && roll <= 0.85) targetRarity = 'mid'; // 40%
                     else if(roll > 0.85) targetRarity = 'high'; // 15%
                     
-                    const pool = allKeys.filter(k => CardDB[k].rarity === targetRarity);
+                    const pool = rewardKeyPool.filter(k => CardDB[k].rarity === targetRarity);
                     return pool[rand(0, pool.length - 1)];
                 };
 

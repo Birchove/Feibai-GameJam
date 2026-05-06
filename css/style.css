@@ -162,10 +162,110 @@
         #screen-combat .screen-content { display: flex; flex-direction: column; background: url('../assets/combat_bg.png') center/cover, var(--ink-bg); }
         .combat-top { padding: 10px 40px; display: flex; justify-content: space-between; align-items: center; font-size: 24px; font-weight: bold; }
         .stat-badge { background: rgba(0,0,0,0.8); padding: 5px 15px; border: 1px solid #444; border-radius: 20px; }
-        .combat-middle { flex: 1; display: flex; justify-content: space-around; align-items: center; position: relative; gap: 12px; flex-wrap: wrap; align-content: center; }
+        .combat-middle { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: stretch; position: relative; gap: 0; padding: 8px 12px; }
+        .combat-arena-row {
+            display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-end; align-content: center;
+            gap: 24px 40px; width: 100%;
+        }
         .enemy-list {
             display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-end; gap: 16px 22px;
-            flex: 1; min-width: 140px; max-width: 72%; position: relative;
+            flex: 0 1 auto; min-width: 140px; position: relative;
+        }
+        /* 3 敌：单行略缩小，减轻与手牌/按钮区抢位 */
+        .enemy-list.enemy-layout-triple {
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 10px 14px;
+            justify-content: center;
+            align-items: flex-end;
+            max-width: min(100%, 520px);
+        }
+        .enemy-list.enemy-layout-triple .entity-sprite {
+            width: 128px;
+            height: 172px;
+        }
+        .enemy-list.enemy-layout-triple .hp-container {
+            width: 128px;
+        }
+        .enemy-list.enemy-layout-triple .intent {
+            font-size: 13px;
+            top: -34px;
+            padding: 4px 8px;
+            max-width: 140px;
+            white-space: normal;
+            text-align: center;
+            line-height: 1.2;
+        }
+        .enemy-list.enemy-layout-triple .enemy-name-tag {
+            max-width: 132px;
+            font-size: 12px;
+        }
+        .enemy-list.enemy-layout-triple .status-bar {
+            flex-wrap: wrap;
+            max-width: 124px;
+            height: auto;
+            min-height: 22px;
+            gap: 3px;
+            justify-content: center;
+        }
+        .enemy-list.enemy-layout-triple .status-icon {
+            font-size: 14px;
+            padding: 1px 4px;
+        }
+        /* 4+ 敌：2 列网格（田字 / 2×N），整体变窄，避免与右侧结束回合按钮重叠 */
+        .enemy-list.enemy-layout-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 118px));
+            gap: 8px 16px;
+            justify-content: center;
+            align-content: end;
+            max-width: min(100%, 280px);
+        }
+        .enemy-list.enemy-layout-grid .entity-sprite {
+            width: 108px;
+            height: 144px;
+        }
+        .enemy-list.enemy-layout-grid .hp-container {
+            width: 108px;
+        }
+        .enemy-list.enemy-layout-grid .intent {
+            position: relative;
+            top: auto;
+            left: auto;
+            font-size: 11px;
+            padding: 3px 5px;
+            max-width: 112px;
+            white-space: normal;
+            text-align: center;
+            line-height: 1.25;
+            margin-bottom: 2px;
+        }
+        .enemy-list.enemy-layout-grid .entity.enemy-slot {
+            padding-top: 2px;
+        }
+        .enemy-list.enemy-layout-grid .status-bar {
+            flex-wrap: wrap;
+            max-width: 106px;
+            height: auto;
+            min-height: 20px;
+            gap: 2px;
+            justify-content: center;
+            margin-top: 2px;
+        }
+        .enemy-list.enemy-layout-grid .status-icon {
+            font-size: 12px;
+            padding: 1px 3px;
+        }
+        .enemy-list.enemy-layout-grid .hp-text {
+            font-size: 11px;
+            top: -18px;
+        }
+        .enemy-list.enemy-layout-grid .hp-text .hp-pct {
+            font-size: 10px;
+        }
+        .enemy-list.enemy-layout-grid .enemy-name-tag {
+            max-width: 110px;
+            font-size: 11px;
         }
         .entity.enemy-slot {
             transition: box-shadow 0.25s, transform 0.25s, outline-color 0.2s;
@@ -174,18 +274,28 @@
             outline: 2px solid transparent;
             outline-offset: 2px;
         }
-        /* 我方回合：待机绿圈（等待） */
-        .entity.enemy-slot.enemy-phase-wait {
-            box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.5), 0 0 16px rgba(34, 197, 94, 0.22);
+        /* 意图环：等待绿 / 伤害红 / 上状态或自buff蓝 */
+        .entity.enemy-slot.enemy-intent-wait {
+            box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.55), 0 0 16px rgba(34, 197, 94, 0.22);
         }
-        /* 选中目标：更亮的绿，区别于金色 */
-        .entity.enemy-slot.target-selected {
-            box-shadow: 0 0 0 2px #4ade80, 0 0 22px rgba(74, 222, 128, 0.5);
-            transform: translateY(-4px);
+        .entity.enemy-slot.enemy-intent-atk {
+            box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.7), 0 0 20px rgba(239, 68, 68, 0.32);
         }
-        .entity.enemy-slot.target-selected.enemy-phase-wait {
-            box-shadow: 0 0 0 2px #4ade80, 0 0 24px rgba(74, 222, 128, 0.55);
+        .entity.enemy-slot.enemy-intent-buff {
+            box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.65), 0 0 18px rgba(59, 130, 246, 0.3);
         }
+        .entity.enemy-slot.drag-hover-target {
+            outline: 2px dashed rgba(250, 250, 250, 0.85);
+            outline-offset: 4px;
+        }
+        .drag-battle-hint {
+            position: fixed; z-index: 10000; pointer-events: none; display: none;
+            padding: 8px 12px; max-width: min(320px, 90vw);
+            background: rgba(8, 8, 12, 0.92); border: 1px solid #4b5563; border-radius: 8px;
+            font-size: 15px; line-height: 1.35; color: #e5e7eb;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.55); transform: translate(-50%, calc(-100% - 14px));
+        }
+        .drag-battle-hint.visible { display: block; }
         /* 受击：红闪 */
         .entity.enemy-slot.enemy-glow-hit {
             animation: enemyGlowHit 0.55s ease;
@@ -263,6 +373,7 @@
         @keyframes pzMatchPulse { 0% { transform: scale(1);} 50% { transform: scale(1.15);} 100% { transform: scale(1);} }
         
         #kuhai-flee-modal.modal { z-index: 950; }
+        #junxing-modal.modal { z-index: 960; }
         .kuhai-flee-box {
             background: var(--ink-panel); border: 1px solid var(--gold); border-radius: 10px; padding: 26px 30px;
             max-width: 460px; box-shadow: 0 20px 50px rgba(0,0,0,0.9); text-align: center;

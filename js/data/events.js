@@ -21,7 +21,8 @@ const MapChapters = [
         { id: 2, x: 46, y: 66, name: '村庄', type: 'normal', icon: '🏘️', ev: 'village_hub_2' },
         { id: 3, x: 64, y: 42, name: '山路', type: 'normal', icon: '⛰️', ev: 'rng_mountain' },
         { id: 4, x: 80, y: 58, name: '茶楼', type: 'normal', icon: '🏯', ev: 'vn2' },
-        { id: 5, x: 92, y: 20, name: '奈何桥', type: 'big', icon: '🌉', ev: 'end' }
+        { id: 5, x: 86, y: 38, name: '鬼门关', type: 'big', icon: '⛩️', ev: 'enc_yan_luo_wang' },
+        { id: 6, x: 92, y: 20, name: '奈何桥', type: 'big', icon: '🌉', ev: 'end' }
     ]
 ];
 
@@ -126,15 +127,121 @@ const Events = {
     ]},
     vn3: { name: '我', texts: ['破庙中心有一尊小佛像', '要做些什么？'], opts: [
         { text: '不去碰他，只是歇脚 (回复7生命)', cb: () => Combat.heal(7) },
-        { text: '拿走佛像 (失去最大气血20%，获得佛像[开局震慑全体10伤])', cb: () => {
-            const dmg = Math.max(1, Math.floor(State.maxHp * 0.2));
-            Combat.takeDmg(dmg, true);
-            State.relics.push('【佛像】开局震慑');
-            Game.showToast(`佛像祟力反噬：失去 ${dmg} 气血（约为上限的 20%）。已得法宝「佛像震慑」。`);
+        { text: '拿走佛像 (气血上限−7；获得「佛像」：每场战斗开始对全体敌人造成11点伤害)', cb: () => {
+            State.maxHp = Math.max(1, State.maxHp - 7);
+            State.hp = Math.min(State.hp, State.maxHp);
+            if (!State.relics.includes('【佛像】')) State.relics.push('【佛像】');
+            Game.updateUI();
+            Game.showToast('佛相入手：气血上限减少 7。已得法宝「佛像」。');
         } },
         { text: '敬拜佛像 (悟性归零，获得卡牌“念奴娇”)', cb: () => { State.wuxing = 0; State.deck.push('c9'); Game.showToast('获得 念奴娇'); } }
     ]},
     village_hub_0: Village_buildHub(0),
-    village_hub_1: Village_buildHub(1),
-    village_hub_2: Village_buildHub(2)
+    village_hub_1: {
+        name: '荒村',
+        texts: [
+            '你看到一小群鬼魂……',
+            '那貌似是死于战争的一个家庭……',
+            '你不由得想到了北宋战乱的种种过往…………'
+        ],
+        opts: [
+            {
+                text: '同情他们（获得法宝「落魄灵魂」）',
+                cb: () => {
+                    if (!State.relics.includes('【落魄灵魂】')) State.relics.push('【落魄灵魂】');
+                    Game.showToast('阴风呜咽间，似有微薄谢礼附上魂息。');
+                    MapSys.afterVillageChapter(1);
+                    return false;
+                }
+            },
+            {
+                text: '祓除他们（失去6点生命，获得法宝「红缨枪」）',
+                cb: () => {
+                    State.hp = Math.max(0, State.hp - 6);
+                    if (!State.relics.includes('【红缨枪】')) State.relics.push('【红缨枪】');
+                    Game.updateUI();
+                    Game.showToast('杀气荡开阴祟，一杆赤缨透骨而现。');
+                    MapSys.afterVillageChapter(1);
+                    return false;
+                }
+            },
+            {
+                text: '无视他们（从卡组中删去一张牌）',
+                cb: () => {
+                    Game.openDeckRemovePicker((ok) => {
+                        if (ok) MapSys.afterVillageChapter(1);
+                    });
+                    return false;
+                }
+            }
+        ]
+    },
+    village_hub_2: {
+        name: '荒村',
+        texts: [
+            '这里空无人烟……',
+            '只有一些骷髅和枯木……',
+            '要做些什么……'
+        ],
+        opts: [
+            {
+                text: '捡起枯木（「枯木树枝」+ 卡组加入1张「悔」）',
+                cb: () => {
+                    if (!State.relics.includes('【枯木树枝】')) State.relics.push('【枯木树枝】');
+                    State.deck.push('c_hui');
+                    Game.showToast('枯枝入手，指腹犹带湿凉。');
+                    MapSys.afterVillageChapter(2);
+                    return false;
+                }
+            },
+            {
+                text: '拿起骷髅头（「仪式头骨」+ 卡组加入1张「悔」）',
+                cb: () => {
+                    if (!State.relics.includes('【仪式头骨】')) State.relics.push('【仪式头骨】');
+                    State.deck.push('c_hui');
+                    Game.showToast('颅中似有空响，如有人低语。');
+                    MapSys.afterVillageChapter(2);
+                    return false;
+                }
+            },
+            {
+                text: '拂去尘土（「香炉」+ 卡组加入2张「悔」）',
+                cb: () => {
+                    if (!State.relics.includes('【香炉】')) State.relics.push('【香炉】');
+                    State.deck.push('c_hui', 'c_hui');
+                    Game.showToast('尘下露出兽足小炉，余温一缕。');
+                    MapSys.afterVillageChapter(2);
+                    return false;
+                }
+            },
+            {
+                text: '转身离开',
+                cb: () => {
+                    MapSys.afterVillageChapter(2);
+                    return false;
+                }
+            }
+        ]
+    },
+
+    end_story: {
+        name: '奈何桥',
+        texts: [
+            '雾开处，桥影如线，对岸灯火依稀，却照不见来时路。',
+            '你掌中残卷已尽，冥府簿上无名亦有名——这一局，算你走过了。',
+            '桥头有风，掠过耳畔时，像极了人间某座小城里的初夏。',
+            '若有机缘再入轮回，愿你仍提剑、仍识字、仍记得那些未写完的句子。',
+            '此番冥游记，到此一笔。珍重。'
+        ],
+        opts: [
+            {
+                text: '踏桥归去',
+                cb: () => {
+                    Game.showToast('魂光渐远……');
+                    setTimeout(() => Game.navTo('screen-main'), 2200);
+                    return false;
+                }
+            }
+        ]
+    }
 };

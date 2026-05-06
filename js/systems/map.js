@@ -38,6 +38,8 @@ const MapSys = {
         } else if (marker === 1) {
             State.mapChapter = 2;
             State.mapNodeIndex = 0;
+        } else if (marker === 2) {
+            // 第三章荒村事件：不改变章节，仅返回地图
         }
         MapSys.renderMap();
         Game.navTo('screen-map');
@@ -50,7 +52,7 @@ const MapSys = {
         if (node.ev === 'vn1') EventSys.start(Events.vn1);
         else if (node.ev === 'vn2') EventSys.start(Events.vn2);
         else if (node.ev === 'vn3') EventSys.start(Events.vn3);
-        else if (node.ev === 'end') { Game.showToast('冥途已尽……此番轮回谢过。'); setTimeout(() => Game.navTo('screen-main'), 3200); }
+        else if (node.ev === 'end') EventSys.start(Events.end_story);
         else if (node.ev === 'rng_mountain') Combat.start(resolveMountainEncounterId());
         else if (node.ev === 'enc_xiu_luo' || node.ev.startsWith('fight') || node.ev.startsWith('enc_')) Combat.start(node.ev);
         else if (node.ev.startsWith('village_hub_')) EventSys.start(Events[node.ev]);
@@ -60,6 +62,7 @@ const MapSys = {
 const EventSys = {
     currEv: null, textIndex: 0,
     start: (evData) => {
+        if (typeof hideKeywordTooltip === 'function') hideKeywordTooltip();
         EventSys.currEv = evData; EventSys.textIndex = 0;
         $('event-name').innerText = evData.name;
         $('event-options').style.display = 'none';

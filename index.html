@@ -216,14 +216,16 @@
             <div class="ping-ze-tracker" id="pz-tracker"></div>
 
             <div class="combat-middle" id="combat-arena">
-                <div class="entity" id="player">
-                    <div class="asset-placeholder entity-sprite" style="background: url('assets/player_sprite.png') center/cover, #222; border:none;"></div>
-                    <div class="hp-container"><div class="hp-fill" id="player-hp-fill"></div><div class="hp-text" id="player-hp-text">50/50 <span id="player-block" style="color:#60a5fa"></span></div></div>
-                    <div class="status-bar" id="player-status-bar"></div>
+                <div class="combat-arena-row">
+                    <div class="entity" id="player">
+                        <div class="asset-placeholder entity-sprite" style="background: url('assets/player_sprite.png') center/cover, #222; border:none;"></div>
+                        <div class="hp-container"><div class="hp-fill" id="player-hp-fill"></div><div class="hp-text" id="player-hp-text">50/50 <span id="player-block" style="color:#60a5fa"></span></div></div>
+                        <div class="status-bar" id="player-status-bar"></div>
+                    </div>
+                    <div class="enemy-list" id="enemy-list"></div>
                 </div>
-
-                <div class="enemy-list" id="enemy-list"></div>
             </div>
+            <div id="drag-battle-hint" class="drag-battle-hint" aria-hidden="true"></div>
 
             <div class="combat-bottom">
                 <div class="pile" id="draw-pile" onclick="Combat.viewPile('draw')" style="cursor:pointer;" title="点击查看抽牌堆">抽牌堆<br><span id="draw-count">0</span></div>

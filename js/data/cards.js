@@ -6,14 +6,14 @@ const CardDB = {
             'c4': { id: 'c4', name: '点水', cost: 1, type: '仄', typeClass: 'type-ze', desc: '抽取1张卡牌', rarity: 'low', cardType: '功卡', effect: () => Combat.draw(1) },
             'c5': { id: 'c5', name: '绣剑', cost: 0, type: '平', typeClass: 'type-ping', desc: '6力6防', rarity: 'equip', cardType: '装备卡', effect: () => {} },
             'c6': { id: 'c6', name: '破阵子', cost: 3, type: '仄', typeClass: 'type-ze', desc: `打出你手牌的所有武卡，下回合你不能造成${K.SH}`, rarity: 'mid', cardType: '词牌', effect: () => { Combat.playAllAttacks(); State.combat.player.cantDmgNextTurn = true; } },
-            'c7': { id: 'c7', name: '定风波', cost: 3, type: '平', typeClass: 'type-ping', desc: `你失去7点血量，让一名敌人${K.YY}`, rarity: 'high', cardType: '词牌', effect: () => {
+            'c7': { id: 'c7', name: '定风波', cost: 3, type: '平', typeClass: 'type-ping', toExhaust: true, desc: `你失去7点血量，让一名敌人${K.YY}，打出后进入${K.CS}`, rarity: 'high', cardType: '词牌', effect: () => {
                 Combat.takeDmg(7, true);
                 const t = Combat._primaryTargetIdx();
                 const en = State.combat.enemies[t];
                 if (en && en.hp > 0) { en.stun = true; Game.showToast('敌人被旋风困住！'); }
             } },
             'c8': { id: 'c8', name: '水调歌头', cost: 2, type: '平', typeClass: 'type-ping', atkBase: 0, desc: `造成{V_ATK}点${K.SH}2次，抽取(1+轻功)张卡牌`, rarity: 'mid', cardType: '词牌', effect: () => { Combat.dealDmg(0); setTimeout(()=>Combat.dealDmg(0), 200); Combat.draw(1 + State.agi); } },
-            'c9': { id: 'c9', name: '念奴娇', cost: 2, type: '平', typeClass: 'type-ping', desc: `${K.GF}，每回合开始失去1点生命，从弃牌堆打出1卡`, rarity: 'mid', cardType: '词牌', effect: () => { State.combat.player.nianNuJiao = true; Game.showToast('功法发动：念奴娇'); } },
+            'c9': { id: 'c9', name: '念奴娇', cost: 2, type: '平', typeClass: 'type-ping', desc: `${K.GF}，每回合开始失去1点生命，从弃牌堆打出1卡（本场打出后不再入手）`, rarity: 'mid', cardType: '功法', effect: () => { State.combat.player.nianNuJiao = true; Game.showToast('功法发动：念奴娇'); } },
             'c10': { id: 'c10', name: '满江红', cost: 0, type: '平', typeClass: 'type-ping', toExhaust: true, desc: `打出后进入${K.CS}，抽取卡牌，本回合${K.SH}翻倍，受到的${K.SH}也翻倍`, rarity: 'mid', cardType: '词牌', effect: () => { Combat.draw(1); State.combat.player.dmgDouble = true; State.combat.player.takeDmgDouble = true; } },
             
             // [ 11-21: 低阶残卷-补充 ]
@@ -52,10 +52,10 @@ const CardDB = {
                 Combat.renderEnemies();
             } },
             'c23': { id: 'c23', name: '一转攻势', cost: 1, type: '仄', typeClass: 'type-ze', desc: `${K.GF}，你每失去3点力，获得1点力`, rarity: 'mid', cardType: '功卡', effect: () => { State.combat.player.yiZhuan = true; Game.showToast('一转攻势：开始计数'); } },
-            'c24': { id: 'c24', name: '束手就擒', cost: 1, type: '平', typeClass: 'type-ping', toExhaust: true, desc: `打出后进入${K.CS}，本回合失去2点力；束手：所有敌人对你的每次攻势减少6点`, rarity: 'mid', cardType: '功卡', effect: () => {
+            'c24': { id: 'c24', name: '束手就擒', cost: 1, type: '平', typeClass: 'type-ping', toExhaust: true, desc: `打出后进入${K.CS}，本回合失去2点力；每名敌人本回合对你攻势−6`, rarity: 'mid', cardType: '功卡', effect: () => {
                 State.combat.player.turnStr -= 2;
                 Combat.onStrLost(2);
-                State.combat.enemies.forEach(en => { if (en && en.hp > 0) { en.shushouQin = 6; Combat.pulseEnemyEntity(en); } });
+                State.combat.enemies.forEach(en => { if (en && en.hp > 0) { en.atkDownThisRound = (en.atkDownThisRound || 0) + 6; Combat.pulseEnemyEntity(en); } });
                 Game.showToast('束手就擒');
                 Game.updateUI();
                 Combat.renderEnemies();
@@ -192,5 +192,8 @@ const CardDB = {
             'c50': { id: 'c50', name: '枯木逢春', cost: 2, type: '平', typeClass: 'type-ping', toExhaust: true, desc: `打出后进入${K.CS}，回复12点血量`, rarity: 'high', cardType: '功卡', effect: () => Combat.heal(12) },
 
             // 特殊/衍生物
-            'c_duwu': { id: 'c_duwu', name: '黩武', cost: '-', type: '无', typeClass: 'type-ze', desc: `打出"${K.LBMM}"后，卡组中生成此卡，不可被打出`, rarity: 'token', cardType: '衍生物', unplayable: true, effect: () => {} }
+            'c_duwu': { id: 'c_duwu', name: '黩武', cost: '-', type: '无', typeClass: 'type-ze', desc: `打出"${K.LBMM}"后，卡组中生成此卡，不可被打出`, rarity: 'token', cardType: '衍生物', unplayable: true, effect: () => {} },
+            'c_jingkong': { id: 'c_jingkong', name: '惊恐', cost: '-', type: '无', typeClass: 'type-ze', desc: '诅咒。不可打出。抽到后保留 3 个我方回合，期满沉入沉沙。', rarity: 'token', cardType: '诅咒', unplayable: true, effect: () => {} },
+            'c_jia_suo': { id: 'c_jia_suo', name: '枷锁', cost: '-', type: '无', typeClass: 'type-ze', desc: '不可打出。', rarity: 'token', cardType: '诅咒', unplayable: true, effect: () => {} },
+            'c_hui': { id: 'c_hui', name: '悔', cost: '-', type: '无', typeClass: 'type-ze', desc: '诅咒。不可打出。若我方回合结束时仍在手牌，受到 2 点伤害。', rarity: 'token', cardType: '诅咒', unplayable: true, effect: () => {} }
         };
