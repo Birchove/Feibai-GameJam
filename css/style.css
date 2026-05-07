@@ -78,6 +78,9 @@
 
         .modal { position: absolute; top: var(--abar-height); left: 0; width: 100%; height: calc(100% - var(--abar-height)); background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); z-index: 200; display: none; justify-content: center; align-items: center; }
         .modal.active { display: flex; }
+        /* info 面板需高于事件/村肆等流程模态，避免点击后被遮挡 */
+        #info-panel.modal,
+        #info-detail-panel.modal { z-index: 700; }
         
         /* ================= 面板专项排版 ================= */
         #info-content, #deck-content, #pile-content { width: 900px; max-width: 90%; height: 600px; max-height: 85%; background: var(--ink-panel); border: 1px solid #444; display: flex; border-radius: 12px; overflow: hidden; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.9); }

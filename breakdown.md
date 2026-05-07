@@ -1,53 +1,53 @@
 @index.html 
 
-你是一个资深的游戏前端架构师。当前这个 `index.html` 是一个成型的单文件卡牌肉鸽游戏，但随着加入了法宝、武器、诗句、卡牌、敌人和事件等海量内容，代码已经非常臃肿。
-我需要你帮我将这个单文件进行解耦和模块化拆分。
+你是一个资深的游戏前端架构师。`index.html` 单文件拆分工作已经完成，当前项目进入“模块化后维护阶段”。
+本文件不再作为拆分指令，而是作为**现状对照说明**，用于后续迭代时快速校验结构是否被破坏。
 
-请严格综合考虑游戏中涉及的【所有维度】（玩家基础属性、流派、卡牌、敌人、法宝、武器、诗句、事件），按照以下【架构设计】和【执行红线】进行彻底拆分：
+请严格综合考虑游戏中涉及的【所有维度】（玩家基础属性、流派、卡牌、敌人、法宝、武器、诗句、事件），按照以下【架构现状】和【维护红线】执行后续开发：
 
-### 一、 架构设计（文件结构与具体内容指派）
+### 一、 架构现状（文件结构与职责）
 
-请帮我创建以下目录结构，并将 `index.html` 中的代码精准抽离进去：
+当前项目目录如下（已落地）：
 
 📂 根目录
- ┣ 📄 index.html        (仅保留纯净的 HTML DOM 骨架，在 <body> 底部按依赖顺序引入以下 JS)
+ ┣ 📄 index.html        (纯 DOM 骨架 + 内联事件入口 + 依赖脚本引入)
  ┣ 📂 css
- ┃ ┗ 📄 style.css       (抽出 <style> 标签内的所有样式，包含媒体查询和动画)
+ ┃ ┗ 📄 style.css       (全局样式、媒体查询、动画、战斗与结算 UI)
  ┣ 📂 js
  ┃ ┣ 📂 core           (核心基石层)
- ┃ ┃ ┣ 📄 utils.js      (抽出通用的工具函数，如 rand, shuffle, $(id))
- ┃ ┃ ┣ 📄 state.js      (抽出 State 对象，包含完整的玩家属性 str/def/hp，以及 weapon/relics/poetry/deck 等状态)
- ┃ ┃ ┗ 📄 audio.js      (抽出 AudioSys 音频控制对象)
- ┃ ┣ 📂 data           (静态数据字典层：必须彻底剥离硬编码，方便未来配表)
- ┃ ┃ ┣ 📄 constants.js  (抽出 K 术语悬停字典)
- ┃ ┃ ┣ 📄 classes.js    (【重点】从 HTML 中提取剑、弓、枪等 6 个流派的名字、描述和初始属性，转为字典供后续调用)
- ┃ ┃ ┣ 📄 cards.js      (抽出完整的 50 张卡牌 CardDB)
- ┃ ┃ ┣ 📄 items.js      (【重点】抽出法宝、武器、诗句的数据库，将目前 Settlement 里硬编码的 '【绣剑】'、'【八卦护心镜】' 改为从这里随机抽取)
- ┃ ┃ ┣ 📄 enemies.js    (【重点】将 Combat 里写死的敌人 e1/e2 的血量、贴图、意图 intent 和 AI 行为逻辑，提取为 EnemyDB)
- ┃ ┃ ┗ 📄 events.js     (抽出 Events 对话和节点数据)
+ ┃ ┃ ┣ 📄 utils.js      (通用工具函数、关键词 tooltip 绑定)
+ ┃ ┃ ┣ 📄 state.js      (State 全局状态树：玩家、地图、战斗)
+ ┃ ┃ ┗ 📄 audio.js      (AudioSys 音频控制)
+ ┃ ┣ 📂 data           (静态数据字典层)
+ ┃ ┃ ┣ 📄 constants.js  (K 术语悬停字典)
+ ┃ ┃ ┣ 📄 classes.js    (流派字典：剑、弓、枪、毒、棍、拳)
+ ┃ ┃ ┣ 📄 cards.js      (CardDB 卡牌数据库)
+ ┃ ┃ ┣ 📄 items.js      (WeaponDB / RelicDB / 掉落相关字典)
+ ┃ ┃ ┣ 📄 enemies.js    (EnemyArchetypes + EncounterDB)
+ ┃ ┃ ┣ 📄 events.js     (章节节点、剧情事件与地图数据)
+ ┃ ┃ ┗ 📄 poetry.js     (PoetryDB 诗句触发与效果描述)
  ┃ ┗ 📂 systems        (系统业务逻辑层)
- ┃   ┣ 📄 game.js       (抽出 Game 对象，负责流派选择、信息面板更新、图鉴渲染及各 UI 模块流转)
- ┃   ┣ 📄 map.js        (抽出 MapSys 和 EventSys，负责 SVG 绘制和节点触发)
- ┃   ┣ 📄 combat.js     (抽出 Combat 战斗引擎，注意对接 EnemyDB 和卡牌 effect)
- ┃   ┣ 📄 settlement.js (抽出 Settlement 战利品结算系统，注意对接 items.js 实现武器/法宝/诗句的掉落逻辑)
- ┃   ┗ 📄 fx.js         (抽出 DragSys 卡牌拖拽系统，以及底层的 bgParticles 水墨粒子渲染)
+ ┃   ┣ 📄 game.js       (全局流程、界面流转、信息面板、图鉴)
+ ┃   ┣ 📄 map.js        (MapSys / EventSys，地图渲染与节点进入)
+ ┃   ┣ 📄 combat.js     (Combat 战斗引擎，已接入多敌结构)
+ ┃   ┣ 📄 settlement.js (战利品结算与领取流程)
+ ┃   ┣ 📄 fx.js         (DragSys 拖拽系统、背景粒子等视觉反馈)
+ ┃   ┗ 📄 dev.js        (开发辅助面板与调试快捷逻辑)
 
-### 二、 执行红线（极其重要，违背会导致游戏直接白屏！）
+### 二、 维护红线（极其重要，违背会导致游戏白屏或行为错乱）
 
 1. **绝对禁止使用 ES Modules (`export/import`)**：
-   由于目前的 HTML 大量使用了内联事件（如 `onclick="Game.navTo()"` 或 `onclick="Combat.endTurn()"`），如果在拆分时使用了 type="module" 或 import，会导致作用域隔离，HTML 找不到这些对象！
-   **正确做法**：直接在对应的 JS 文件中声明 `const Game = {...}` 或 `window.Game = {...}`。
-2. **<script> 标签的引入顺序必须严谨**：
-   在 `index.html` 底部引入时，请遵循以下顺序，确保被依赖的文件先加载：
-   `utils.js` -> `state.js` -> `audio.js` -> `constants.js` -> `classes.js` -> `cards.js` -> `items.js` -> `enemies.js` -> `events.js` -> `game.js` -> `combat.js` -> `settlement.js` -> `map.js` -> `fx.js`
-3. **保持原有游戏逻辑与计算公式不变**：
-   这是一次代码结构重构（Refactoring），绝对不能破坏原有的力/御伤害计算公式、平仄系统判定以及各类卡牌的特殊效果。
-4. **数据驱动化改造**：
-   原结算逻辑中写死了 `isElite ? '【绣剑】' : null`，在拆分到 `settlement.js` 时，请把它修改为从 `items.js`（例如 `WeaponDB` 和 `RelicDB`）中进行抽取，哪怕目前数据库里只有这两个物品。同样，图鉴中的“流派选择”也请尽量通过 `classes.js` 的数据来渲染。
+   由于 HTML 大量依赖内联事件（如 `onclick="Game.navTo()"` / `onclick="Combat.endTurn()"`），使用 `type="module"` 会导致作用域隔离、全局对象丢失。
+   **正确做法**：继续保持全局对象写法（`const Game = {...}` / `window.Game = ...`）。
+2. **<script> 标签引入顺序必须严谨**：
+   `utils.js` -> `state.js` -> `audio.js` -> `constants.js` -> `classes.js` -> `cards.js` -> `items.js` -> `enemies.js` -> `events.js` -> `poetry.js` -> `game.js` -> `combat.js` -> `settlement.js` -> `map.js` -> `fx.js` -> `dev.js`
+3. **保持既有公式与判定不变（除非明确重做设计）**：
+   伤害/持守计算、平仄触发、势爆发、功法单战斗封存等机制，必须与当前 `combat.js` 运行逻辑一致。
+4. **继续数据驱动化，不回退硬编码**：
+   卡牌、敌人、法宝、武器、诗句、事件均优先改 `js/data/*` 字典，不要把可配置内容重新写死到 `systems` 里。
 
-请分步骤执行：
-第一步：提取 CSS 和 `js/core/` 的基础文件。
-第二步：提取 `js/data/` 下的所有字典文件（务必仔细提炼 HTML 和 Combat 中写死的数据）。
-第三步：提取 `js/systems/` 下的业务逻辑文件。
-第四步：输出清理完毕的 `index.html`。
-开始工作吧。
+### 三、 当前实现边界（避免误判）
+
+1. 流派字典为 6 个，但可开局流派当前仅开放「剑」。
+2. 战斗系统当前为多敌结构：主字段是 `State.combat.enemies`，`State.combat.enemy` 仅兼容首敌别名。
+3. 存档槽 UI 已有，但当前版本未接入 `localStorage` 持久化。

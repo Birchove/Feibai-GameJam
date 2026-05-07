@@ -221,6 +221,7 @@ const Combat = {
         State.combat.playerHpLost = 0;
         State.combat._ritualSkullFired = false;
         State.combat.ganShiEchoEnemyPhase = false;
+        State.combat.ganShiEchoEnemyStacks = 0;
         State.combat._ganShiReflecting = false;
         State.combat._ganShiReflectHandled = false;
 
@@ -1204,16 +1205,18 @@ const Combat = {
             dmg = Math.floor(dmg * Math.pow(0.8, attacker.qieNuoStacks));
         }
 
-        if (!ignoreBlock && attacker && State.combat.ganShiEchoEnemyPhase && !State.combat._ganShiReflecting) {
-            const gk = Combat.ganShiIntentKind(attacker);
+        const ganShiStacks = State.combat.ganShiEchoEnemyStacks || 0;
+        if (!ignoreBlock && attacker && ganShiStacks > 0 && !State.combat._ganShiReflecting) {
+            const gk = attacker._ganShiKindThisAct || Combat.ganShiIntentKind(attacker);
             if (gk === 'atk' && dmg > 0) {
-                let rd = dmg;
+                let rd = dmg * ganShiStacks;
                 if (attacker.arch === 'yan_luo_wang') rd = Math.floor(rd);
                 State.combat._ganShiReflecting = true;
                 try {
                     Combat.applyEnemySelfStrike(attacker, rd);
                     State.combat._ganShiReflectHandled = true;
-                    Game.showToast('感时花溅泪：泪尽锋折，还施彼身');
+                    const tip = ganShiStacks > 1 ? `（x${ganShiStacks}）` : '';
+                    Game.showToast(`感时花溅泪：泪尽锋折，还施彼身${tip}`);
                 } finally {
                     State.combat._ganShiReflecting = false;
                 }
@@ -1394,6 +1397,7 @@ const Combat = {
     enemyTurn: () => {
         const finishPhase = () => {
             State.combat.ganShiEchoEnemyPhase = false;
+            State.combat.ganShiEchoEnemyStacks = 0;
             const p = State.combat.player;
             if (p.deathRoundsRemaining > 0) {
                 p.deathRoundsRemaining -= 1;
@@ -1428,12 +1432,15 @@ const Combat = {
                     const arch = Combat._arch(e);
                     if (arch) {
                         let skipAct = false;
-                        if (State.combat.ganShiEchoEnemyPhase) {
+                        if ((State.combat.ganShiEchoEnemyStacks || 0) > 0) {
                             const gk = Combat.ganShiIntentKind(e);
+                            e._ganShiKindThisAct = gk;
                             if (gk === 'weak') {
-                                // 现有减层时机在我方回合开始；此处+2可确保玩家回合可见，并保留到敌方下次行动
-                                Combat.applyEnemyWeakCurse(e, 2);
-                                Game.showToast(`感时花溅泪：${e.name} 反受虚弱咒`);
+                                const stacks = State.combat.ganShiEchoEnemyStacks || 1;
+                                // 敌方减层时机在我方回合开始，单层感时按 +2 实际等效 1 层；可叠层按倍数放大
+                                Combat.applyEnemyWeakCurse(e, 2 * stacks);
+                                const tip = stacks > 1 ? `（x${stacks}）` : '';
+                                Game.showToast(`感时花溅泪：${e.name} 反受虚弱咒${tip}`);
                                 skipAct = true;
                             }
                         }
@@ -1441,6 +1448,7 @@ const Combat = {
                             const ret = arch.act(e);
                             if (ret && typeof ret.then === 'function') await ret;
                         }
+                        e._ganShiKindThisAct = null;
                     }
                 }
                 if (!(State._dev && State._devSkipEnemy)) e.turnCounter++;

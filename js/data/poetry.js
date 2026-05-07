@@ -23,7 +23,10 @@ const PoetryDB = {
         pattern: ['仄', '平', '平', '仄', '仄'],
         effectDesc: '敌方下一轮行动中：其攻势改噬己身；若以虚弱咒对你则自受其弱；若仅为待机则无事',
         trigger: function () {
-            if (typeof State !== 'undefined' && State.combat) State.combat.ganShiEchoEnemyPhase = true;
+            if (typeof State !== 'undefined' && State.combat) {
+                State.combat.ganShiEchoEnemyPhase = true;
+                State.combat.ganShiEchoEnemyStacks = (State.combat.ganShiEchoEnemyStacks || 0) + 1;
+            }
         }
     }
 };

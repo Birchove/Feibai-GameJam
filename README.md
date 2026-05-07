@@ -23,7 +23,7 @@
 * 📜 **独创“平仄”与“闪避”系统**
   每张卡牌带有“平”或“仄”的属性，打出后会在空中留下诗词残卷的视觉印记，并参与诗韵触发的判定；“闪避”卡牌可由玩家主动打出，用以补足平仄序列、凑齐诗句以触发额外效果。
 * 🗺️ **六道轮回与冥府探索**
-  多流派选择（剑、弓、枪、毒、棍、拳），结合分支地图探索（山路战斗、茶楼奇遇、破庙抉择），每一次轮回都是全新的故事。
+  当前版本可选流派入口已保留（剑、弓、枪、毒、棍、拳），实装可开局流派为**剑**；结合分支地图探索（山路战斗、茶楼奇遇、破庙抉择），每一次轮回都是全新的故事。
 
 ## 🛠️ 技术栈 (Tech Stack)
 
@@ -36,26 +36,48 @@
 
 ```text
 Feibai-GameJam/
-├── index.html               # 游戏主程序（集成了 HTML/CSS/JS 的单文件）
-├── README.md                # 项目说明文档
-└── assets/                  # 美术与音频资产文件夹
-    ├── 飞白PV.mp4            # 世界观开场 PV
-    ├── main_menu_bg.png     # 主界面背景图
-    ├── combat_bg.png        # 战斗场景背景图
-    ├── card_strike.png      # 卡牌插图资产
-    ├── enemy_1.png          # 怪物立绘资产
-    ├── bgm_combat.mp3       # 战斗背景音乐
-    └── ... (其他美术与音效文件)
+├── index.html               # 游戏主页面骨架（屏幕结构 + 脚本引入）
+├── css/
+│   └── style.css            # 全量样式、动画与响应式规则
+├── js/
+│   ├── core/                # 底层能力（状态、工具、音频）
+│   │   ├── utils.js
+│   │   ├── state.js
+│   │   └── audio.js
+│   ├── data/                # 静态数据字典（卡牌、敌人、事件、诗句等）
+│   │   ├── constants.js
+│   │   ├── classes.js
+│   │   ├── cards.js
+│   │   ├── items.js
+│   │   ├── enemies.js
+│   │   ├── events.js
+│   │   └── poetry.js
+│   └── systems/             # 业务系统（战斗、地图、结算、特效）
+│       ├── game.js
+│       ├── combat.js
+│       ├── settlement.js
+│       ├── map.js
+│       ├── fx.js
+│       └── dev.js
+├── docs/
+│   └── card-effects-from-code.md
+├── README.md
+└── assets/                  # 美术与音频资产文件夹（含开场 PV）
 ```
 ## 🚀 运行指南 (How to Run)
 ### 本地游玩：
 
 克隆或下载本仓库到本地。
 
-确保所有图片和音频文件均已正确放置在 assets/ 目录下。
+确保所有图片和音频文件均已正确放置在 `assets/` 目录下。
 
-双击运行 index.html 即可在任意现代浏览器（Chrome/Edge/Firefox）中开始游戏。
-(注：由于浏览器的自动播放策略，本地直接双击打开可能导致开屏 BGM 无法自动播放，建议通过 Live Server 等本地服务器运行)
+双击运行 `index.html` 即可在任意现代浏览器（Chrome/Edge/Firefox）中开始游戏。  
+(注：由于浏览器自动播放策略，本地直接双击打开可能导致开屏 BGM 无法自动播放，建议通过 Live Server 等本地服务器运行)
+
+### 当前实现说明：
+- 战斗系统已接入多敌人结构（`State.combat.enemies`）。
+- `State.combat.enemy` 作为兼容别名保留（指向首个敌人）。
+- 存档槽 UI 已存在，但当前版本未接入 `localStorage` 持久化。
 
 ### 线上部署：
 本项目已通过 GitHub Pages 部署，任何人都可以通过外网链接直接访问游玩。
