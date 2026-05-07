@@ -5,6 +5,22 @@ const GONGFA_CARD_IDS = new Set(['c9', 'c23', 'c29', 'c33', 'c34', 'c36', 'c39',
 const ATTACK_CARD_NO_ENEMY_TARGET = new Set(['c12', 'c28', 'c42']);
 
 const Combat = {
+    /** 下一次 `Combat.start` 使用的战斗背景皮肤（由地图节点 `combatBg` 传入；使用后清空） */
+    _nextCombatBgSkin: null,
+
+    setNextCombatBackground: (skin) => {
+        Combat._nextCombatBgSkin = skin || null;
+    },
+
+    _COMBAT_BG_SCREEN_CLASSES: ['combat-bg-mountain'],
+
+    applyCombatBackgroundToScreen: (skin) => {
+        const el = $('screen-combat');
+        if (!el) return;
+        Combat._COMBAT_BG_SCREEN_CLASSES.forEach((c) => el.classList.remove(c));
+        if (skin === 'mountain') el.classList.add('combat-bg-mountain');
+    },
+
     /** 功法：本场战斗打出后，同 ID 不再出现在抽/弃/手/沉沙（非沉沙消耗，本场封存） */
     registerBattleConsumed: (cardId) => {
         if (!GONGFA_CARD_IDS.has(cardId)) return;
@@ -199,7 +215,12 @@ const Combat = {
     },
 
     start: (encounterId) => {
-        AudioSys.playBGM('assets/bgm_combat.mp3');
+        const pendingBg = Combat._nextCombatBgSkin;
+        Combat._nextCombatBgSkin = null;
+        Combat.applyCombatBackgroundToScreen(pendingBg);
+
+        const bossBattle = encounterId === 'enc_yan_luo_wang';
+        AudioSys.playBGMTrack(bossBattle ? 'boss' : 'combat');
         State.combat.encounterKey = encounterId;
 
         State.combat.inCombat = true;
@@ -521,7 +542,7 @@ const Combat = {
 
     _fleeCombatNoRewards: () => {
         State.combat.inCombat = false;
-        AudioSys.playBGM('assets/bgm_map.mp3');
+        AudioSys.playBGMTrack('world');
         Game.showToast('暂且退让……');
         Game.updateUI();
         MapSys.renderMap();
@@ -1529,7 +1550,7 @@ const Combat = {
             State._qibuPoetryReward = State.combat.qibuPoetryId || null;
             State.combat.qibuPoetryId = null;
             State.combat.inCombat = false;
-            AudioSys.playBGM('assets/bgm_map.mp3');
+            AudioSys.playBGMTrack('world');
             setTimeout(() => {
                 Settlement.show(State.combat.lastRewardTier || 'normal');
             }, 1500);

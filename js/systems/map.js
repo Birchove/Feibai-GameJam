@@ -17,6 +17,7 @@ const MapSys = {
             line.setAttribute('x2', `${n2.x}%`);
             line.setAttribute('y2', `${n2.y}%`);
             line.setAttribute('class', 'map-line');
+            line.setAttribute('stroke-linecap', 'round');
             svg.appendChild(line);
         }
 
@@ -25,7 +26,9 @@ const MapSys = {
             el.className = `map-node ${i < State.mapNodeIndex ? 'visited' : (i === State.mapNodeIndex ? 'reachable' : '')}`;
             el.style.left = `${n.x}%`;
             el.style.top = `${n.y}%`;
-            el.innerHTML = `<div class="node-name">${n.name}</div><div class="node-icon ${n.type}">${n.icon}</div>`;
+            const markClass = n.mark === 'seal' ? 'map-mark-seal' : 'map-mark-ink';
+            const glyph = (typeof n.glyph === 'string' && n.glyph.length) ? n.glyph : '·';
+            el.innerHTML = `<div class="node-name">${n.name}</div><div class="node-icon ${n.type} ${markClass}"><span class="node-glyph">${glyph}</span></div>`;
             if (i === State.mapNodeIndex) el.onclick = () => MapSys.enterNode(n);
             container.appendChild(el);
         });
@@ -53,16 +56,41 @@ const MapSys = {
         else if (node.ev === 'vn2') EventSys.start(Events.vn2);
         else if (node.ev === 'vn3') EventSys.start(Events.vn3);
         else if (node.ev === 'end') EventSys.start(Events.end_story);
-        else if (node.ev === 'rng_mountain') Combat.start(resolveMountainEncounterId());
-        else if (node.ev === 'enc_xiu_luo' || node.ev.startsWith('fight') || node.ev.startsWith('enc_')) Combat.start(node.ev);
-        else if (node.ev.startsWith('village_hub_')) EventSys.start(Events[node.ev]);
+        else if (node.ev === 'rng_mountain') {
+            Combat.setNextCombatBackground(node.combatBg);
+            Combat.start(resolveMountainEncounterId());
+        } else if (node.ev === 'enc_xiu_luo' || node.ev.startsWith('fight') || node.ev.startsWith('enc_')) {
+            Combat.setNextCombatBackground(node.combatBg);
+            Combat.start(node.ev);
+        } else if (node.ev.startsWith('village_hub_')) EventSys.start(Events[node.ev]);
     }
 };
 
 const EventSys = {
     currEv: null, textIndex: 0,
+
+    _EVENT_BG_CLASSES: ['event-bg-teahouse', 'event-bg-village', 'event-bg-temple', 'event-bg-wangxiang', 'event-bg-naihe'],
+
+    applyEventBackground: (evData) => {
+        const el = $('screen-event');
+        if (!el) return;
+        EventSys._EVENT_BG_CLASSES.forEach((c) => el.classList.remove(c));
+        const skin = evData && evData.eventSkin;
+        const map = {
+            teahouse: 'event-bg-teahouse',
+            village: 'event-bg-village',
+            temple: 'event-bg-temple',
+            wangxiang: 'event-bg-wangxiang',
+            naihe: 'event-bg-naihe'
+        };
+        const cls = map[skin];
+        if (cls) el.classList.add(cls);
+    },
+
     start: (evData) => {
         if (typeof hideKeywordTooltip === 'function') hideKeywordTooltip();
+        AudioSys.playBGMTrack('world');
+        EventSys.applyEventBackground(evData);
         EventSys.currEv = evData; EventSys.textIndex = 0;
         $('event-name').innerText = evData.name;
         $('event-options').style.display = 'none';

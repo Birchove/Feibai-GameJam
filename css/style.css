@@ -1,6 +1,20 @@
 
         /* ================= 基础变量与重置 ================= */
+        /*
+         * BGM 三类接口（文件在 assets/；曲目切换逻辑见 js/core/audio.js → AudioSys.BGM / playBGMTrack）
+         *   bgm_boss.mp3   — 鬼门关 Boss（遭遇 id：enc_yan_luo_wang）
+         *   bgm_combat.mp3 — 除 Boss 以外的战斗
+         *   bgm_world.mp3  — 大地图与事件界面共用
+         * 开场 PV 另用 铁雨尘朝.mp3，仍走 AudioSys.playBGM 直链，不计入上述三类。
+         */
+        /*
+         * 主角立绘（文件在 assets/；路径相对 css/）
+         *   portrait_info.png   — 「侠客信息」中栏全幅（见 .info-portrait-layer）
+         *   portrait_combat.png — 战斗 #player 槽（见 .player-combat-portrait）
+         */
         :root {
+            --portrait-info-url: url('../assets/portrait_info.png');
+            --portrait-combat-url: url('../assets/portrait_combat.png');
             --ink-bg: #050507;
             --ink-panel: #121216;
             --ink-light: #d1d5db;
@@ -85,6 +99,16 @@
         /* ================= 面板专项排版 ================= */
         #info-content, #deck-content, #pile-content { width: 900px; max-width: 90%; height: 600px; max-height: 85%; background: var(--ink-panel); border: 1px solid #444; display: flex; border-radius: 12px; overflow: hidden; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.9); }
         .info-col { flex: 1; padding: 25px; display: flex; flex-direction: column; position: relative; }
+        .info-col.info-col-portrait { min-width: 0; }
+        .info-portrait-layer {
+            position: absolute; inset: 0;
+            background-image: var(--portrait-info-url);
+            background-position: center;
+            background-size: cover;
+            background-repeat: no-repeat;
+            opacity: 0.92;
+            pointer-events: none;
+        }
         .close-btn { position: absolute; top: 15px; right: 15px; width: 40px; height: 40px; background: rgba(30,30,35,0.8); border: 1px solid #444; border-radius: 8px; display: flex; justify-content: center; align-items: center; color: #aaa; font-size: 20px; cursor: pointer; transition: 0.2s; z-index: 210; }
         .close-btn:hover { background: var(--blood-red); color: #fff; border-color: #fff; }
 
@@ -161,55 +185,262 @@
         }
 
         /* ================= 核心：卡牌与 Hover 术语特效 ================= */
+        /* 卡面：冷灰绢底 + 顶缘柔光 + 深内晕，整体哑光；稀有度只做细描边/环，避免与外置战斗光效糊在一起 */
         .kw { position: relative; text-decoration: underline dashed var(--blood-red); cursor: help; font-weight: bold; color: #e5e7eb; }
         .kw:hover::after { display: none; }
         #kw-tooltip { position: fixed; transform: translate(-50%, -100%); background: rgba(10,10,12,0.98); color: var(--gold); padding: 10px 14px; border-radius: 6px; border: 1px solid var(--blood-red); white-space: pre-wrap; width: max-content; max-width: 200px; font-size: 12px; z-index: 999999; font-weight: normal; line-height: 1.5; text-shadow: none; text-align: left; box-shadow: 0 5px 15px rgba(0,0,0,0.8); pointer-events: none; display: none; }
         
-        .deck-card, .card { width: 150px; height: 230px; background: linear-gradient(135deg, #222, #111); border: 2px solid #555; border-radius: 8px; position: relative; padding: 10px; box-shadow: 0 5px 10px rgba(0,0,0,0.5); display: flex; flex-direction: column; transition: 0.2s; user-select: none;}
-        .deck-card.mid-rarity-card, .card.mid-rarity-card { border-color: var(--mid-color); box-shadow: 0 0 12px rgba(160, 170, 181, 0.4); }
-        .deck-card.high-rarity-card, .card.high-rarity-card { border-color: var(--gold-light); box-shadow: 0 0 15px rgba(255, 215, 0, 0.5); }
+        .deck-card, .card {
+            width: 150px; height: 230px;
+            position: relative;
+            padding: 10px;
+            border-radius: 10px;
+            user-select: none;
+            display: flex;
+            flex-direction: column;
+            transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+            border: 1px solid rgba(135, 125, 105, 0.42);
+            background:
+                linear-gradient(168deg, rgba(255, 253, 245, 0.055) 0%, transparent 38%),
+                linear-gradient(148deg, #1e2229 0%, #15181f 42%, #0b0d12 100%);
+            box-shadow:
+                0 6px 18px rgba(0, 0, 0, 0.72),
+                inset 0 1px 0 rgba(255, 255, 255, 0.075),
+                inset 0 -10px 22px rgba(0, 0, 0, 0.4);
+        }
+        .deck-card.mid-rarity-card, .card.mid-rarity-card {
+            border-color: rgba(148, 165, 188, 0.55);
+            box-shadow:
+                0 6px 18px rgba(0, 0, 0, 0.72),
+                inset 0 1px 0 rgba(210, 220, 235, 0.07),
+                inset 0 -10px 22px rgba(0, 0, 0, 0.4),
+                0 0 0 1px rgba(90, 110, 140, 0.28);
+        }
+        .deck-card.high-rarity-card, .card.high-rarity-card {
+            border-color: rgba(200, 168, 90, 0.52);
+            box-shadow:
+                0 6px 18px rgba(0, 0, 0, 0.72),
+                inset 0 1px 0 rgba(255, 230, 170, 0.09),
+                inset 0 -10px 22px rgba(0, 0, 0, 0.45),
+                0 0 0 1px rgba(120, 90, 40, 0.22);
+        }
         .deck-card:hover, .card:hover { z-index: 100 !important; transform: translateY(-10px); }
-        .card:hover { transform: translateY(-40px) scale(1.1); border-color: #aaa; box-shadow: 0 0 20px rgba(255,255,255,0.2); }
-        .card.dragging { cursor: grabbing; transition: none; z-index: 999 !important; opacity: 0.9; box-shadow: 0 20px 40px rgba(0,0,0,0.8); border-color: var(--gold); }
+        .card:hover {
+            transform: translateY(-40px) scale(1.1);
+            border-color: rgba(175, 168, 150, 0.65);
+            box-shadow:
+                0 14px 28px rgba(0, 0, 0, 0.85),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1),
+                inset 0 -10px 22px rgba(0, 0, 0, 0.38);
+        }
+        .card.dragging {
+            cursor: grabbing;
+            transition: none;
+            z-index: 999 !important;
+            opacity: 0.95;
+            border-color: rgba(196, 167, 125, 0.75);
+            box-shadow:
+                0 22px 44px rgba(0, 0, 0, 0.9),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        }
         .card.disabled { filter: grayscale(100%) brightness(0.5); pointer-events: none; }
-        
-        .card-cost { width: 26px; height: 26px; font-size: 14px; top: -10px; left: -10px; position: absolute; background: #111; border: 2px solid #888; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; color: #60a5fa; box-shadow: 0 0 5px black; z-index: 5; }
-        .card-type { width: 22px; height: 22px; font-size: 11px; top: -6px; right: -6px; position: absolute; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; color: white; box-shadow: 0 0 5px black; z-index: 5;}
-        .type-ping { background-color: #4b5563; } 
-        .type-ze { background-color: var(--blood-red); }
-        .card-name { text-align: center; font-weight: bold; font-size: 16px; margin-top: 5px; padding-bottom: 2px; color: #eee; }
-        .card-category { text-align: center; font-size: 11px; color: #888; margin-bottom: 4px; border-bottom: 1px solid #444; padding-bottom: 4px;}
-        .card-img { height: 50px; margin: 5px 0; border: 1px dashed #444; font-size: 10px; display: flex; justify-content: center; align-items: center; color: #888; overflow: hidden;}
-        
+
+        .card-cost {
+            width: 26px; height: 26px; font-size: 14px;
+            top: -10px; left: -10px; position: absolute;
+            border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            font-weight: bold;
+            color: #a5d4ff;
+            z-index: 5;
+            background: radial-gradient(circle at 32% 28%, #353945, #12141a 72%);
+            border: 1px solid rgba(196, 174, 140, 0.45);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+        .card-type {
+            width: 22px; height: 22px; font-size: 11px;
+            top: -6px; right: -6px; position: absolute;
+            border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            font-weight: bold;
+            color: #f5f2eb;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+            z-index: 5;
+        }
+        .type-ping { background: linear-gradient(165deg, #5c6678, #3f4858); border: 1px solid rgba(130, 145, 165, 0.4); }
+        .type-ze { background: linear-gradient(165deg, #9a2228, #6b151a); border: 1px solid rgba(200, 120, 120, 0.45); }
+        .card-name {
+            text-align: center;
+            font-weight: bold;
+            font-size: 16px;
+            margin-top: 5px;
+            padding-bottom: 2px;
+            color: #f2ebe1;
+            letter-spacing: 0.04em;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+        }
+        .card-category {
+            text-align: center;
+            font-size: 11px;
+            color: #9d9480;
+            margin-bottom: 4px;
+            border-bottom: 1px solid rgba(95, 90, 78, 0.45);
+            padding-bottom: 5px;
+            letter-spacing: 0.08em;
+        }
+        .card-img {
+            height: 50px;
+            margin: 5px 0;
+            border-radius: 5px;
+            font-size: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #6d6a64;
+            overflow: hidden;
+            background: rgba(4, 5, 7, 0.72);
+            border: 1px solid rgba(72, 68, 58, 0.85);
+            box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.55), inset 0 6px 16px rgba(0, 0, 0, 0.55);
+        }
+
         /* 关键修复：卡面描述不再使用 flex 居中，彻底解决文字堆叠和悬停错乱 */
-        .card-desc { font-size: 12px; color: #aaa; flex: 1; text-align: left; display: block; margin-top: 5px; line-height: 1.4; white-space: normal; overflow: hidden;}
+        .card-desc { font-size: 12px; color: #b8b4a8; flex: 1; text-align: left; display: block; margin-top: 5px; line-height: 1.45; white-space: normal; overflow: hidden; text-shadow: 0 1px 1px rgba(0, 0, 0, 0.65); }
         
         .card-count-badge { position: absolute; bottom: -10px; right: -10px; background: var(--blood-red); color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; justify-content: center; align-items: center; font-size: 12px; font-weight: bold; border: 2px solid #222; z-index: 10; }
 
         #settings-panel { flex-direction: column; gap: 20px; }
 
-        /* ================= 三生石 (图鉴) ================= */
-        #gallery-panel .screen-content { background: var(--ink-bg); padding: 40px; overflow-y: auto; width: 100%; height: 100%; }
+        /* ================= 三生石 (图鉴) — 容器 id 为 #screen-gallery ================= */
+        #screen-gallery .screen-content { background: var(--ink-bg); padding: 40px; overflow-y: auto; width: 100%; height: 100%; }
         .gallery-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 20px; }
         .gallery-section-title { font-size: 24px; color: var(--blood-red); margin-top: 30px; margin-bottom: 25px; font-weight: bold; }
         .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 25px; justify-items: center; }
 
+        /* 三生石：加粗高对比描边 + 外缘线（仅 #screen-gallery，此前误写 #gallery-panel 未命中 DOM） */
+        #screen-gallery .deck-card {
+            border-style: solid;
+            border-width: 3px;
+            border-color: rgba(200, 190, 172, 0.95);
+            box-shadow:
+                0 6px 18px rgba(0, 0, 0, 0.72),
+                inset 0 1px 0 rgba(255, 255, 255, 0.075),
+                inset 0 -10px 22px rgba(0, 0, 0, 0.4),
+                0 0 0 1px rgba(18, 16, 14, 0.95),
+                0 0 0 4px rgba(95, 88, 74, 0.65);
+        }
+        #screen-gallery .deck-card.mid-rarity-card {
+            border-width: 4px;
+            border-color: #b8cce8;
+            box-shadow:
+                0 6px 18px rgba(0, 0, 0, 0.72),
+                inset 0 1px 0 rgba(210, 220, 235, 0.1),
+                inset 0 -10px 22px rgba(0, 0, 0, 0.4),
+                0 0 0 2px rgba(45, 65, 98, 0.95),
+                0 0 0 6px rgba(70, 110, 160, 0.55);
+        }
+        #screen-gallery .deck-card.high-rarity-card {
+            border-width: 4px;
+            border-color: #e9c456;
+            box-shadow:
+                0 6px 18px rgba(0, 0, 0, 0.72),
+                inset 0 1px 0 rgba(255, 230, 170, 0.12),
+                inset 0 -10px 22px rgba(0, 0, 0, 0.45),
+                0 0 0 2px rgba(95, 68, 22, 0.95),
+                0 0 0 6px rgba(130, 95, 35, 0.55);
+        }
+
         /* ================= 地图与事件 ================= */
         #screen-map .screen-content { background: url('../assets/map_bg.png') center/cover, var(--ink-bg); position: relative; }
         .map-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
-        .map-line { stroke: #444; stroke-width: 2; stroke-dasharray: 5,5; }
+        .map-line { stroke: rgba(48, 46, 44, 0.82); stroke-width: 2; stroke-dasharray: 8, 7; }
         .map-node { position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: flex-end; cursor: pointer; transition: 0.3s; opacity: 0.5; pointer-events: none;}
         .map-node.reachable { opacity: 1; pointer-events: auto; }
         .map-node.reachable:hover { transform: translate(-50%, -50%) scale(1.2); filter: drop-shadow(0 0 10px var(--blood-red)); }
         .map-node.visited { opacity: 0.3; }
-        .node-icon { font-size: 40px; color: #ccc; }
-        .node-icon.big { font-size: 60px; color: var(--blood-red); }
-        .node-name { writing-mode: vertical-rl; font-size: 20px; font-weight: bold; position: absolute; top: -10px; right: -30px; letter-spacing: 5px; text-shadow: 2px 2px 5px black; color: #fff;}
+        /* 地图节点：glyph + mark（ink 淡墨晕圈 / seal 朱文印）— 数据见 js/data/events.js → MapChapters */
+        .node-icon {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 56px;
+            height: 56px;
+            box-sizing: border-box;
+        }
+        .node-icon.big { width: 72px; height: 72px; }
+        .node-glyph {
+            position: relative;
+            z-index: 1;
+            font-family: 'Zhi Mang Xing', 'Ma Shan Zheng', cursive;
+            font-size: 38px;
+            line-height: 1;
+            color: #121318;
+            letter-spacing: 0;
+            text-shadow: 0 1px 1px rgba(255, 255, 255, 0.12), 0 2px 16px rgba(0, 0, 0, 0.35);
+            pointer-events: none;
+        }
+        .node-icon.big .node-glyph { font-size: 48px; }
+        .map-mark-ink::before {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            background: radial-gradient(ellipse 88% 82% at 44% 40%, rgba(28, 28, 32, 0.34) 0%, rgba(28, 28, 32, 0.14) 46%, rgba(28, 28, 32, 0.05) 64%, transparent 74%);
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.06);
+            pointer-events: none;
+        }
+        /* 水墨字：略提高不透明度与描边感，在地图底图上更易辨认 */
+        .map-mark-ink .node-glyph {
+            transform: rotate(-5deg);
+            color: rgba(6, 6, 10, 0.98);
+            text-shadow:
+                0 0 4px rgba(250, 247, 240, 0.75),
+                0 0 1px rgba(250, 247, 240, 0.95),
+                0 1px 3px rgba(0, 0, 0, 0.72),
+                0 2px 12px rgba(0, 0, 0, 0.45);
+        }
+        .map-mark-seal {
+            border: 2.5px solid rgba(169, 32, 32, 0.95);
+            border-radius: 3px;
+            background: linear-gradient(152deg, rgba(255, 250, 248, 0.2) 0%, rgba(235, 195, 188, 0.16) 100%);
+            box-shadow:
+                inset 0 0 0 1px rgba(255, 228, 222, 0.35),
+                0 2px 10px rgba(0, 0, 0, 0.4);
+            transform: rotate(-7deg);
+        }
+        .map-mark-seal .node-glyph {
+            font-family: 'Ma Shan Zheng', 'Zhi Mang Xing', cursive;
+            color: #9a1818;
+            text-shadow: 0 0 1px rgba(60, 12, 12, 0.35);
+            transform: rotate(5deg);
+        }
+        .node-icon.big.map-mark-seal { border-width: 3px; }
+        .map-node.reachable:hover .map-mark-seal {
+            box-shadow:
+                inset 0 0 0 1px rgba(255, 228, 222, 0.5),
+                0 0 20px rgba(180, 42, 42, 0.45);
+        }
+        .node-name { writing-mode: vertical-rl; font-size: 18px; font-weight: bold; position: absolute; top: -6px; right: -28px; letter-spacing: 4px; text-shadow: 2px 2px 5px black; color: #e8e4dc; font-family: 'Noto Serif SC', 'Source Han Serif SC', serif;}
 
         #map-return-btn { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 150; display: none; background: rgba(139,24,24,0.9); border-color: #ff6b6b; padding: 10px 40px; font-size: 20px; border-radius: 8px;}
 
-        #screen-event .screen-content { background: url('../assets/event_bg.png') center/cover, var(--ink-bg); justify-content: flex-end; align-items: center; padding-bottom: 50px; }
-        .dialog-box { width: 80%; max-width: 1000px; height: 250px; background: rgba(10,10,15,0.95); border: 2px solid #444; border-radius: 10px; position: relative; padding: 40px; display: flex; flex-direction: column; justify-content: center; cursor: pointer; }
+        /* 事件界面背景：默认 + 按节点类型切换（由 #screen-event 的 class 与 --event-bg-image 驱动） */
+        #screen-event {
+            --event-bg-image: url('../assets/event_bg.png');
+        }
+        #screen-event.event-bg-teahouse { --event-bg-image: url('../assets/event_bg_teahouse.png'); }
+        #screen-event.event-bg-village { --event-bg-image: url('../assets/event_bg_village.png'); }
+        #screen-event.event-bg-temple { --event-bg-image: url('../assets/event_bg_temple.png'); }
+        #screen-event.event-bg-wangxiang { --event-bg-image: url('../assets/event_bg_wangxiang.png'); }
+        #screen-event.event-bg-naihe { --event-bg-image: url('../assets/event_bg_naihe.png'); }
+
+        #screen-event .screen-content {
+            background: var(--event-bg-image) center/cover, var(--ink-bg);
+            justify-content: flex-end;
+            align-items: center;
+            padding-bottom: 50px;
+        }
+        .dialog-box { width: 80%; max-width: 1000px; height: 250px; background: rgba(10,10,15,0.78); border: 2px solid #444; border-radius: 10px; position: relative; padding: 40px; display: flex; flex-direction: column; justify-content: center; cursor: pointer; }
         .dialog-name { position: absolute; top: -20px; left: 30px; background: var(--ink-border); padding: 5px 20px; font-size: 24px; font-weight: bold; border: 1px solid #555; color: var(--blood-red); }
         .dialog-text { font-size: 28px; line-height: 1.5; text-shadow: 1px 1px 2px black; }
         .dialog-options { display: none; flex-direction: column; gap: 15px; width: 60%; margin: 0 auto; z-index: 10;}
@@ -223,6 +454,27 @@
         .status-icon:hover .status-tooltip { visibility: visible; opacity: 1; }
 
         #screen-combat .screen-content { display: flex; flex-direction: column; background: url('../assets/combat_bg.png') center/cover, var(--ink-bg); }
+
+        /*
+         * 山路战斗：`combat_bg_mountain.png` 只叠在「战区」.combat-middle 内，半透明 + 底部渐变透明，
+         * 不覆盖顶部气/势与底部手牌区，避免喧宾夺主挡 UI。
+         */
+        #screen-combat.combat-bg-mountain .combat-middle::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            background: url('../assets/combat_bg_mountain.png') center 42% / cover no-repeat;
+            opacity: 0.38;
+            -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.85) 45%, rgba(0,0,0,0.2) 88%, transparent 100%);
+            mask-image: linear-gradient(to bottom, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.85) 45%, rgba(0,0,0,0.2) 88%, transparent 100%);
+        }
+        #screen-combat.combat-bg-mountain .combat-middle .combat-arena-row {
+            position: relative;
+            z-index: 1;
+        }
+
         .combat-top { padding: 10px 40px; display: flex; justify-content: space-between; align-items: center; font-size: 24px; font-weight: bold; }
         .stat-badge { background: rgba(0,0,0,0.8); padding: 5px 15px; border: 1px solid #444; border-radius: 20px; }
         .combat-middle { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: stretch; position: relative; gap: 0; padding: 8px 12px; }
@@ -396,7 +648,24 @@
             35% { outline-color: rgba(59, 130, 246, 0.95); box-shadow: 0 0 18px rgba(59, 130, 246, 0.55); }
         }
         .entity { display: flex; flex-direction: column; align-items: center; gap: 10px; position: relative; }
+        /*
+         * 妖怪立绘资产：assets/enemy_<archKey>.png（archKey 见 js/data/enemies.js → EnemyArchetypes）
+         * 显示尺寸与推荐比例：
+         *   - 默认：.entity-sprite 宽 180px × 高 240px → 比例 3:4，建议原画 360×480 或 540×720（竖版，cover 裁切）
+         *   - 四魑布局：.enemy-layout-chi-four .entity-sprite 92×114 → 约 46:57
+         *   - 窄屏：.entity-sprite 100×140 → 5:7
+         * 玩家立绘：CSS 变量 --portrait-combat-url（assets/portrait_combat.png），与敌共用 .entity-sprite 尺寸规则
+         */
         .entity-sprite { width: 180px; height: 240px; }
+        #player .player-combat-portrait.entity-sprite {
+            border: none;
+            padding: 0;
+            background-color: #1a1a1f;
+            background-image: var(--portrait-combat-url);
+            background-position: center;
+            background-size: cover;
+            background-repeat: no-repeat;
+        }
         .hp-container { width: 180px; height: 12px; background: #222; border: 1px solid #000; position: relative; }
         .hp-fill { height: 100%; background: var(--blood-red); width: 100%; transition: 0.3s; }
         .hp-text { position: absolute; top: -20px; left: 0; width: 100%; text-align: center; font-size: 14px; text-shadow: 1px 1px 2px black; line-height: 1.25; }
@@ -607,7 +876,7 @@
             .saves-container { gap: 20px; }
             .save-slot { width: 150px; height: 220px; }
             
-            .deck-card, .card { width: 110px; height: 165px; padding: 6px; border-width: 1px; }
+            .deck-card, .card { width: 110px; height: 165px; padding: 6px; border-width: 1px; border-radius: 8px; }
             .card-name { font-size: 13px; margin-top: 2px; }
             .card-category { font-size: 9px; margin-bottom: 2px; padding-bottom: 2px; }
             .card-cost { width: 20px; height: 20px; font-size: 12px; top: -6px; left: -6px; }

@@ -1,28 +1,28 @@
 // 三章地图：第一章以村庄收束并进入第二章；第三章末尾奈何桥回主菜单
 const MapChapters = [
     [
-        { id: 0, x: 10, y: 80, name: '望乡台', type: 'big', icon: '🪨', ev: 'vn1' },
-        { id: 1, x: 30, y: 50, name: '山路', type: 'normal', icon: '⛰️', ev: 'fight1' },
-        { id: 2, x: 45, y: 70, name: '山路', type: 'normal', icon: '⛰️', ev: 'fight2' },
-        { id: 3, x: 65, y: 40, name: '茶楼', type: 'normal', icon: '🏯', ev: 'vn2' },
-        { id: 4, x: 80, y: 60, name: '破庙', type: 'normal', icon: '🏚️', ev: 'vn3' },
-        { id: 5, x: 90, y: 20, name: '村庄', type: 'normal', icon: '🏘️', ev: 'village_hub_0' }
+        { id: 0, x: 10, y: 80, name: '望乡台', type: 'big', glyph: '望', mark: 'seal', ev: 'vn1' },
+        { id: 1, x: 30, y: 50, name: '山路', type: 'normal', glyph: '刃', mark: 'ink', ev: 'fight1', combatBg: 'mountain' },
+        { id: 2, x: 45, y: 70, name: '山路', type: 'normal', glyph: '战', mark: 'ink', ev: 'fight2', combatBg: 'mountain' },
+        { id: 3, x: 65, y: 40, name: '茶楼', type: 'normal', glyph: '茗', mark: 'seal', ev: 'vn2' },
+        { id: 4, x: 80, y: 60, name: '破庙', type: 'normal', glyph: '刹', mark: 'ink', ev: 'vn3' },
+        { id: 5, x: 90, y: 20, name: '村庄', type: 'normal', glyph: '憩', mark: 'seal', ev: 'village_hub_0' }
     ],
     [
-        { id: 0, x: 12, y: 72, name: '山路', type: 'normal', icon: '⛰️', ev: 'rng_mountain' },
-        { id: 1, x: 30, y: 52, name: '山路', type: 'normal', icon: '⛰️', ev: 'rng_mountain' },
-        { id: 2, x: 48, y: 68, name: '茶楼', type: 'normal', icon: '🏯', ev: 'vn2' },
-        { id: 3, x: 66, y: 42, name: '山路', type: 'normal', icon: '⛰️', ev: 'rng_mountain' },
-        { id: 4, x: 88, y: 24, name: '村庄', type: 'normal', icon: '🏘️', ev: 'village_hub_1' }
+        { id: 0, x: 12, y: 72, name: '山路', type: 'normal', glyph: '遇', mark: 'ink', ev: 'rng_mountain', combatBg: 'mountain' },
+        { id: 1, x: 30, y: 52, name: '山路', type: 'normal', glyph: '缘', mark: 'ink', ev: 'rng_mountain', combatBg: 'mountain' },
+        { id: 2, x: 48, y: 68, name: '茶楼', type: 'normal', glyph: '茗', mark: 'seal', ev: 'vn2' },
+        { id: 3, x: 66, y: 42, name: '山路', type: 'normal', glyph: '伐', mark: 'ink', ev: 'rng_mountain', combatBg: 'mountain' },
+        { id: 4, x: 88, y: 24, name: '村庄', type: 'normal', glyph: '肆', mark: 'seal', ev: 'village_hub_1' }
     ],
     [
-        { id: 0, x: 10, y: 78, name: '山路', type: 'normal', icon: '⛰️', ev: 'rng_mountain' },
-        { id: 1, x: 28, y: 48, name: '修罗场', type: 'big', icon: '⚔️', ev: 'enc_xiu_luo' },
-        { id: 2, x: 46, y: 66, name: '村庄', type: 'normal', icon: '🏘️', ev: 'village_hub_2' },
-        { id: 3, x: 64, y: 42, name: '山路', type: 'normal', icon: '⛰️', ev: 'rng_mountain' },
-        { id: 4, x: 80, y: 58, name: '茶楼', type: 'normal', icon: '🏯', ev: 'vn2' },
-        { id: 5, x: 86, y: 38, name: '鬼门关', type: 'big', icon: '⛩️', ev: 'enc_yan_luo_wang' },
-        { id: 6, x: 92, y: 20, name: '奈何桥', type: 'big', icon: '🌉', ev: 'end' }
+        { id: 0, x: 10, y: 78, name: '山路', type: 'normal', glyph: '逢', mark: 'ink', ev: 'rng_mountain', combatBg: 'mountain' },
+        { id: 1, x: 28, y: 48, name: '修罗场', type: 'big', glyph: '魁', mark: 'seal', ev: 'enc_xiu_luo' },
+        { id: 2, x: 46, y: 66, name: '村庄', type: 'normal', glyph: '憩', mark: 'seal', ev: 'village_hub_2' },
+        { id: 3, x: 64, y: 42, name: '山路', type: 'normal', glyph: '刃', mark: 'ink', ev: 'rng_mountain', combatBg: 'mountain' },
+        { id: 4, x: 80, y: 58, name: '茶楼', type: 'normal', glyph: '茗', mark: 'seal', ev: 'vn2' },
+        { id: 5, x: 86, y: 38, name: '鬼门关', type: 'big', glyph: '冥', mark: 'seal', ev: 'enc_yan_luo_wang' },
+        { id: 6, x: 92, y: 20, name: '奈何桥', type: 'big', glyph: '归', mark: 'seal', ev: 'end' }
     ]
 ];
 
@@ -99,6 +99,7 @@ function Village_postFightRewards(chapterMarker) {
 
 function Village_buildHub(chapterMarker) {
     return {
+        eventSkin: 'village',
         name: '荒村',
         texts: ['残垣断壁间，似有人烟……', '可要歇脚、易物，还是拔刀清厄？'],
         opts: [
@@ -131,8 +132,8 @@ function Village_buildHub(chapterMarker) {
 }
 
 const Events = {
-    vn1: { name: '我', texts: ['似乎有些记忆……', '想起了些什么……', '好像是……被杀了……', '我要杀出……阎王殿……'], opts: [] },
-    vn2: { name: '冥府茶楼店小二', texts: ['小店……恭迎……客官……\n有何……吩咐？'], opts: [
+    vn1: { eventSkin: 'wangxiang', name: '我', texts: ['似乎有些记忆……', '想起了些什么……', '好像是……被杀了……', '我要杀出……阎王殿……'], opts: [] },
+    vn2: { eventSkin: 'teahouse', name: '冥府茶楼店小二', texts: ['小店……恭迎……客官……\n有何……吩咐？'], opts: [
         { text: '歇息一会 (回复35%已损生命)', cb: () => { const heal = Math.floor((State.maxHp - State.hp) * 0.35); Combat.heal(heal); } },
         { text: '活动筋骨 (支付100钱，删一张牌)', cb: () => {
             if (State.gold < 100) {
@@ -150,7 +151,7 @@ const Events = {
         } },
         { text: '凑凑热闹 (获得卡牌“破阵子”)', cb: () => { State.deck.push('c6'); Game.showToast('获得 破阵子'); } }
     ]},
-    vn3: { name: '我', texts: ['破庙中心有一尊小佛像', '要做些什么？'], opts: [
+    vn3: { eventSkin: 'temple', name: '我', texts: ['破庙中心有一尊小佛像', '要做些什么？'], opts: [
         { text: '不去碰他，只是歇脚 (回复7生命)', cb: () => Combat.heal(7) },
         { text: '拿走佛像 (气血上限−7；获得「佛像」：每场战斗开始对全体敌人造成11点伤害)', cb: () => {
             State.maxHp = Math.max(1, State.maxHp - 7);
@@ -163,6 +164,7 @@ const Events = {
     ]},
     village_hub_0: Village_buildHub(0),
     village_hub_1: {
+        eventSkin: 'village',
         name: '荒村',
         texts: [
             '你看到一小群鬼魂……',
@@ -202,6 +204,7 @@ const Events = {
         ]
     },
     village_hub_2: {
+        eventSkin: 'village',
         name: '荒村',
         texts: [
             '这里空无人烟……',
@@ -250,6 +253,7 @@ const Events = {
     },
 
     end_story: {
+        eventSkin: 'naihe',
         name: '奈何桥',
         texts: [
             '雾开处，桥影如线，对岸灯火依稀，却照不见来时路。',

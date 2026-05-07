@@ -3,11 +3,16 @@
 
 const _pick = (arr) => arr[rand(0, arr.length - 1)];
 
+/** 妖怪立绘：`assets/enemy_<archKey>.png`，archKey 与本体 `EnemyArchetypes` 键名一致（魑魅四体共用 `chi_mei_single` 一张图） */
+function enemySpriteStyle(archKey) {
+    return `url('assets/enemy_${archKey}.png') center/cover, #222`;
+}
+
 const EnemyArchetypes = {
     legacy_fight1: {
         displayId: 'e1',
         name: '游魂',
-        sprite: "url('assets/enemy_1.png') center/cover, #222",
+        sprite: enemySpriteStyle('legacy_fight1'),
         rollHp: () => 160,
         intent: (e) => {
             if (e.turnCounter % 2 === 0) {
@@ -27,7 +32,7 @@ const EnemyArchetypes = {
     legacy_fight2: {
         displayId: 'e2',
         name: '恶鬼',
-        sprite: "url('assets/enemy_2.png') center/cover, #222",
+        sprite: enemySpriteStyle('legacy_fight2'),
         rollHp: () => 200,
         intent: (e) => {
             if (e.turnCounter % 2 !== 0) return '意图: 虚弱咒';
@@ -47,7 +52,7 @@ const EnemyArchetypes = {
     di_fu_ye_gui: {
         displayId: 'm_difu',
         name: '地府野鬼',
-        sprite: "url('assets/enemy_1.png') center/cover, #222",
+        sprite: enemySpriteStyle('di_fu_ye_gui'),
         rollHp: () => rand(46, 50),
         init: (e) => { e._nextAtkRoll = null; },
         intent: (e) => {
@@ -72,7 +77,7 @@ const EnemyArchetypes = {
     bai_hun_ye_gui: {
         displayId: 'm_baihun',
         name: '白魂野鬼',
-        sprite: "url('assets/enemy_1.png') center/cover, #222",
+        sprite: enemySpriteStyle('bai_hun_ye_gui'),
         rollHp: () => rand(70, 74),
         intent: (e) => {
             if (e.turnCounter % 2 !== 0) return `意图: 凝煞聚力 (+8力，当前 ${e.str || 0})`;
@@ -94,7 +99,7 @@ const EnemyArchetypes = {
     lan_shi_guai: {
         displayId: 'm_lanshi',
         name: '烂尸怪',
-        sprite: "url('assets/enemy_2.png') center/cover, #222",
+        sprite: enemySpriteStyle('lan_shi_guai'),
         rollHp: () => rand(58, 62),
         init: (e) => { e._lsPhase = 0; },
         displayIntent: (e) => {
@@ -137,7 +142,7 @@ const EnemyArchetypes = {
     chi_mei_single: {
         displayId: 'm_chimei',
         name: '魑魅魍魉',
-        sprite: "url('assets/enemy_1.png') center/cover, #222",
+        sprite: enemySpriteStyle('chi_mei_single'),
         rollHp: () => rand(12, 16),
         displayIntent: (e) => {
             if (e.turnCounter % 2 !== 0) {
@@ -166,7 +171,7 @@ const EnemyArchetypes = {
     ye_ku_gui: {
         displayId: 'm_yeku',
         name: '夜哭鬼',
-        sprite: "url('assets/enemy_2.png') center/cover, #222",
+        sprite: enemySpriteStyle('ye_ku_gui'),
         rollHp: () => rand(94, 98),
         init: (e) => { e._yk = 0; },
         intent: (e) => {
@@ -192,7 +197,7 @@ const EnemyArchetypes = {
     yin_sha: {
         displayId: 'm_yinsha',
         name: '阴煞',
-        sprite: "url('assets/enemy_2.png') center/cover, #222",
+        sprite: enemySpriteStyle('yin_sha'),
         rollHp: () => rand(94, 98),
         init: (e) => { e._ys = 0; },
         intent: (e) => {
@@ -223,7 +228,7 @@ const EnemyArchetypes = {
     ku_hai_guan_li: {
         displayId: 'm_kuhai',
         name: '枯骸官吏',
-        sprite: "url('assets/enemy_2.png') center/cover, #222",
+        sprite: enemySpriteStyle('ku_hai_guan_li'),
         rollHp: () => 666,
         intent: (e) => {
             const raw = 6 * e.turnCounter;
@@ -237,7 +242,7 @@ const EnemyArchetypes = {
     diao_si_gui: {
         displayId: 'm_diaosi',
         name: '吊死鬼',
-        sprite: "url('assets/enemy_1.png') center/cover, #222",
+        sprite: enemySpriteStyle('diao_si_gui'),
         rollHp: () => rand(94, 98),
         intent: (e) => {
             const raw = 15;
@@ -255,7 +260,7 @@ const EnemyArchetypes = {
     ye_xun_a: {
         displayId: 'm_yexun_a',
         name: '夜巡阴差·甲',
-        sprite: "url('assets/enemy_1.png') center/cover, #222",
+        sprite: enemySpriteStyle('ye_xun_a'),
         rollHp: () => rand(46, 50),
         intent: (e) => {
             if (e.turnCounter % 2 !== 0) return '意图: 枷印（易伤+御骸12）';
@@ -274,7 +279,7 @@ const EnemyArchetypes = {
     ye_xun_b: {
         displayId: 'm_yexun_b',
         name: '夜巡阴差·乙',
-        sprite: "url('assets/enemy_1.png') center/cover, #222",
+        sprite: enemySpriteStyle('ye_xun_b'),
         rollHp: () => rand(46, 50),
         intent: (e) => {
             if (e.turnCounter % 2 === 0) return '意图: 凝煞御骸';
@@ -294,7 +299,7 @@ const EnemyArchetypes = {
     hei_wu_chang: {
         displayId: 'm_heiwu',
         name: '黑无常',
-        sprite: "url('assets/enemy_2.png') center/cover, #222",
+        sprite: enemySpriteStyle('hei_wu_chang'),
         rollHp: () => 161,
         init: (e) => { e._wuChangRagePhase = null; },
         displayIntent: (e) => {
@@ -341,7 +346,7 @@ const EnemyArchetypes = {
     bai_wu_chang: {
         displayId: 'm_baiwu',
         name: '白无常',
-        sprite: "url('assets/enemy_1.png') center/cover, #222",
+        sprite: enemySpriteStyle('bai_wu_chang'),
         rollHp: () => 241,
         init: (e) => { e._wuChangRagePhase = null; },
         displayIntent: (e) => {
@@ -394,7 +399,7 @@ const EnemyArchetypes = {
     yan_luo_wang: {
         displayId: 'm_yanluo',
         name: '阎罗王',
-        sprite: "url('assets/enemy_2.png') center/cover, #222",
+        sprite: enemySpriteStyle('yan_luo_wang'),
         rollHp: () => 444,
         init: (e) => { e.shehun = 0; e.junxing = true; },
         displayIntent: (e) => {
@@ -444,7 +449,7 @@ const EnemyArchetypes = {
     village_strong_rand: {
         displayId: 'm_village',
         name: '路劫阴魁',
-        sprite: "url('assets/enemy_2.png') center/cover, #222",
+        sprite: enemySpriteStyle('village_strong_rand'),
         rollHp: () => rand(110, 130),
         intent: (e) => {
             const raw = 8 + e.turnCounter * 2;

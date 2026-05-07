@@ -34,6 +34,9 @@ const Game = {
                 $(screenId).classList.add('active');
                 $('abar').style.display = ['screen-map', 'screen-event', 'screen-combat', 'screen-settlement'].includes(screenId) ? 'flex' : 'none';
                 if (screenId === 'screen-main') Game.refreshMainMenuCTA();
+                if ((screenId === 'screen-map' || screenId === 'screen-event') && typeof AudioSys !== 'undefined' && AudioSys.playBGMTrack) {
+                    AudioSys.playBGMTrack('world');
+                }
             },
             showToast: (msg, durationMs = 2000) => {
                 const t = $('toast'); t.innerText = msg; t.style.opacity = 1;
@@ -264,7 +267,7 @@ const Game = {
                 State._resumeScreenId = 'screen-map';
                 Game.refreshMainMenuCTA();
                 MapSys.renderMap();
-                AudioSys.playBGM('assets/bgm_map.mp3'); 
+                AudioSys.playBGMTrack('world');
                 Game.navTo('screen-map');
             },
             updateInfoPanel: () => {
