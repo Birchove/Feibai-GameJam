@@ -67,8 +67,22 @@
         
         .game-title { font-size: 100px; color: #eee; letter-spacing: 30px; text-shadow: 0 0 20px rgba(139,24,24,0.8); margin-bottom: 50px; }
         .saves-container { display: flex; gap: 50px; }
-        .save-slot { width: 220px; height: 320px; background: rgba(10,10,12,0.9); border: 1px solid #333; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; transition: 0.3s; }
-        .save-slot:hover { border-color: var(--blood-red); transform: translateY(-10px); box-shadow: 0 10px 20px rgba(0,0,0,0.8); }
+        .save-slot {
+            width: 220px; height: 320px;
+            background: linear-gradient(180deg, rgba(10,14,20,0.62), rgba(8,10,14,0.76));
+            border: 1px solid rgba(149, 167, 188, 0.22);
+            box-shadow: inset 0 0 24px rgba(6,10,16,0.42), 0 10px 26px rgba(0,0,0,0.38);
+            backdrop-filter: blur(1.6px);
+            -webkit-backdrop-filter: blur(1.6px);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            cursor: pointer; transition: 0.28s ease;
+        }
+        .save-slot:hover {
+            border-color: rgba(196, 137, 137, 0.55);
+            background: linear-gradient(180deg, rgba(12,16,24,0.68), rgba(10,12,18,0.8));
+            transform: translateY(-8px);
+            box-shadow: inset 0 0 24px rgba(8,14,22,0.45), 0 14px 28px rgba(0,0,0,0.48);
+        }
         
         #pv-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 300; display: none; justify-content: center; align-items: center; flex-direction: column; }
         
@@ -480,8 +494,10 @@
         .combat-middle { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: stretch; position: relative; gap: 0; padding: 8px 12px; }
         .combat-arena-row {
             display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-end; align-content: center;
-            gap: 24px 40px; width: 100%;
+            gap: 24px 88px; width: 100%;
         }
+        #player { margin-right: 48px; }
+        #enemy-list { margin-left: 48px; }
         .enemy-list {
             display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-end; gap: 16px 22px;
             flex: 0 1 auto; min-width: 140px; position: relative;
@@ -611,13 +627,13 @@
         }
         /* 意图环：等待绿 / 伤害红 / 上状态或自buff蓝 */
         .entity.enemy-slot.enemy-intent-wait {
-            box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.55), 0 0 16px rgba(34, 197, 94, 0.22);
+            box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.62), 0 0 18px rgba(34, 197, 94, 0.24);
         }
         .entity.enemy-slot.enemy-intent-atk {
-            box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.7), 0 0 20px rgba(239, 68, 68, 0.32);
+            box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.78), 0 0 22px rgba(239, 68, 68, 0.34);
         }
         .entity.enemy-slot.enemy-intent-buff {
-            box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.65), 0 0 18px rgba(59, 130, 246, 0.3);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.72), 0 0 20px rgba(59, 130, 246, 0.32);
         }
         .entity.enemy-slot.drag-hover-target {
             outline: 2px dashed rgba(250, 250, 250, 0.85);
@@ -671,7 +687,7 @@
         .hp-text { position: absolute; top: -20px; left: 0; width: 100%; text-align: center; font-size: 14px; text-shadow: 1px 1px 2px black; line-height: 1.25; }
         .hp-text .hp-pct { font-size: 12px; color: #86efac; font-weight: normal; }
         .hp-text .hp-block { font-size: 12px; color: #93c5fd; }
-        .intent { position: absolute; top: -40px; background: rgba(0,0,0,0.8); padding: 5px 10px; border: 1px solid #555; font-size: 16px; color: #ff6b6b; border-radius: 5px; }
+        .intent { position: absolute; top: -54px; background: rgba(0,0,0,0.8); padding: 5px 14px; border: 1px solid #555; font-size: 16px; color: #ff6b6b; border-radius: 5px; max-width: 220px; white-space: normal; text-align: center; line-height: 1.25; }
         .combat-bottom { height: 260px; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 20px; position: relative; }
         .pile { position: absolute; bottom: 30px; width: 100px; height: 140px; background: rgba(20,20,25,0.9); border: 1px solid #444; display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 18px; z-index: 120; }
         #draw-pile { left: 40px; } #discard-pile { right: 40px; }
@@ -892,6 +908,8 @@
             .hand { max-width: calc(100% - 170px); margin: 0 85px; gap: 4px; }
             .hand-card-stack .card:not(:first-child) { margin-left: -70px; }
             .enemy-list { max-width: 95%; gap: 8px 10px; }
+            #player { margin-right: 20px; }
+            #enemy-list { margin-left: 20px; }
             .entity-sprite { width: 100px; height: 140px; }
             .combat-top { font-size: 16px; padding: 5px 15px; }
             

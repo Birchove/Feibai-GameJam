@@ -190,6 +190,37 @@ const Combat = {
         document.querySelectorAll('.entity.enemy-slot.drag-hover-target').forEach((el) => el.classList.remove('drag-hover-target'));
     },
 
+    openPZChoiceModal: (onPick) => {
+        let modal = $('pz-choice-modal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'pz-choice-modal';
+            modal.className = 'modal';
+            modal.style.zIndex = '980';
+            document.body.appendChild(modal);
+        }
+        modal.innerHTML = `
+            <div class="kuhai-flee-box" style="max-width:420px;">
+                <div class="kuhai-flee-title" style="margin-bottom:8px;">投笔从戎</div>
+                <div class="kuhai-flee-text" style="text-align:center;">请选择本次打出的平仄：</div>
+                <div class="kuhai-flee-row" style="margin-top:14px;">
+                    <div class="btn-g" id="pz-pick-ping" style="font-size:18px;">平</div>
+                    <div class="btn-g" id="pz-pick-ze" style="font-size:18px;">仄</div>
+                </div>
+            </div>`;
+        modal.classList.add('active');
+        $('pz-pick-ping').onclick = (ev) => {
+            ev.stopPropagation();
+            modal.classList.remove('active');
+            if (typeof onPick === 'function') onPick('平');
+        };
+        $('pz-pick-ze').onclick = (ev) => {
+            ev.stopPropagation();
+            modal.classList.remove('active');
+            if (typeof onPick === 'function') onPick('仄');
+        };
+    },
+
     _arch(e) { return EnemyArchetypes[e.arch]; },
 
     _livingIndices() {
@@ -238,7 +269,7 @@ const Combat = {
         State.combat.battlePingCount = 0;
         State.combat.battleWuPlayed = 0;
         State.combat.qibuPoetryId = null;
-        State.combat._incenseCount = 0;
+        if (typeof State.combat._incenseCount !== 'number') State.combat._incenseCount = 0;
         State.combat.playerHpLost = 0;
         State.combat._ritualSkullFired = false;
         State.combat.ganShiEchoEnemyPhase = false;
@@ -249,7 +280,7 @@ const Combat = {
         const weaponData = (typeof WeaponDB !== 'undefined' && State.weapon) ? WeaponDB[State.weapon] : null;
         const wStr = weaponData ? (weaponData.str || 0) : 0;
         const wDef = weaponData ? (weaponData.def || 0) : 0;
-        State.combat.player = { block: 0, dmgMod: 0, cantPlay: false, cantDmg: false, weak: 0, weakNextTurn: 0, vuln: 0, turnStr: 0, turnDef: 0, turnDmgMod: 0, combatStr: 0, combatDef: 0, wStr, wDef, jianBiQingYe: false, nianNuJiao: false, dmgDouble: false, takeDmgDouble: false, daoGuang: false, ignorePZ: false, cantDmgNextTurn: false, deathRoundsRemaining: 0, lostStrAcc: 0, emei: false, emeiCount: 0, fengDao: false, yiZhuan: false, chunQiang: false, guRuo: false, _inRepeat: false, cursedNextPlayer: false, yanJunxingBloodCount: 0, yanJunxingNextStr: 0, incorporealStacks: 0 };
+        State.combat.player = { block: 0, dmgMod: 0, cantPlay: false, cantDmg: false, weak: 0, weakNextTurn: 0, vuln: 0, turnStr: 0, turnDef: 0, turnDmgMod: 0, combatStr: 0, combatDef: 0, wStr, wDef, jianBiQingYe: false, nianNuJiao: false, dmgDouble: false, takeDmgDouble: false, daoGuang: false, ignorePZ: false, cantDmgNextTurn: false, deathRoundsRemaining: 0, lostStrAcc: 0, emei: false, emeiCount: 0, fengDao: false, yiZhuan: false, chunQiang: false, guRuo: false, _inRepeat: false, cursedNextPlayer: false, yanJunxingBloodCount: 0, yanJunxingNextStr: 0, incorporealStacks: 0, choosePZThisTurn: false, nextTurnEnergy: 0 };
         State.combat.shanjia = 0;
         State.combat._snapshot = null;
         State.combat._prevSnapshot = null;
@@ -661,70 +692,77 @@ const Combat = {
         }
         if (typeof hideKeywordTooltip === 'function') hideKeywordTooltip();
 
-        State.energy -= effCost;
-        if (cd.isAttack) State.momentum = Math.min(10, State.momentum + 1);
-
-        if (!State.combat.player.ignorePZ) {
-            State.combat.pzHistory.push(cd.type);
-            if (State.combat.pzHistory.length > 5) State.combat.pzHistory.shift();
-            Combat.renderPZ();
-            Combat.checkPoetryTrigger();
-        }
-
-        State.combat.hand.splice(index, 1);
-        if (GONGFA_CARD_IDS.has(cardId)) {
-            Combat.registerBattleConsumed(cardId);
-        } else if (item.isMirror || cd.toExhaust) {
-            State.combat.exhaustPile.push(cardId);
-        } else {
-            State.combat.discardPile.push(cardId);
-        }
-
-        cd.effect();
-
-        const p = State.combat.player;
-        const goesExhaust = !GONGFA_CARD_IDS.has(cardId) && (item.isMirror || cd.toExhaust);
-        if (State.relics.includes('【枯木树枝】') && goesExhaust && Math.random() < 0.5) {
-            Game.showToast('【枯木树枝】枯木回光：再演一次');
-            p._inRepeat = true;
-            try { cd.effect(); } catch (err) { console.error(err); }
-            p._inRepeat = false;
-        }
-
-        if (cd.type === '仄' && p.chunQiang && cd.id !== 'c44') {
-            setTimeout(() => {
-                const t = Combat._randomOtherLivingIdx(Combat._primaryTargetIdx());
-                const idx = t >= 0 ? t : Combat._primaryTargetIdx();
-                Combat.dealDmg(-5, false, idx);
-            }, 100);
-        }
-        if (cd.type === '平' && p.guRuo && cd.id !== 'c45') {
-            setTimeout(() => Combat.addBlock(-4), 100);
-        }
-        if (cd.isAttack && p.emei) {
-            p.emeiCount = (p.emeiCount || 0) + 1;
-            if (p.emeiCount >= 3) {
-                p.emeiCount -= 3;
-                Game.showToast('峨眉剑法：抽 1 张');
-                setTimeout(() => Combat.draw(1), 100);
+        const afterPZResolved = (resolvedType) => {
+            State.energy -= effCost;
+            if (cd.isAttack) State.momentum = Math.min(10, State.momentum + 1);
+            if (resolvedType) {
+                State.combat.pzHistory.push(resolvedType);
+                if (State.combat.pzHistory.length > 5) State.combat.pzHistory.shift();
+                Combat.renderPZ();
+                Combat.checkPoetryTrigger();
             }
-        }
-        if (p.daoGuang && cd.id !== 'c47' && /剑/.test(cd.name) && !p._inRepeat) {
-            setTimeout(() => {
-                if (!State.combat.inCombat) return;
+
+            State.combat.hand.splice(index, 1);
+            if (GONGFA_CARD_IDS.has(cardId)) {
+                Combat.registerBattleConsumed(cardId);
+            } else if (item.isMirror || cd.toExhaust) {
+                State.combat.exhaustPile.push(cardId);
+            } else {
+                State.combat.discardPile.push(cardId);
+            }
+
+            cd.effect();
+
+            const p = State.combat.player;
+            const goesExhaust = !GONGFA_CARD_IDS.has(cardId) && (item.isMirror || cd.toExhaust);
+            if (State.relics.includes('【枯木树枝】') && goesExhaust && Math.random() < 0.5) {
+                Game.showToast('【枯木树枝】枯木回光：再演一次');
                 p._inRepeat = true;
                 try { cd.effect(); } catch (err) { console.error(err); }
                 p._inRepeat = false;
-                Game.showToast('刀光剑影：再打一次');
-                Game.updateUI(); Combat.renderHand(); Combat.checkDeath();
-            }, 400);
+            }
+
+            if (resolvedType === '仄' && p.chunQiang && cd.id !== 'c44') {
+                setTimeout(() => {
+                    const t = Combat._randomOtherLivingIdx(Combat._primaryTargetIdx());
+                    const idx = t >= 0 ? t : Combat._primaryTargetIdx();
+                    Combat.dealDmg(-5, false, idx);
+                }, 100);
+            }
+            if (resolvedType === '平' && p.guRuo && cd.id !== 'c45') {
+                setTimeout(() => Combat.addBlock(-4), 100);
+            }
+            if (cd.isAttack && p.emei) {
+                p.emeiCount = (p.emeiCount || 0) + 1;
+                if (p.emeiCount >= 3) {
+                    p.emeiCount -= 3;
+                    Game.showToast('峨眉剑法：抽 1 张');
+                    setTimeout(() => Combat.draw(1), 100);
+                }
+            }
+            if (p.daoGuang && cd.id !== 'c47' && /剑/.test(cd.name) && !p._inRepeat) {
+                setTimeout(() => {
+                    if (!State.combat.inCombat) return;
+                    p._inRepeat = true;
+                    try { cd.effect(); } catch (err) { console.error(err); }
+                    p._inRepeat = false;
+                    Game.showToast('刀光剑影：再打一次');
+                    Game.updateUI(); Combat.renderHand(); Combat.checkDeath();
+                }, 400);
+            }
+
+            if (cd.cardType === '武卡') State.combat.battleWuPlayed = (State.combat.battleWuPlayed || 0) + 1;
+            if (resolvedType === '仄' && cd.id !== 'c44') State.combat.battleZeCount = (State.combat.battleZeCount || 0) + 1;
+            if (resolvedType === '平' && cd.id !== 'c45') State.combat.battlePingCount = (State.combat.battlePingCount || 0) + 1;
+
+            Combat.renderHand(); Game.updateUI(); Combat.checkDeath();
+        };
+
+        if (State.combat.player.ignorePZ) {
+            Combat.openPZChoiceModal((pickedType) => afterPZResolved(pickedType));
+            return;
         }
-
-        if (cd.cardType === '武卡') State.combat.battleWuPlayed = (State.combat.battleWuPlayed || 0) + 1;
-        if (cd.type === '仄' && cd.id !== 'c44') State.combat.battleZeCount = (State.combat.battleZeCount || 0) + 1;
-        if (cd.type === '平' && cd.id !== 'c45') State.combat.battlePingCount = (State.combat.battlePingCount || 0) + 1;
-
-        Combat.renderHand(); Game.updateUI(); Combat.checkDeath();
+        afterPZResolved(cd.type);
     },
 
     openCardPicker: ({ source, maxCount = 1, prompt, onConfirm }) => {
@@ -789,8 +827,8 @@ const Combat = {
             p.lostStrAcc = (p.lostStrAcc || 0) + amount;
             while (p.lostStrAcc >= 3) {
                 p.lostStrAcc -= 3;
-                p.turnStr += 1;
-                Game.showToast('一转攻势：本回合 +1 力');
+                p.combatStr += 1;
+                Game.showToast('一转攻势：本场战斗 +1 力');
             }
         }
         if (p.fengDao) {
@@ -1500,6 +1538,7 @@ const Combat = {
             }
             if (p.yiZhuan) pBar.innerHTML += `<div class="status-icon" style="color:var(--gold);">↻<div class="status-tooltip">一转攻势</div></div>`;
             if (p.fengDao) pBar.innerHTML += `<div class="status-icon" style="color:var(--gold);">🗡<div class="status-tooltip">封刀挂剑</div></div>`;
+            if ((p.nextTurnEnergy || 0) > 0) pBar.innerHTML += `<div class="status-icon" style="color:#93c5fd;">⚡+${p.nextTurnEnergy}<div class="status-tooltip">以逸待劳：下回合额外获得 ${p.nextTurnEnergy} 点气</div></div>`;
             if (p.emei) pBar.innerHTML += `<div class="status-icon" style="color:var(--gold);">⚡ ${p.emeiCount || 0}<div class="status-tooltip">峨眉剑法（3 武卡抽 1）</div></div>`;
             if (p.chunQiang) pBar.innerHTML += `<div class="status-icon" style="color:var(--gold);">舌${State.combat.battleZeCount != null ? State.combat.battleZeCount : 0}<div class="status-tooltip">唇枪舌剑：本场已打出仄牌 ${State.combat.battleZeCount || 0}（不含本身）</div></div>`;
             if (p.guRuo) pBar.innerHTML += `<div class="status-icon" style="color:var(--gold);">壁${State.combat.battlePingCount != null ? State.combat.battlePingCount : 0}<div class="status-tooltip">固若金汤：本场已打出平牌 ${State.combat.battlePingCount || 0}（不含本身）</div></div>`;
@@ -1511,6 +1550,11 @@ const Combat = {
                 const st = p.incorporealStacks;
                 pBar.innerHTML += `<div class="status-icon" style="color:#a7c7e7;">无实体×<span class="kw" data-tip="${wstTip}">${st}</span></div>`;
             }
+            if (State.relics.includes('【香炉】')) {
+                const left = Math.max(1, 6 - (State.combat._incenseCount || 0));
+                pBar.innerHTML += `<div class="status-icon" style="color:#67e8f9;">🕯<div class="status-tooltip">还有 ${left} 回合获得一层无实体</div></div>`;
+            }
+            if (p.ignorePZ) pBar.innerHTML += `<div class="status-icon" style="color:#c4b5fd;">平仄择<div class="status-tooltip">投笔从戎：本回合每次出牌可自选平或仄</div></div>`;
             bindKeywordTooltips(pBar);
         }
     },

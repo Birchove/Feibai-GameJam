@@ -254,6 +254,7 @@ const Game = {
                 State.class = cls; State.hp = init.hp; State.maxHp = init.maxHp; State.gold = 100; State.mapNodeIndex = 0; State.mapChapter = 0; State.relics = [];
                 State._villagePendingChapter = undefined;
                 State._settlementFromVillageAmbush = false;
+                if (State.combat) State.combat._incenseCount = 0;
                 State.str = init.str; State.def = init.def; State.agi = init.agi;
                 State.weapon = ''; State.poetry = []; State.wuxing = init.wuxing; 
                 // 流派开局自带诗句与武器（剑：吴钩霜雪明 + 绣剑）

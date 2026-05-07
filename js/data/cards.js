@@ -45,13 +45,13 @@ const CardDB = {
             'c21': { id: 'c21', name: '双斩', cost: 1, type: '仄', typeClass: 'type-ze', atkBase: -3, desc: `造成{V_ATK}点${K.SH}两次`, isAttack: true, rarity: 'low', cardType: '武卡', effect: () => { Combat.dealDmg(-3); setTimeout(()=>Combat.dealDmg(-3), 200); } },
             
             // [ 22-40: 中阶秘籍 ]
-            'c22': { id: 'c22', name: '歃血为盟', cost: 2, type: '平', typeClass: 'type-ping', toExhaust: true, desc: `打出后进入${K.CS}，失去10点血量，对所有敌人给予三层${K.YS}和${K.XR}`, rarity: 'mid', cardType: '功卡', effect: () => {
-                Combat.takeDmg(10, true);
+            'c22': { id: 'c22', name: '歃血为盟', cost: 2, type: '平', typeClass: 'type-ping', toExhaust: true, desc: `打出后进入${K.CS}，固定失去1点血量，对所有敌人给予三层${K.YS}和${K.XR}`, rarity: 'mid', cardType: '功卡', effect: () => {
+                Combat.takeDmg(1, true);
                 State.combat.enemies.forEach(en => { if (en && en.hp > 0) { en.weak += 3; en.vuln += 3; Combat.pulseEnemyEntity(en); } });
                 Game.updateUI();
                 Combat.renderEnemies();
             } },
-            'c23': { id: 'c23', name: '一转攻势', cost: 1, type: '仄', typeClass: 'type-ze', desc: `${K.GF}，你每失去3点力，获得1点力`, rarity: 'mid', cardType: '功卡', effect: () => { State.combat.player.yiZhuan = true; Game.showToast('一转攻势：开始计数'); } },
+            'c23': { id: 'c23', name: '一转攻势', cost: 1, type: '仄', typeClass: 'type-ze', desc: `${K.GF}，本场战斗你每失去3点力，获得1点力`, rarity: 'mid', cardType: '功卡', effect: () => { State.combat.player.yiZhuan = true; Game.showToast('一转攻势：开始计数'); } },
             'c24': { id: 'c24', name: '束手就擒', cost: 1, type: '平', typeClass: 'type-ping', toExhaust: true, desc: `打出后进入${K.CS}，本回合失去2点力；每名敌人本回合对你攻势−6`, rarity: 'mid', cardType: '功卡', effect: () => {
                 State.combat.player.turnStr -= 2;
                 Combat.onStrLost(2);
@@ -80,6 +80,14 @@ const CardDB = {
                 Combat.dealDmg(d, false, idx);
             } },
             'c28': { id: 'c28', name: '白虹贯日', cost: 1, type: '平', typeClass: 'type-ping', toExhaust: true, atkBase: 5, desc: `打出后进入${K.CS}，造成{V_ATK}点${K.SH}，对血量最高敌人造成双倍${K.SH}`, isAttack: true, rarity: 'mid', cardType: '武卡', effect: () => {
+                const liv0 = Combat._livingIndices();
+                if (!liv0.length) return;
+                if (liv0.length === 1) {
+                    const idx = liv0[0];
+                    Combat.dealDmg(5, false, idx);
+                    setTimeout(() => Combat.dealDmg(5, false, idx), 120);
+                    return;
+                }
                 Combat.dealDmgAll(5);
                 const liv = Combat._livingIndices();
                 if (!liv.length) return;
@@ -132,7 +140,7 @@ const CardDB = {
                 State.combat.qibuPoetryId = avail[rand(0, avail.length - 1)];
                 Game.showToast('七步成诗：战后结算领取残篇');
             } },
-            'c38': { id: 'c38', name: '投笔从戎', cost: 1, type: '平', typeClass: 'type-ping', atkBase: 0, desc: `对一名敌人造成{V_ATK}点${K.SH}，本回合你的所有手牌不分平仄`, isAttack: true, rarity: 'mid', cardType: '武卡', effect: () => { Combat.dealDmg(0); State.combat.player.ignorePZ = true; } },
+            'c38': { id: 'c38', name: '投笔从戎', cost: 1, type: '平', typeClass: 'type-ping', atkBase: 0, desc: `对一名敌人造成{V_ATK}点${K.SH}，本回合你每次打牌可自选平仄`, isAttack: true, rarity: 'mid', cardType: '武卡', effect: () => { Combat.dealDmg(0); State.combat.player.ignorePZ = true; } },
             'c39': { id: 'c39', name: '拔山扛鼎', cost: 1, type: '仄', typeClass: 'type-ze', desc: `${K.GF}，本场战斗你获得4点力`, rarity: 'mid', cardType: '功卡', effect: () => { State.combat.player.combatStr += 4; Game.updateUI(); Game.showToast('拔山扛鼎：本场战斗 +4 力'); } },
             'c40': { id: 'c40', name: '文思泉涌', cost: 1, type: '仄', typeClass: 'type-ze', defBase: 0, desc: `清除你所有的${K.CSH}，每清除一个就获得{V_DEF}点${K.CSHOU}`, rarity: 'mid', cardType: '功卡', effect: () => { let count = State.combat.pzHistory.length; State.combat.pzHistory = []; Combat.renderPZ(); for(let i=0; i<count; i++) Combat.addBlock(0); } },
             

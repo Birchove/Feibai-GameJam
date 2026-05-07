@@ -34,6 +34,10 @@ Feibai-GameJam/
 - 事件背景由 `js/data/events.js` 里各事件的 **`eventSkin`** 字段（`teahouse` / `village` / `temple` / `wangxiang` / `naihe`）决定；`js/systems/map.js` 中 `EventSys.applyEventBackground` 会在进入事件时给 `#screen-event` 挂上对应 class，**CSS 变量** `--event-bg-image` 指向上表 PNG。
 - **战斗结算**仍单独使用 `event_bg.png`，与事件皮肤无关；若结算也要分区换图，需另加 CSS 规则。
 - 若某专用 PNG 暂缺，可复制 `event_bg.png` 占位同名文件，避免 404。
+- `saves_menu_bg.png`（回忆一 / 回忆二 / 回忆三 共用）生图提示词：
+  - 正向词：`Chinese dark wuxia underworld memory hall, ancient stone chamber with three subtle memorial altars, drifting incense smoke, dim candle light, faded paper talismans, melancholy and solemn atmosphere, ink wash + painterly 2D game background, dark blue and desaturated cyan palette with slight warm amber highlights, center area clean for UI buttons and save slot text, high clarity, no characters, no text`
+  - 负向词：`characters, people, text, watermark, logo, modern furniture, neon lights, sci-fi elements, photorealistic, 3d render, over-detailed foreground clutter, blurry, noisy`
+  - 出图建议：优先 `16:9`（如 `1920x1080`）；画面中部与偏下位置留“低细节空区”，用于承载“回忆一/二/三”按钮与状态文字，避免背景干扰可读性。
 
 ---
 
@@ -49,6 +53,10 @@ Feibai-GameJam/
 - 地图节点在 `js/data/events.js` 的 `MapChapters` 中可通过可选字段 **`combatBg: 'mountain'`** 标记（当前所有名为「山路」的节点及第一章 `fight1` / `fight2` 已配置）。`js/systems/map.js` 在进入战斗前调用 `Combat.setNextCombatBackground(node.combatBg)`，`js/systems/combat.js` 在 `Combat.start` 开头消费该值并为 `#screen-combat` 添加或移除 class **`combat-bg-mountain`**。
 - 从开发者面板等路径直接 `Combat.start(...)`、未经过地图节点时，不会设置山路皮肤，仍为默认仅 `combat_bg.png`。
 - 美术建议：山路立绘构图偏 **中上景**（天际/远山），下方留虚或低密度，与 `mask` 渐变衔接更自然；若文件缺失，可复制 `combat_bg.png` 为占位文件名，避免 404。
+- `combat_bg.png` 生图提示词（可直接用）：
+  - 正向词：`Chinese dark wuxia underworld battlefield, moonlit ghost mountain path, dead trees and broken stone road, distant misty ridges, ink-wash texture blended with painterly 2D game background, cinematic cold blue and dark teal palette, subtle warm lantern accents, atmospheric fog, high clarity, low visual noise in lower screen area for card UI readability, no characters, no text`
+  - 负向词：`characters, people, monsters, text, watermark, logo, modern buildings, neon cyberpunk, photorealistic, 3d render, oversaturated colors, blurry, noisy`
+  - 出图建议：优先 `16:9`（如 `1920x1080`）；画面重心偏中上，底部 25%-30% 保持低细节，避免压手牌与按钮。
 
 ---
 
