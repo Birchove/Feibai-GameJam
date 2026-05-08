@@ -1,11 +1,16 @@
 // 敌人 Archetype：intent(enemy, all)/act(enemy, all)；弱怪 HP 用 rollHp 在出战时掷定
-// ArchKey 用于数据统计（枯骸官吏) 与 AI；displayId 用于结算 tier 等
+// ArchKey 用于数据统计(枯骸官吏) 与 AI；displayId 用于结算 tier 等
 
 const _pick = (arr) => arr[rand(0, arr.length - 1)];
 
-/** 妖怪立绘：`assets/enemy_<archKey>.png`，archKey 与本体 `EnemyArchetypes` 键名一致（魑魅四体共用 `chi_mei_single` 一张图） */
+/** 妖怪立绘：`assets/enemy_<archKey>.png`，archKey 与本体 `EnemyArchetypes` 键名一致(魑魅四体共用 `chi_mei_single` 一张图) */
 function enemySpriteStyle(archKey) {
     return `url('assets/enemy_${archKey}.png') center/cover, #222`;
+}
+
+/** 意图悬停用：与战斗内持守减伤预览一致 */
+function _intentDmgPreview(e, raw) {
+    return typeof Combat !== 'undefined' && Combat.enemyDmgAfterShushou ? Combat.enemyDmgAfterShushou(e, raw) : raw;
 }
 
 const EnemyArchetypes = {
@@ -18,9 +23,17 @@ const EnemyArchetypes = {
             if (e.turnCounter % 2 === 0) {
                 const dmg = 4 + 5 * (e.turnCounter / 2 - 1);
                 const d = typeof Combat !== 'undefined' && Combat.enemyDmgAfterShushou ? Combat.enemyDmgAfterShushou(e, dmg) : dmg;
-                return `意图: 攻击 (${d})`;
+                return `意图: 攻击 (${d}伤)`;
             }
             return '意图: 等待';
+        },
+        intentHover: (e) => {
+            if (e.turnCounter % 2 === 0) {
+                const dmg = 4 + 5 * (e.turnCounter / 2 - 1);
+                const d = _intentDmgPreview(e, dmg);
+                return `基础 ${dmg} 点，修正后约 ${d} 点；攻击回合伤害随回合递增。`;
+            }
+            return null;
         },
         act: (e) => {
             if (e.turnCounter % 2 === 0) {
@@ -35,14 +48,15 @@ const EnemyArchetypes = {
         sprite: enemySpriteStyle('legacy_fight2'),
         rollHp: () => 200,
         intent: (e) => {
-            if (e.turnCounter % 2 !== 0) return '意图: 虚弱咒';
+            if (e.turnCounter % 2 !== 0) return '意图: 虚弱咒 (虚弱)';
             const d = typeof Combat !== 'undefined' && Combat.enemyDmgAfterShushou ? Combat.enemyDmgAfterShushou(e, 8) : 8;
-            return `意图: 攻击 (${d})`;
+            return `意图: 攻击 (${d}伤)`;
         },
+        intentHover: (e) => (e.turnCounter % 2 !== 0 ? '虚弱：使你造成伤害降低(按虚弱层数折扣)。' : null),
         act: (e) => {
             if (e.turnCounter % 2 !== 0) {
                 if (typeof Combat !== 'undefined' && Combat.applyPlayerWeakCurse) Combat.applyPlayerWeakCurse(1);
-                Game.showToast('受到虚弱咒！造成的伤害降低');
+                Game.showToast('虚弱咒加身：你这一击轻了');
             } else {
                 Combat.takeDmg(8, false, e);
             }
@@ -59,10 +73,11 @@ const EnemyArchetypes = {
             if (e.turnCounter % 2 !== 0) {
                 if (!e._nextAtkRoll) e._nextAtkRoll = rand(6, 8);
                 const d = typeof Combat !== 'undefined' && Combat.enemyDmgAfterShushou ? Combat.enemyDmgAfterShushou(e, e._nextAtkRoll) : e._nextAtkRoll;
-                return `意图: 攻击 (${d})`;
+                return `意图: 攻击 (${d}伤)`;
             }
-            return '意图: 虚弱咒';
+            return '意图: 虚弱咒 (虚弱)';
         },
+        intentHover: (e) => (e.turnCounter % 2 === 0 ? '虚弱：使你造成伤害降低(按虚弱层数折扣)。' : null),
         act: (e) => {
             if (e.turnCounter % 2 !== 0) {
                 const dmg = e._nextAtkRoll || rand(6, 8);
@@ -70,7 +85,7 @@ const EnemyArchetypes = {
                 Combat.takeDmg(dmg, false, e);
             } else {
                 if (typeof Combat !== 'undefined' && Combat.applyPlayerWeakCurse) Combat.applyPlayerWeakCurse(1);
-                Game.showToast('虚弱咒缠身……');
+                Game.showToast('虚弱咒如絮缠身……');
             }
         }
     },
@@ -80,15 +95,19 @@ const EnemyArchetypes = {
         sprite: enemySpriteStyle('bai_hun_ye_gui'),
         rollHp: () => rand(70, 74),
         intent: (e) => {
-            if (e.turnCounter % 2 !== 0) return `意图: 凝煞聚力 (+8力，当前 ${e.str || 0})`;
+            if (e.turnCounter % 2 !== 0) return `意图: 凝煞聚力 (力+8·当前${e.str || 0})`;
             const raw = 5 + (e.str || 0);
             const d = typeof Combat !== 'undefined' && Combat.enemyDmgAfterShushou ? Combat.enemyDmgAfterShushou(e, raw) : raw;
-            return `意图: 扑击 (${d})`;
+            return `意图: 扑击 (${d}伤)`;
+        },
+        intentHover: (e) => {
+            if (e.turnCounter % 2 !== 0) return `蓄力：本动力道 +8，发动前当前力道 ${e.str || 0}(发动后 +8)。`;
+            return null;
         },
         act: (e) => {
             if (e.turnCounter % 2 !== 0) {
                 e.str = (e.str || 0) + 8;
-                Game.showToast('阴煞聚力，敌方力道陡增');
+                Game.showToast('阴煞聚拢：那厮力道陡增');
                 if (typeof Combat !== 'undefined' && Combat.pulseEnemyEntity) Combat.pulseEnemyEntity(e);
             } else {
                 const dmg = 5 + (e.str || 0);
@@ -106,16 +125,22 @@ const EnemyArchetypes = {
             const ph = e._lsPhase % 3;
             if (ph === 0) {
                 const d = typeof Combat !== 'undefined' && Combat.enemyDmgAfterShushou ? Combat.enemyDmgAfterShushou(e, 13) : 13;
-                return `意图: 攻击 (${d})`;
+                return `意图: 攻击 (${d}伤)`;
             }
             if (ph === 1) {
                 if (e._lanNext === 'atk') {
                     const d = typeof Combat !== 'undefined' && Combat.enemyDmgAfterShushou ? Combat.enemyDmgAfterShushou(e, 5) : 5;
-                    return `意图: 脓毒攻 (${d})`;
+                    return `意图: 脓毒攻 (${d}伤)`;
                 }
-                return '意图: 御骸（+10持守）';
+                return '意图: 御骸 (10持守)';
             }
-            return '意图: 尸皮硬化 (+4力 +10持守)';
+            return '意图: 尸皮硬化 (力+4·持守)';
+        },
+        intentHover: (e) => {
+            const ph = e._lsPhase % 3;
+            if (ph === 1 && e._lanNext !== 'atk') return '获得 10 点持守(格挡伤害)。';
+            if (ph === 2) return '力道 +4，并获得 10 点持守。';
+            return null;
         },
         intent: (e) => EnemyArchetypes.lan_shi_guai.displayIntent(e),
         act: (e) => {
@@ -126,7 +151,7 @@ const EnemyArchetypes = {
                 if (e._lanNext === 'atk') Combat.takeDmg(5, false, e);
                 else {
                     e.block = (e.block || 0) + 10;
-                    Game.showToast('烂尸怪御起腐甲');
+                    Game.showToast('烂尸怪披上一层腐甲');
                     if (typeof Combat !== 'undefined' && Combat.pulseEnemyEntity) Combat.pulseEnemyEntity(e);
                 }
             } else {
@@ -146,22 +171,31 @@ const EnemyArchetypes = {
         rollHp: () => rand(24, 32),
         displayIntent: (e) => {
             if (e.turnCounter % 2 !== 0) {
-                if (e._chiMeiNext === 'weak') return '意图: 虚弱咒';
+                if (e._chiMeiNext === 'weak') return '意图: 虚弱咒 (虚弱)';
                 if (e._chiMeiNext === 'atk') {
                     const d = typeof Combat !== 'undefined' && Combat.enemyDmgAfterShushou ? Combat.enemyDmgAfterShushou(e, 6) : 6;
-                    return `意图: 攻击 (${d})`;
+                    return `意图: 攻击 (${d}伤)`;
                 }
-                return '意图: 咒缚…';
+                return '意图: 咒缚';
             }
             const d = typeof Combat !== 'undefined' && Combat.enemyDmgAfterShushou ? Combat.enemyDmgAfterShushou(e, 4) : 4;
-            return `意图: 攻袭 (${d})`;
+            return `意图: 攻袭 (${d}伤)`;
+        },
+        intentHover: (e) => {
+            if (e.turnCounter % 2 !== 0) {
+                if (e._chiMeiNext === 'weak') return '虚弱：使你造成伤害降低。';
+                if (e._chiMeiNext === 'atk') return null;
+                const d = _intentDmgPreview(e, 6);
+                return `约 ${d} 点伤害(基础 6，已含持守等修正)。`;
+            }
+            return null;
         },
         intent: (e) => EnemyArchetypes.chi_mei_single.displayIntent(e),
         act: (e) => {
             if (e.turnCounter % 2 !== 0) {
                 if (e._chiMeiNext === 'weak') {
                     if (typeof Combat !== 'undefined' && Combat.applyPlayerWeakCurse) Combat.applyPlayerWeakCurse(1);
-                    Game.showToast('虚弱咒！');
+                    Game.showToast('虚弱咒又叠一层');
                 } else {
                     Combat.takeDmg(6, false, e);
                 }
@@ -176,19 +210,20 @@ const EnemyArchetypes = {
         init: (e) => { e._yk = 0; },
         intent: (e) => {
             const ph = e._yk % 3;
-            if (ph === 0) return '意图: 诅咒（下回合不可攻）';
+            if (ph === 0) return '意图: 诅咒 (下回合无法出手)';
             if (ph === 1) {
                 const d = typeof Combat !== 'undefined' && Combat.enemyDmgAfterShushou ? Combat.enemyDmgAfterShushou(e, 6) : 6;
-                return `意图: 侵攻 (${d})`;
+                return `意图: 侵攻 (${d}伤)`;
             }
             const d = typeof Combat !== 'undefined' && Combat.enemyDmgAfterShushou ? Combat.enemyDmgAfterShushou(e, 13) : 13;
-            return `意图: 侵攻 (${d})`;
+            return `意图: 侵攻 (${d}伤)`;
         },
+        intentHover: (e) => ((e._yk % 3) === 0 ? '诅咒：下一玩家回合你无法对敌人造成伤害。' : null),
         act: (e) => {
             const ph = e._yk % 3;
             if (ph === 0) {
                 State.combat.player.cursedNextPlayer = true;
-                Game.showToast('诅咒入骨：下回合难施杀手');
+                Game.showToast('诅咒入骨：下一回合难施杀手');
             } else if (ph === 1) Combat.takeDmg(6, false, e);
             else Combat.takeDmg(13, false, e);
             e._yk++;
@@ -204,24 +239,25 @@ const EnemyArchetypes = {
             const ph = e._ys % 4;
             if (ph === 0) {
                 const d = typeof Combat !== 'undefined' && Combat.enemyDmgAfterShushou ? Combat.enemyDmgAfterShushou(e, 17) : 17;
-                return `意图: 侵攻 (${d})`;
+                return `意图: 侵攻 (${d}伤)`;
             }
             if (ph === 1) {
                 const d = typeof Combat !== 'undefined' && Combat.enemyDmgAfterShushou ? Combat.enemyDmgAfterShushou(e, 9) : 9;
-                return `意图: 侵攻 (${d})`;
+                return `意图: 侵攻 (${d}伤)`;
             }
             if (ph === 2) {
                 const d = typeof Combat !== 'undefined' && Combat.enemyDmgAfterShushou ? Combat.enemyDmgAfterShushou(e, 5) : 5;
-                return `意图: 侵攻 (${d})`;
+                return `意图: 侵攻 (${d}伤)`;
             }
-            return '意图: 阴风遏止（眩晕）';
+            return '意图: 阴风遏止';
         },
+        intentHover: (e) => ((e._ys % 4) === 3 ? '本回合不对你造成伤害。' : null),
         act: (e) => {
             const ph = e._ys % 4;
             if (ph === 0) Combat.takeDmg(17, false, e);
             else if (ph === 1) Combat.takeDmg(9, false, e);
             else if (ph === 2) Combat.takeDmg(5, false, e);
-            else Game.showToast('阴煞僵滞，未及出手');
+            else Game.showToast('阴煞凝滞，未曾出手');
             e._ys++;
         }
     },
@@ -233,7 +269,12 @@ const EnemyArchetypes = {
         intent: (e) => {
             const raw = 6 * e.turnCounter;
             const d = typeof Combat !== 'undefined' && Combat.enemyDmgAfterShushou ? Combat.enemyDmgAfterShushou(e, raw) : raw;
-            return `意图: 量罪罚击 (${d})`;
+            return `意图: 量罪罚击 (${d}伤·递增)`;
+        },
+        intentHover: (e) => {
+            const raw = 6 * e.turnCounter;
+            const d = _intentDmgPreview(e, raw);
+            return `基础伤害 ${raw} 点，经持守等修正后约 ${d} 点；每经过该敌人一回合 +6。`;
         },
         act: (e) => {
             Combat.takeDmg(6 * e.turnCounter, false, e);
@@ -247,13 +288,19 @@ const EnemyArchetypes = {
         intent: (e) => {
             const raw = 15;
             const d = typeof Combat !== 'undefined' && Combat.enemyDmgAfterShushou ? Combat.enemyDmgAfterShushou(e, raw) : raw;
-            return e.turnCounter % 2 !== 0 ? `意图: 缢杀 ${d}，并缀易伤` : `意图: 缢杀 (${d})`;
+            return e.turnCounter % 2 !== 0 ? `意图: 缢杀 (${d}伤·易伤)` : `意图: 缢杀 (${d}伤)`;
+        },
+        intentHover: (e) => {
+            const raw = 15;
+            const d = _intentDmgPreview(e, raw);
+            if (e.turnCounter % 2 !== 0) return `约 ${d} 点伤害(基础 15)，并使你易伤 +1。`;
+            return null;
         },
         act: (e) => {
             Combat.takeDmg(15, false, e);
             if (e.turnCounter % 2 !== 0) {
                 State.combat.player.vuln += 1;
-                Game.showToast('阴气入络，易伤缠身');
+                Game.showToast('阴气钻络：你被挂上易伤');
             }
         }
     },
@@ -263,15 +310,16 @@ const EnemyArchetypes = {
         sprite: enemySpriteStyle('ye_xun_a'),
         rollHp: () => rand(46, 50),
         intent: (e) => {
-            if (e.turnCounter % 2 !== 0) return '意图: 枷印（易伤+御骸12）';
+            if (e.turnCounter % 2 !== 0) return '意图: 枷印 (易伤·12持守)';
             const d = typeof Combat !== 'undefined' && Combat.enemyDmgAfterShushou ? Combat.enemyDmgAfterShushou(e, 14) : 14;
-            return `意图: 勾魂锥 (${d})`;
+            return `意图: 勾魂锥 (${d}伤)`;
         },
+        intentHover: (e) => (e.turnCounter % 2 !== 0 ? '你易伤 +1；该敌人获得 12 点持守。' : null),
         act: (e) => {
             if (e.turnCounter % 2 !== 0) {
                 State.combat.player.vuln += 1;
                 e.block = (e.block || 0) + 12;
-                Game.showToast('阴差枷印：你更易受制');
+                Game.showToast('阴差枷印在身：你更易受制');
                 if (typeof Combat !== 'undefined' && Combat.pulseEnemyEntity) Combat.pulseEnemyEntity(e);
             } else Combat.takeDmg(14, false, e);
         }
@@ -282,16 +330,17 @@ const EnemyArchetypes = {
         sprite: enemySpriteStyle('ye_xun_b'),
         rollHp: () => rand(46, 50),
         intent: (e) => {
-            if (e.turnCounter % 2 === 0) return '意图: 凝煞御骸';
+            if (e.turnCounter % 2 === 0) return '意图: 凝煞御骸 (力+3·8持守)';
             const d = typeof Combat !== 'undefined' && Combat.enemyDmgAfterShushou ? Combat.enemyDmgAfterShushou(e, 14) : 14;
-            return `意图: 链鞭 (${d})`;
+            return `意图: 链鞭 (${d}伤)`;
         },
+        intentHover: (e) => (e.turnCounter % 2 === 0 ? '力道 +3，持守 +8。' : null),
         act: (e) => {
             if (e.turnCounter % 2 !== 0) Combat.takeDmg(14, false, e);
             else {
                 e.str = (e.str || 0) + 3;
                 e.block = (e.block || 0) + 8;
-                Game.showToast('阴差披甲，更难击破');
+                Game.showToast('阴差披甲：更难击破');
                 if (typeof Combat !== 'undefined' && Combat.pulseEnemyEntity) Combat.pulseEnemyEntity(e);
             }
         }
@@ -303,22 +352,36 @@ const EnemyArchetypes = {
         rollHp: () => 161,
         init: (e) => { e._wuChangRagePhase = null; },
         displayIntent: (e) => {
-            if (e._wuChangRagePhase === 'prep') return '意图: 煞气凝结…';
+            if (e._wuChangRagePhase === 'prep') return '意图: 煞气凝结 (下回合狂暴)';
             if (e._wuChangRagePhase === 'berserk') {
                 const d = 22 + (e.str || 0);
                 const td = typeof Combat !== 'undefined' && Combat.enemyDmgAfterShushou ? Combat.enemyDmgAfterShushou(e, d) : d;
-                return `意图: 狂乱罚击 (${td})`;
+                return `意图: 狂乱罚击 (${td}伤)`;
             }
             if (e.turnCounter % 2 !== 0) {
                 const d = typeof Combat !== 'undefined' && Combat.enemyDmgAfterShushou ? Combat.enemyDmgAfterShushou(e, 11) : 11;
-                return `意图: 索命 (${d}) · 弃牌恐魇`;
+                return `意图: 索命 (${d}伤·弃牌惊恐)`;
             }
-            return '意图: 聚怨为甲 · 双煞增力';
+            return '意图: 聚怨为甲';
+        },
+        intentHover: (e) => {
+            if (e._wuChangRagePhase === 'prep') return '本动不造成伤害；下一动进入狂暴，伤害与自愈大幅提高。';
+            if (e._wuChangRagePhase === 'berserk') {
+                const raw = 22 + (e.str || 0);
+                const td = _intentDmgPreview(e, raw);
+                return `约 ${td} 点伤害(基础 ${raw})；命中后力道 +2、生命 +10。`;
+            }
+            if (e.turnCounter % 2 !== 0) {
+                const d = _intentDmgPreview(e, 11);
+                return `约 ${d} 点伤害(基础 11)；弃牌堆加入 1 张「惊恐」。`;
+            }
+            const blk = Math.max(0, Math.floor((State.maxHp - State.hp) / 2));
+            return `获得 ${blk} 点持守(约为已损失生命的一半)；每名存活黑白无常力道 +1。`;
         },
         intent: (e) => EnemyArchetypes.hei_wu_chang.displayIntent(e),
         act: (e) => {
             if (e._wuChangRagePhase === 'prep') {
-                Game.showToast('黑无常：同伴既殁，且在阴风凝煞一瞬……');
+                Game.showToast('黑无常：伴当已去，阴风一瞬更烈……');
                 e._wuChangRagePhase = 'berserk';
                 return;
             }
@@ -327,13 +390,13 @@ const EnemyArchetypes = {
                 Combat.takeDmg(d, false, e);
                 e.str = (e.str || 0) + 2;
                 e.hp = Math.min(e.maxHp, e.hp + 10);
-                Game.showToast('黑无常狂化');
+                Game.showToast('黑无常杀性暴涨');
                 return;
             }
             if (e.turnCounter % 2 !== 0) {
                 Combat.takeDmg(11, false, e);
                 State.combat.discardPile.push('c_jingkong');
-                Game.showToast('阴魇入梦：惊恐堕入弃牌堆');
+                Game.showToast('梦魇压心：「惊恐」沉入弃牌堆');
             } else {
                 const blk = Math.max(0, Math.floor((State.maxHp - State.hp) / 2));
                 e.block = (e.block || 0) + blk;
@@ -350,23 +413,37 @@ const EnemyArchetypes = {
         rollHp: () => 241,
         init: (e) => { e._wuChangRagePhase = null; },
         displayIntent: (e) => {
-            if (e._wuChangRagePhase === 'prep') return '意图: 煞气凝结…';
+            if (e._wuChangRagePhase === 'prep') return '意图: 煞气凝结 (下回合狂暴)';
             if (e._wuChangRagePhase === 'berserk') {
                 const d = 22 + (e.str || 0);
                 const td = typeof Combat !== 'undefined' && Combat.enemyDmgAfterShushou ? Combat.enemyDmgAfterShushou(e, d) : d;
-                return `意图: 狂乱罚击 (${td})`;
+                return `意图: 狂乱罚击 (${td}伤)`;
             }
             if (e.turnCounter % 2 !== 0) {
                 const blk = Math.floor(State.hp / 2);
-                return `意图: 借汝生气为御 (${blk}) · 回合末双煞回生`;
+                return `意图: 借生气为御 (${blk}持守·末回)`;
             }
             const d = typeof Combat !== 'undefined' && Combat.enemyDmgAfterShushou ? Combat.enemyDmgAfterShushou(e, 9) : 9;
-            return `意图: 还魂鞭 (${d}) · 啖伤回命`;
+            return `意图: 还魂鞭 (${d}伤·吸血)`;
+        },
+        intentHover: (e) => {
+            if (e._wuChangRagePhase === 'prep') return '本动不造成伤害；下一动进入狂暴，伤害与自愈大幅提高。';
+            if (e._wuChangRagePhase === 'berserk') {
+                const raw = 22 + (e.str || 0);
+                const td = _intentDmgPreview(e, raw);
+                return `约 ${td} 点伤害(基础 ${raw})；命中后力道 +2、生命 +10。`;
+            }
+            if (e.turnCounter % 2 !== 0) {
+                const blk = Math.max(0, Math.floor(State.hp / 2));
+                return `获得 ${blk} 点持守(约为当前生命的一半，向下取整)；回合末每名存活无常各回复 1 点生命。`;
+            }
+            const d = _intentDmgPreview(e, 9);
+            return `约 ${d} 点伤害(基础 9)；对你造成的伤害等额转为该敌人生命。`;
         },
         intent: (e) => EnemyArchetypes.bai_wu_chang.displayIntent(e),
         act: (e) => {
             if (e._wuChangRagePhase === 'prep') {
-                Game.showToast('白无常：怨恨如丝，转眼即成绞索……');
+                Game.showToast('白无常：怨恨如丝，转眼成绞……');
                 e._wuChangRagePhase = 'berserk';
                 return;
             }
@@ -375,7 +452,7 @@ const EnemyArchetypes = {
                 Combat.takeDmg(d, false, e);
                 e.str = (e.str || 0) + 2;
                 e.hp = Math.min(e.maxHp, e.hp + 10);
-                Game.showToast('白无常狂化');
+                Game.showToast('白无常戾气大作');
                 return;
             }
             if (e.turnCounter % 2 !== 0) {
@@ -386,7 +463,7 @@ const EnemyArchetypes = {
                         o.hp = Math.min(o.maxHp, o.hp + 1);
                     }
                 });
-                Game.showToast('双无常各回复 1 点命火');
+                Game.showToast('双无常各续一命火');
             } else {
                 const hp0 = State.hp;
                 Combat.takeDmg(9, false, e);
@@ -404,20 +481,38 @@ const EnemyArchetypes = {
         init: (e) => { e.shehun = 0; e.junxing = true; },
         displayIntent: (e) => {
             const ph = ((e.turnCounter - 1) % 4) + 1;
-            if (ph === 1) return '意图: 冥律 · 摄魂四层 / 峻刑';
+            if (ph === 1) return '意图: 冥律 (摄魂·峻刑)';
             if (ph === 2) {
                 const atkBase = 44 + (e.str || 0);
                 const raw = typeof Combat !== 'undefined' && Combat.enemyDmgAfterShushou ? Combat.enemyDmgAfterShushou(e, atkBase) : atkBase;
                 const d = Math.floor(raw);
-                return `意图: 量罪罚击 (${d})`;
+                return `意图: 量罪罚击 (${d}伤)`;
             }
             if (ph === 3) {
                 const atkBase = 11 + (e.str || 0);
                 const raw = typeof Combat !== 'undefined' && Combat.enemyDmgAfterShushou ? Combat.enemyDmgAfterShushou(e, atkBase) : atkBase;
                 const d = Math.floor(raw);
-                return `意图: 薄惩 (${d})`;
+                return `意图: 薄惩 (${d}伤)`;
             }
-            return '意图: 再缚摄魂 · 观簿续刑';
+            return '意图: 再缚摄魂 (阈值可叠)';
+        },
+        intentHover: (e) => {
+            const ph = ((e.turnCounter - 1) % 4) + 1;
+            if (ph === 1) return '摄魂层数 +4，并触发峻刑；行动结束后按摄魂层数增加力道与持守。';
+            if (ph === 2) {
+                const atkBase = 44 + (e.str || 0);
+                const raw = _intentDmgPreview(e, atkBase);
+                return `约 ${Math.floor(raw)} 点伤害(基础 ${atkBase}，含峻刑结算)。`;
+            }
+            if (ph === 3) {
+                const atkBase = 11 + (e.str || 0);
+                const raw = _intentDmgPreview(e, atkBase);
+                return `约 ${Math.floor(raw)} 点伤害(基础 ${atkBase}，含峻刑结算)。`;
+            }
+            const m = (typeof State !== 'undefined' && State.combat) ? (State.combat.turn || 1) : 1;
+            const thr = 111 * (4 - Math.floor(m / 4));
+            if (thr > 0) return `摄魂 +4；若阎罗生命 ≥ ${thr}，再额外 +4 层摄魂。`;
+            return '摄魂 +4。';
         },
         intent: (e) => EnemyArchetypes.yan_luo_wang.displayIntent(e),
         act: (e) => {
@@ -425,7 +520,7 @@ const EnemyArchetypes = {
             if (ph === 1) {
                 e.shehun = (e.shehun || 0) + 4;
                 e.junxing = true;
-                Game.showToast('阎罗王：摄魂萦体，峻刑铭骨');
+                Game.showToast('阎罗王：摄魂缠身，峻刑镌骨');
             } else if (ph === 2) {
                 const atk = 44 + (e.str || 0);
                 if (typeof Combat !== 'undefined' && Combat.yanLuowangStrikeAndJunxing) return Combat.yanLuowangStrikeAndJunxing(e, atk);
@@ -440,7 +535,7 @@ const EnemyArchetypes = {
                 const thr = 111 * (4 - Math.floor(m / 4));
                 if (thr > 0 && e.hp >= thr) {
                     e.shehun += 4;
-                    Game.showToast(`阎罗王：魂册未罄，再叠摄魂（阈 ${thr}）`);
+                    Game.showToast(`阎罗王：魂册未满，摄魂再叠(阈 ${thr})`);
                 }
             }
             if ((e.shehun || 0) > 0) {
@@ -458,7 +553,12 @@ const EnemyArchetypes = {
         intent: (e) => {
             const raw = 8 + e.turnCounter * 2;
             const d = typeof Combat !== 'undefined' && Combat.enemyDmgAfterShushou ? Combat.enemyDmgAfterShushou(e, raw) : raw;
-            return `意图: 猛袭 (${d})`;
+            return `意图: 猛袭 (${d}伤)`;
+        },
+        intentHover: (e) => {
+            const raw = 8 + e.turnCounter * 2;
+            const d = _intentDmgPreview(e, raw);
+            return `基础 ${raw} 点，修正后约 ${d} 点；每经该敌一回合 +2 基础。`;
         },
         act: (e) => {
             let dmg = 8 + e.turnCounter * 2;
@@ -489,7 +589,7 @@ const EncounterDB = {
         return [{ arch: k }];
     }},
     enc_strong_random_wide: {
-        /** 山路随机：强敌为精英结算，弱敌为小怪结算（不掉法宝） */
+        /** 山路随机：强敌为精英结算，弱敌为小怪结算(不掉法宝) */
         spawn: () => {
             const roll = Math.random();
             if (roll < 0.15) return { rewardTier: 'elite', units: [{ arch: 'ku_hai_guan_li' }] };

@@ -1,11 +1,11 @@
 /** 功法：单场战斗仅可发动一次，不占沉沙、不可被折戟取回 */
 const GONGFA_CARD_IDS = new Set(['c9', 'c23', 'c29', 'c33', 'c34', 'c36', 'c39', 'c44', 'c45', 'c47']);
 
-/** 需选单体的攻击牌中，群体伤害类（多敌时允许在空白处打出，仍打全体） */
+/** 需选单体的攻击牌中，群体伤害类(多敌时允许在空白处打出，仍打全体) */
 const ATTACK_CARD_NO_ENEMY_TARGET = new Set(['c12', 'c28', 'c42']);
 
 const Combat = {
-    /** 下一次 `Combat.start` 使用的战斗背景皮肤（由地图节点 `combatBg` 传入；使用后清空） */
+    /** 下一次 `Combat.start` 使用的战斗背景皮肤(由地图节点 `combatBg` 传入；使用后清空) */
     _nextCombatBgSkin: null,
 
     setNextCombatBackground: (skin) => {
@@ -21,7 +21,7 @@ const Combat = {
         if (skin === 'mountain') el.classList.add('combat-bg-mountain');
     },
 
-    /** 功法：本场战斗打出后，同 ID 不再出现在抽/弃/手/沉沙（非沉沙消耗，本场封存） */
+    /** 功法：本场战斗打出后，同 ID 不再出现在抽/弃/手/沉沙(非沉沙消耗，本场封存) */
     registerBattleConsumed: (cardId) => {
         if (!GONGFA_CARD_IDS.has(cardId)) return;
         if (!State.combat.battleConsumed.includes(cardId)) State.combat.battleConsumed.push(cardId);
@@ -60,6 +60,18 @@ const Combat = {
         return arch.intent(en);
     },
 
+    /** 意图条悬停：白话详解(含具体数值)；仅部分 archetype 实现，其余返回 null 不设 title */
+    getIntentHover: (en) => {
+        const arch = Combat._arch(en);
+        if (!arch || typeof arch.intentHover !== 'function') return null;
+        try {
+            const t = arch.intentHover(en);
+            return t ? String(t) : null;
+        } catch (_) {
+            return null;
+        }
+    },
+
     refreshEnemyIntentLocks: () => {
         if (!State.combat || !State.combat.inCombat) return;
         const t = State.combat.turn;
@@ -90,8 +102,8 @@ const Combat = {
         if (arch && typeof arch.intentGlow === 'function') return arch.intentGlow(en);
         const s = Combat.getIntentText(en);
         if (/等待|僵滞/.test(s)) return 'wait';
-        if (/攻击\s*\(|侵攻|缢杀|勾魂|链鞭|量罪|撕扯|罚击|脓毒攻|扑击|勾魂锥/.test(s)) return 'atk';
-        if (/虚弱|诅咒|枷印|眩晕|虚弱咒|御骸|持守|尸皮|凝煞|易伤|咒[（：]/.test(s)) return 'buff';
+        if (/攻击\s*\(|侵攻|攻袭|缢杀|勾魂|链鞭|量罪|撕扯|罚击|脓毒攻|扑击|勾魂锥|索命|猛袭|薄惩|还魂鞭/.test(s)) return 'atk';
+        if (/虚弱|诅咒|枷印|眩晕|虚弱咒|御骸|持守|尸皮|凝煞|易伤|咒[(：]|咒缚|冥律|再缚|借生气|聚怨/.test(s)) return 'buff';
         return 'wait';
     },
 
@@ -158,7 +170,7 @@ const Combat = {
         hint.style.left = `${pt.x}px`;
         hint.style.top = `${pt.y}px`;
         if (liv.length > 1 && hitIdx < 0) {
-            hint.innerHTML = '请将卡牌拖至目标敌人';
+            hint.innerHTML = '请将牌拖到敌影之上';
             hint.classList.add('visible');
             hint.setAttribute('aria-hidden', 'false');
             return;
@@ -172,7 +184,7 @@ const Combat = {
             hint.classList.remove('visible');
             return;
         }
-        const momNote = prev.momCrit ? ((State.relics && State.relics.includes('【红缨枪】')) ? '（含蓄势×2）' : '（含蓄势×1.5）') : '';
+        const momNote = prev.momCrit ? ((State.relics && State.relics.includes('【红缨枪】')) ? '(含蓄势×2)' : '(含蓄势×1.5)') : '';
         const hitDetail = prev.hits > 1
             ? `每段 ${prev.perHit} 点，合计 ${prev.total} 点`
             : `${prev.perHit} 点`;
@@ -202,7 +214,7 @@ const Combat = {
         modal.innerHTML = `
             <div class="kuhai-flee-box" style="max-width:420px;">
                 <div class="kuhai-flee-title" style="margin-bottom:8px;">投笔从戎</div>
-                <div class="kuhai-flee-text" style="text-align:center;">请选择本次打出的平仄：</div>
+                <div class="kuhai-flee-text" style="text-align:center;">这一笔，欲写「平」还是「仄」？</div>
                 <div class="kuhai-flee-row" style="margin-top:14px;">
                     <div class="btn-g" id="pz-pick-ping" style="font-size:18px;">平</div>
                     <div class="btn-g" id="pz-pick-ze" style="font-size:18px;">仄</div>
@@ -289,7 +301,7 @@ const Combat = {
 
         const pack = Combat_startFromEncounter(encounterId);
         if (!pack || !pack.enemies.length) {
-            Game.showToast('遭遇配置错误');
+            Game.showToast('此战遭遇未成编，恐有误');
             return;
         }
         State.combat.enemies = pack.enemies;
@@ -305,7 +317,7 @@ const Combat = {
         if (State.relics.includes('【佛像】') || State.relics.includes('【佛像】开局震慑')) {
             setTimeout(() => {
                 if (!State.combat.inCombat) return;
-                Game.showToast('【佛像】明光开示：诸邪各受 11 点罚击');
+                Game.showToast('【佛像】光起：诸邪各承 11 点惩戒');
                 Combat.dealDmgAll(11, true);
             }, 500);
         }
@@ -335,7 +347,7 @@ const Combat = {
             const blk = Math.max(0, 10 - 2 * n);
             if (blk > 0) {
                 Combat.addBlock(blk, true);
-                Game.showToast(`【八卦护心镜】镜光成壁 +${blk} 持守`);
+                Game.showToast(`【八卦护心镜】镜华凝壁，持守 +${blk}`);
             }
         }
 
@@ -344,7 +356,7 @@ const Combat = {
             if (State.combat._incenseCount >= 6) {
                 State.combat._incenseCount = 0;
                 State.combat.player.incorporealStacks = (State.combat.player.incorporealStacks || 0) + 1;
-                Game.showToast('【香炉】无实体+1（计数已重置；层数每我方回合−1）');
+                Game.showToast('【香炉】青烟绕身：无实体 +1(计数已清；每轮我方回合层数 −1)');
             }
         }
 
@@ -354,7 +366,7 @@ const Combat = {
         if (State.combat.player.cursedNextPlayer) {
             State.combat.player.cantDmg = true;
             State.combat.player.cursedNextPlayer = false;
-            Game.showToast('诅咒显化：本回合难施杀手');
+            Game.showToast('诅咒缠身：本回合难以杀手');
         }
         State.combat.player.turnStr = 0;
         State.combat.player.turnDef = 0;
@@ -364,7 +376,7 @@ const Combat = {
         if ((State.combat.player.yanJunxingNextStr || 0) > 0) {
             const pen = State.combat.player.yanJunxingNextStr;
             State.combat.player.turnStr -= pen;
-            Game.showToast(`峻刑余绪：本回合武力 −${pen}`);
+            Game.showToast(`阎罗峻刑余威：本回合武力 −${pen}`);
             State.combat.player.yanJunxingNextStr = 0;
         }
 
@@ -374,7 +386,7 @@ const Combat = {
             const gain = State.combat.player.weakNextTurn;
             State.combat.player.weak += gain;
             State.combat.player.weakNextTurn = 0;
-            Game.showToast(`虚弱咒显化：本回合虚弱 ${gain}`);
+            Game.showToast(`虚弱咒入骨：本回合虚弱 ${gain}`);
         }
 
         State.combat.enemies.forEach((e) => {
@@ -395,7 +407,7 @@ const Combat = {
                     State.combat.hand.splice(hi, 1);
                     State.combat.exhaustPile.push(cid);
                     const nm = CardDB[cid] ? CardDB[cid].name : cid;
-                    Game.showToast(`「${nm}」期限已尽，沉入沉沙`);
+                    Game.showToast(`「${nm}」时限已尽，沉入沉沙`);
                 }
             }
         }
@@ -415,7 +427,7 @@ const Combat = {
                     const cid = dp.splice(pickedIdx, 1)[0];
                     setTimeout(() => {
                         if (!State.combat.inCombat) return;
-                        Game.showToast(`念奴娇：自动打出 ${picked.name}`);
+                        Game.showToast(`念奴娇牵动：自动打出「${picked.name}」`);
                         try { picked.effect(); } catch (err) { console.error(err); }
                         if (GONGFA_CARD_IDS.has(cid)) Combat.registerBattleConsumed(cid);
                         else if (picked.toExhaust) State.combat.exhaustPile.push(cid);
@@ -477,6 +489,14 @@ const Combat = {
             intentEl.className = 'intent';
             let intentText = Combat.getIntentText(en);
             intentEl.innerText = intentText;
+            const intentHover = Combat.getIntentHover(en);
+            if (intentHover) {
+                intentEl.title = intentHover;
+                intentEl.classList.add('intent-has-detail');
+            } else {
+                intentEl.removeAttribute('title');
+                intentEl.classList.remove('intent-has-detail');
+            }
 
             const spr = document.createElement('div');
             spr.className = 'asset-placeholder entity-sprite battle-enemy-sprite';
@@ -491,7 +511,7 @@ const Combat = {
             const hpText = document.createElement('div');
             hpText.className = 'hp-text';
             const pct = en.maxHp > 0 ? Math.round((en.hp / en.maxHp) * 100) : 0;
-            hpText.innerHTML = `${en.hp}/${en.maxHp}<span class="hp-pct">（${pct}%）</span>${(en.block || 0) > 0 ? ` <span class="hp-block">+${en.block}御</span>` : ''}`;
+            hpText.innerHTML = `${en.hp}/${en.maxHp}<span class="hp-pct">(${pct}%)</span>${(en.block || 0) > 0 ? ` <span class="hp-block">+${en.block}御</span>` : ''}`;
             hpWrap.appendChild(hpFill);
             hpWrap.appendChild(hpText);
 
@@ -523,7 +543,7 @@ const Combat = {
         if ((en.str || 0) > 0) html += `<div class="status-icon">力${en.str}<div class="status-tooltip">敌方力道加成</div></div>`;
         if (en.atkDownThisRound) html += `<div class="status-icon">抑<div class="status-tooltip">本回合其攻势对你 −${en.atkDownThisRound}</div></div>`;
         if ((en.qieNuoStacks || 0) > 0) html += `<div class="status-icon">怯<div class="status-tooltip">怯懦×${en.qieNuoStacks}：攻势×${(Math.pow(0.8, en.qieNuoStacks)).toFixed(2)}</div></div>`;
-        if ((en.shehun || 0) > 0) html += `<div class="status-icon">魂${en.shehun}<div class="status-tooltip">摄魂 ${en.shehun} 层（行动后获得等量力与双倍层数御）</div></div>`;
+            if ((en.shehun || 0) > 0) html += `<div class="status-icon">魂${en.shehun}<div class="status-tooltip">摄魂 ${en.shehun} 层(行动后获得等量力与双倍层数御)</div></div>`;
         if (en.shushouQin) html += `<div class="status-icon">擒<div class="status-tooltip">束手就擒：对你造成的攻势 −${en.shushouQin}</div></div>`;
         return html;
     },
@@ -557,7 +577,7 @@ const Combat = {
         if (hintEl) {
             if (!canPay) {
                 hintEl.hidden = false;
-                hintEl.innerHTML = `囊中铜钱仅 <span style="color:var(--gold);font-weight:bold;">${State.gold}</span>，不敷赎路之约（约需 <span style="color:var(--gold);font-weight:bold;">${pay}</span>）。`;
+                hintEl.innerHTML = `囊中铜钱仅 <span style="color:var(--gold);font-weight:bold;">${State.gold}</span>，不敷赎路之约(约需 <span style="color:var(--gold);font-weight:bold;">${pay}</span>)。`;
             } else {
                 hintEl.hidden = true;
                 hintEl.innerHTML = '';
@@ -566,7 +586,7 @@ const Combat = {
         bt.onclick = () => {
             const payNeed = Math.max(0, Math.ceil(200 - State.combat.kuHaiStats.dealt + State.combat.kuHaiStats.taken));
             if (State.gold < payNeed) {
-                Game.showToast('囊中铜钱不足，难以按约撤离。');
+                Game.showToast('铜钱不够，践不得约，撤不得身');
                 return;
             }
             State.gold -= payNeed;
@@ -599,7 +619,7 @@ const Combat = {
     _fleeCombatNoRewards: () => {
         State.combat.inCombat = false;
         AudioSys.playBGMTrack('world');
-        Game.showToast('暂且退让……');
+        Game.showToast('暂且退让，避其锋芒……');
         Game.updateUI();
         MapSys.renderMap();
         Game.navTo('screen-map');
@@ -633,7 +653,7 @@ const Combat = {
                 State.combat.drawPile = State.combat.discardPile.filter((id) => !ban.has(id));
                 State.combat.discardPile = [];
                 Combat.shuffle(State.combat.drawPile);
-                Game.showToast('牌库重洗');
+                Game.showToast('残卷洗尽，重新洗牌');
             }
             State.combat.hand.push(Combat._handPileToEntry(State.combat.drawPile.pop()));
         }
@@ -705,13 +725,13 @@ const Combat = {
         const cd = CardDB[cardId];
         if (!cd) return;
         if (cd.unplayable) {
-            Game.showToast('此牌不可打出');
+            Game.showToast('此牌封笔，不能打出');
             Combat.renderHand();
             return;
         }
         const effCost = (item.costOverride !== undefined) ? item.costOverride : cd.cost;
         if (State.energy < effCost || !State.combat.isPlayerTurn || State.combat.player.cantPlay) {
-            Game.showToast('无法打出此牌');
+            Game.showToast('此刻气象不合，打不出去');
             Combat.renderHand();
             return;
         }
@@ -741,7 +761,7 @@ const Combat = {
             const p = State.combat.player;
             const goesExhaust = !GONGFA_CARD_IDS.has(cardId) && (item.isMirror || cd.toExhaust);
             if (State.relics.includes('【枯木树枝】') && goesExhaust && Math.random() < 0.5) {
-                Game.showToast('【枯木树枝】枯木回光：再演一次');
+                Game.showToast('【枯木树枝】枯木逢光：再演一回');
                 p._inRepeat = true;
                 try { cd.effect(); } catch (err) { console.error(err); }
                 p._inRepeat = false;
@@ -761,7 +781,7 @@ const Combat = {
                 p.emeiCount = (p.emeiCount || 0) + 1;
                 if (p.emeiCount >= 3) {
                     p.emeiCount -= 3;
-                    Game.showToast('峨眉剑法：抽 1 张');
+                    Game.showToast('峨眉剑法：再抽一张');
                     setTimeout(() => Combat.draw(1), 100);
                 }
             }
@@ -771,7 +791,7 @@ const Combat = {
                     p._inRepeat = true;
                     try { cd.effect(); } catch (err) { console.error(err); }
                     p._inRepeat = false;
-                    Game.showToast('刀光剑影：再打一次');
+                    Game.showToast('刀光剑影：同一招式再演');
                     Game.updateUI(); Combat.renderHand(); Combat.checkDeath();
                 }, 400);
             }
@@ -793,7 +813,7 @@ const Combat = {
     openCardPicker: ({ source, maxCount = 1, prompt, onConfirm }) => {
         const sourceArr = source === 'hand' ? State.combat.hand : State.combat.exhaustPile;
         if (!sourceArr || sourceArr.length === 0) {
-            Game.showToast(`${prompt || '请选择卡牌'}：可选项为空`);
+            Game.showToast(`${prompt || '请择一张牌'}：竟无牌可选`);
             return;
         }
         const panel = $('card-picker');
@@ -803,7 +823,7 @@ const Combat = {
         const cancelBtn = $('card-picker-cancel');
         const selected = new Set();
 
-        title.innerText = `${prompt || '请选择卡牌'}（最多 ${maxCount} 张）`;
+        title.innerText = `${prompt || '请点选卡牌'}(至多 ${maxCount} 张)`;
         grid.innerHTML = '';
 
         sourceArr.forEach((rawItem, idx) => {
@@ -822,7 +842,7 @@ const Combat = {
                             selected.clear();
                             grid.querySelectorAll('.picker-card-wrapper.selected').forEach(el2 => el2.classList.remove('selected'));
                         } else {
-                            Game.showToast(`最多只能选 ${maxCount} 张`);
+                            Game.showToast(`至多择 ${maxCount} 张`);
                             return;
                         }
                     }
@@ -838,7 +858,7 @@ const Combat = {
 
         const close = () => { panel.classList.remove('active'); confirmBtn.onclick = null; cancelBtn.onclick = null; };
         confirmBtn.onclick = () => {
-            if (selected.size === 0) { Game.showToast('未选择'); return; }
+            if (selected.size === 0) { Game.showToast('尚未点选'); return; }
             const indices = Array.from(selected).sort((a, b) => b - a);
             close();
             onConfirm(indices);
@@ -853,11 +873,11 @@ const Combat = {
             while (p.lostStrAcc >= 3) {
                 p.lostStrAcc -= 3;
                 p.combatStr += 1;
-                Game.showToast('一转攻势：本场战斗 +1 力');
+                Game.showToast('一转攻势：本场战斗中武力 +1');
             }
         }
         if (p.fengDao) {
-            Game.showToast('封刀挂剑：抽 2 张');
+            Game.showToast('封刀挂剑：再抽两张');
             Combat.draw(2);
         }
     },
@@ -883,7 +903,7 @@ const Combat = {
         return 'other';
     },
 
-    /** 敌方吃下一轮「等量」攻势（仅数值与格挡，不含玩家蓄势/武力） */
+    /** 敌方吃下一轮「等量」攻势(仅数值与格挡，不含玩家蓄势/武力) */
     applyEnemySelfStrike: (enemy, amount) => {
         if (!enemy || enemy.hp <= 0 || !amount || amount < 1) return;
         const idx = State.combat.enemies.indexOf(enemy);
@@ -992,7 +1012,7 @@ const Combat = {
         setTimeout(() => {
             if (!State.combat.inCombat) return;
             triggered.forEach(pd => {
-                Game.showToast(`诗韵触发：${pd.text}`);
+                Game.showToast(`诗韵应和：${pd.text}`);
                 if (typeof Fx !== 'undefined' && Fx.poetryBurst) Fx.poetryBurst(pd.text, pd.fxVariant || 'blade');
                 try { pd.trigger(); } catch (err) { console.error('Poetry trigger error:', err); }
             });
@@ -1034,7 +1054,7 @@ const Combat = {
                     pr.emeiCount = (pr.emeiCount || 0) + 1;
                     if (pr.emeiCount >= 3) {
                         pr.emeiCount -= 3;
-                        Game.showToast('峨眉剑法：抽 1 张');
+                        Game.showToast('峨眉剑法：再抽一张');
                         Combat.draw(1);
                     }
                 }
@@ -1066,7 +1086,7 @@ const Combat = {
 
     dealDmg: (base, isFixed = false, targetIdx, opts = {}) => {
         AudioSys.playSFX('assets/sfx_hit.mp3');
-        if (State.combat.player.cantDmg) { Game.showToast('止战：本回合无法造成伤害！'); return; }
+        if (State.combat.player.cantDmg) { Game.showToast('止戈：本回合难以伤人'); return; }
 
         if (State._dev && State._devOneShot) {
             State.combat.enemies.forEach((en, i) => {
@@ -1102,7 +1122,7 @@ const Combat = {
             dmg = Math.floor(dmg * mult);
             State.momentum = 0;
             isCrit = true;
-            if (State.relics && State.relics.includes('【红缨枪】')) Game.showToast('【红缨枪】势满：杀伤加倍');
+            if (State.relics && State.relics.includes('【红缨枪】')) Game.showToast('【红缨枪】势盈刃满：杀伤加倍');
         }
         if (State.combat.player.dmgDouble) dmg *= 2;
 
@@ -1234,7 +1254,7 @@ const Combat = {
         const nBlood = p.yanJunxingBloodCount || 0;
         const bloodLoss = Math.floor(Math.pow(2, nBlood));
         const bloodNext = Math.floor(Math.pow(2, nBlood + 1));
-        $('junxing-opt-blood').innerHTML = `失去 <b style="color:var(--blood-red)">${bloodLoss}</b> 点生命（真实伤势；下次择此项为 ${bloodNext}）`;
+        $('junxing-opt-blood').innerHTML = `失去 <b style="color:var(--blood-red)">${bloodLoss}</b> 点生命(真实伤势；下次择此项为 ${bloodNext})`;
 
         const finish = () => {
             el.classList.remove('active');
@@ -1300,7 +1320,7 @@ const Combat = {
                 try {
                     Combat.applyEnemySelfStrike(attacker, rd);
                     State.combat._ganShiReflectHandled = true;
-                    const tip = ganShiStacks > 1 ? `（x${ganShiStacks}）` : '';
+                    const tip = ganShiStacks > 1 ? `(x${ganShiStacks})` : '';
                     Game.showToast(`感时花溅泪：泪尽锋折，还施彼身${tip}`);
                 } finally {
                     State.combat._ganShiReflecting = false;
@@ -1347,7 +1367,7 @@ const Combat = {
                 if (State.relics.includes('【仪式头骨】') && State.combat.playerHpLost >= 10 && !State.combat._ritualSkullFired) {
                     State.combat._ritualSkullFired = true;
                     State.combat.player.combatStr += 4;
-                    Game.showToast('【仪式头骨】剧痛砺志：武力+4');
+                    Game.showToast('【仪式头骨】剧痛入骨：本场武力 +4');
                 }
             }
 
@@ -1358,7 +1378,7 @@ const Combat = {
         Game.updateUI(); Combat.renderHand(); Combat.checkDeath();
     },
 
-    heal: (amt) => { State.hp = Math.min(State.maxHp, State.hp + amt); Game.updateUI(); Game.showToast(`回复 ${amt} 生命`); },
+    heal: (amt) => { State.hp = Math.min(State.maxHp, State.hp + amt); Game.updateUI(); Game.showToast(`气血回补 ${amt}`); },
 
     addBlock: (base, isFixed = false) => {
         const p = State.combat.player;
@@ -1374,7 +1394,7 @@ const Combat = {
         const base = baseRaw || 0;
         const lines = [];
         if (cd.isFixed) {
-            return { value: Math.max(0, base), tip: `固定值：${base}（无视角色武力与武器属性）` };
+            return { value: Math.max(0, base), tip: `固定值：${base}(无视角色武力与武器属性)` };
         }
         const inCombat = !!(State.combat && State.combat.inCombat);
         const p = inCombat ? State.combat.player : null;
@@ -1398,7 +1418,7 @@ const Combat = {
         const base = baseRaw || 0;
         const lines = [];
         if (cd.isFixed) {
-            return { value: Math.max(0, base), tip: `固定值：${base}（无视角色武力与武器属性）` };
+            return { value: Math.max(0, base), tip: `固定值：${base}(无视角色武力与武器属性)` };
         }
         const inCombat = !!(State.combat && State.combat.inCombat);
         const p = inCombat ? State.combat.player : null;
@@ -1437,14 +1457,14 @@ const Combat = {
         });
         if (huiN > 0) {
             Combat.takeDmg(2 * huiN, true);
-            Game.showToast(`悔：${huiN} 张缠身，−${2 * huiN} 气血`);
+            Game.showToast(`「悔」缠手 ${huiN} 张，折去 ${2 * huiN} 点气血`);
             if (State.hp <= 0) return;
         }
 
         State.combat.isPlayerTurn = false;
         $('end-turn-btn').className = '';
         $('end-turn-btn').innerText = '敌方回合';
-        // 「当前回合」类增益在回合结束立即失效（例如：满江红）
+        // 「当前回合」类增益在回合结束立即失效(例如：满江红)
         State.combat.player.dmgDouble = false;
         State.combat.player.takeDmgDouble = false;
         for (let i = 0; i < State.combat.hand.length; i++) {
@@ -1475,7 +1495,17 @@ const Combat = {
             const slot = $(`enemy-slot-${i}`);
             if (!slot) return;
             const intentEl = slot.querySelector('.intent');
-            if (intentEl) intentEl.innerText = Combat.getIntentText(en);
+            if (intentEl) {
+                intentEl.innerText = Combat.getIntentText(en);
+                const ih = Combat.getIntentHover(en);
+                if (ih) {
+                    intentEl.title = ih;
+                    intentEl.classList.add('intent-has-detail');
+                } else {
+                    intentEl.removeAttribute('title');
+                    intentEl.classList.remove('intent-has-detail');
+                }
+            }
         });
     },
 
@@ -1487,7 +1517,7 @@ const Combat = {
             if (p.deathRoundsRemaining > 0) {
                 p.deathRoundsRemaining -= 1;
                 if (p.deathRoundsRemaining === 0) {
-                    Game.showToast('案剑瞋目：力竭而亡');
+                    Game.showToast('案剑瞋目：力尽气绝');
                     State.hp = 0;
                     Game.updateUI();
                     Combat.checkDeath();
@@ -1512,7 +1542,7 @@ const Combat = {
                 if (!State.combat.inCombat || State.hp <= 0) break;
                 if (!e || e.hp <= 0) continue;
                 if (e.stun) {
-                    Game.showToast(`${e.name}囿于旋风中无法行动！`);
+                    Game.showToast(`${e.name}困于旋风，不得出手！`);
                 } else {
                     const arch = Combat._arch(e);
                     if (arch) {
@@ -1524,7 +1554,7 @@ const Combat = {
                                 const stacks = State.combat.ganShiEchoEnemyStacks || 1;
                                 // 敌方减层时机在我方回合开始，单层感时按 +2 实际等效 1 层；可叠层按倍数放大
                                 Combat.applyEnemyWeakCurse(e, 2 * stacks);
-                                const tip = stacks > 1 ? `（x${stacks}）` : '';
+                                const tip = stacks > 1 ? `(x${stacks})` : '';
                                 Game.showToast(`感时花溅泪：${e.name} 反受虚弱咒${tip}`);
                                 skipAct = true;
                             }
@@ -1565,14 +1595,14 @@ const Combat = {
             if (p.yiZhuan) pBar.innerHTML += `<div class="status-icon" style="color:var(--gold);">↻<div class="status-tooltip">一转攻势</div></div>`;
             if (p.fengDao) pBar.innerHTML += `<div class="status-icon" style="color:var(--gold);">🗡<div class="status-tooltip">封刀挂剑</div></div>`;
             if ((p.nextTurnEnergy || 0) > 0) pBar.innerHTML += `<div class="status-icon" style="color:#93c5fd;">⚡+${p.nextTurnEnergy}<div class="status-tooltip">以逸待劳：下回合额外获得 ${p.nextTurnEnergy} 点气</div></div>`;
-            if (p.emei) pBar.innerHTML += `<div class="status-icon" style="color:var(--gold);">⚡ ${p.emeiCount || 0}<div class="status-tooltip">峨眉剑法（3 武卡抽 1）</div></div>`;
-            if (p.chunQiang) pBar.innerHTML += `<div class="status-icon" style="color:var(--gold);">舌${State.combat.battleZeCount != null ? State.combat.battleZeCount : 0}<div class="status-tooltip">唇枪舌剑：本场已打出仄牌 ${State.combat.battleZeCount || 0}（不含本身）</div></div>`;
-            if (p.guRuo) pBar.innerHTML += `<div class="status-icon" style="color:var(--gold);">壁${State.combat.battlePingCount != null ? State.combat.battlePingCount : 0}<div class="status-tooltip">固若金汤：本场已打出平牌 ${State.combat.battlePingCount || 0}（不含本身）</div></div>`;
-            if (p.daoGuang) pBar.innerHTML += `<div class="status-icon" style="color:var(--gold);">⚔×2<div class="status-tooltip">刀光剑影（不含本身；每张含剑名仅追加一次）</div></div>`;
+            if (p.emei) pBar.innerHTML += `<div class="status-icon" style="color:var(--gold);">⚡ ${p.emeiCount || 0}<div class="status-tooltip">峨眉剑法(3 武卡抽 1)</div></div>`;
+            if (p.chunQiang) pBar.innerHTML += `<div class="status-icon" style="color:var(--gold);">舌${State.combat.battleZeCount != null ? State.combat.battleZeCount : 0}<div class="status-tooltip">唇枪舌剑：本场已打出仄牌 ${State.combat.battleZeCount || 0}(不含本身)</div></div>`;
+            if (p.guRuo) pBar.innerHTML += `<div class="status-icon" style="color:var(--gold);">壁${State.combat.battlePingCount != null ? State.combat.battlePingCount : 0}<div class="status-tooltip">固若金汤：本场已打出平牌 ${State.combat.battlePingCount || 0}(不含本身)</div></div>`;
+            if (p.daoGuang) pBar.innerHTML += `<div class="status-icon" style="color:var(--gold);">⚔×2<div class="status-tooltip">刀光剑影(不含本身；每张含剑名仅追加一次)</div></div>`;
             if (p.dmgDouble || p.takeDmgDouble) pBar.innerHTML += `<div class="status-icon" style="color:var(--blood-red);">2×<div class="status-tooltip">满江红</div></div>`;
             if (p.jianBiQingYe) pBar.innerHTML += `<div class="status-icon" style="color:#60a5fa;">壁≤15<div class="status-tooltip">坚壁清野：每回合至多跨回合保留 15 点持守</div></div>`;
             if ((p.incorporealStacks || 0) > 0) {
-                const wstTip = '无实体（香炉）：每第6、12…个我方回合开始+1层并清零香炉计数（与敌方当回合是否出手无关）。持守抵扣后，单次伤势至多与层数相同。每个我方回合开始层数−1最低0；若敌方本回合未对你造成伤害，下回合开始层数仍会衰减，不顺延保留。';
+                const wstTip = '无实体(香炉)：每第6、12…个我方回合开始+1层并清零香炉计数(与敌方当回合是否出手无关)。持守抵扣后，单次伤势至多与层数相同。每个我方回合开始层数−1最低0；若敌方本回合未对你造成伤害，下回合开始层数仍会衰减，不顺延保留。';
                 const st = p.incorporealStacks;
                 pBar.innerHTML += `<div class="status-icon" style="color:#a7c7e7;">无实体×<span class="kw" data-tip="${wstTip}">${st}</span></div>`;
             }
@@ -1580,7 +1610,7 @@ const Combat = {
                 const left = Math.max(1, 6 - (State.combat._incenseCount || 0));
                 pBar.innerHTML += `<div class="status-icon" style="color:#67e8f9;">🕯<div class="status-tooltip">还有 ${left} 回合获得一层无实体</div></div>`;
             }
-            if (p.ignorePZ) pBar.innerHTML += `<div class="status-icon" style="color:#c4b5fd;">平仄择<div class="status-tooltip">投笔从戎：本回合每次出牌可自选平或仄</div></div>`;
+            if (p.ignorePZ) pBar.innerHTML += `<div class="status-icon" style="color:#c4b5fd;">平仄自择<div class="status-tooltip">投笔从戎：本回合每张牌可自定平或仄</div></div>`;
             bindKeywordTooltips(pBar);
         }
     },
@@ -1608,14 +1638,14 @@ const Combat = {
     checkDeath: () => {
         if (State.hp <= 0) {
             State.combat.inCombat = false;
-            Game.showToast('胜败乃兵家常事，大侠请重新来过', 4200);
+            Game.showToast('胜负寻常事，洗净笔锋可重来', 4200);
             AudioSys.stopBGM();
             setTimeout(() => { Game.clearJourneyCheckpoint(); Game.navTo('screen-main'); }, 4200);
         } else if (State.combat.inCombat && Combat._livingIndices().length === 0) {
             if (State.relics.includes('【落魄灵魂】')) {
                 State.hp = Math.min(State.maxHp, State.hp + 1);
                 State.gold += 15;
-                Game.showToast('【落魄灵魂】魂火微暖：+1 气血，+15 钱');
+                Game.showToast('【落魄灵魂】魂火一闪：气血 +1，铜钱 +15');
             }
             State._qibuPoetryReward = State.combat.qibuPoetryId || null;
             State.combat.qibuPoetryId = null;

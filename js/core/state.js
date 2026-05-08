@@ -6,7 +6,7 @@ const State = {
             str: 5, def: 5, wuxing: 2.5, agi: 1,  
             weapon: '', poetry: [], 
             deck: [], relics: [], mapNodeIndex: 0, mapChapter: 0, isViewingMap: false, 
-            // 开发者模式（仅本局生效，不持久化）
+            // 开发者模式(仅本局生效，不持久化)
             _dev: false, _devGod: false, _devOneShot: false, _devSkipEnemy: false, 
             combat: {
                 inCombat: false, turn: 1, isPlayerTurn: true, hand: [], drawPile: [], discardPile: [], exhaustPile: [],

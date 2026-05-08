@@ -1,15 +1,15 @@
 
         /* ================= 基础变量与重置 ================= */
         /*
-         * BGM 三类接口（文件在 assets/；曲目切换逻辑见 js/core/audio.js → AudioSys.BGM / playBGMTrack）
-         *   bgm_boss.mp3   — 鬼门关 Boss（遭遇 id：enc_yan_luo_wang）
+         * BGM 三类接口(文件在 assets/；曲目切换逻辑见 js/core/audio.js → AudioSys.BGM / playBGMTrack)
+         *   bgm_boss.mp3   — 鬼门关 Boss(遭遇 id：enc_yan_luo_wang)
          *   bgm_combat.mp3 — 除 Boss 以外的战斗
          *   bgm_world.mp3  — 大地图与事件界面共用
          */
         /*
-         * 主角立绘（文件在 assets/；路径相对 css/）
-         *   portrait_info.png   — 「侠客信息」中栏全幅（见 .info-portrait-layer）
-         *   portrait_combat.png — 战斗 #player 槽（见 .player-combat-portrait）
+         * 主角立绘(文件在 assets/；路径相对 css/)
+         *   portrait_info.png   — 「侠客信息」中栏全幅(见 .info-portrait-layer)
+         *   portrait_combat.png — 战斗 #player 槽(见 .player-combat-portrait)
          */
         :root {
             --portrait-info-url: url('../assets/portrait_info.png');
@@ -131,8 +131,11 @@
         .attr-val { color: #fff; font-weight: bold;}
         .equip-box { border: 2px dashed #444; border-radius: 8px; background: rgba(30,30,35,0.4); display: flex; flex-direction: column; align-items: center; justify-content: center; color: #666; transition: 0.3s; cursor:pointer;}
         .equip-box:hover { border-color: var(--gold); color: var(--gold); box-shadow: 0 0 15px rgba(184,134,11,0.2) inset; }
+        /* 神兵栏：仅展示，拾取仍走遭遇与荒村货摊 */
+        .equip-box.equip-box-readonly { opacity: 0.52; cursor: default; pointer-events: none; filter: grayscale(0.35); }
+        .equip-box.equip-box-readonly:hover { border-color: #444; color: inherit; box-shadow: none; }
 
-        /* 诗句卡片（信息面板内） */
+        /* 诗句卡片(信息面板内) */
         #info-poetry { gap: 10px; overflow-y: auto; justify-content: flex-start !important; align-items: stretch !important; }
         #info-poetry::-webkit-scrollbar { width: 4px; }
         #info-poetry::-webkit-scrollbar-thumb { background: #444; border-radius: 2px; }
@@ -329,7 +332,7 @@
         .gallery-section-title { font-size: 24px; color: var(--blood-red); margin-top: 30px; margin-bottom: 25px; font-weight: bold; }
         .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 25px; justify-items: center; }
 
-        /* 三生石：加粗高对比描边 + 外缘线（仅 #screen-gallery，此前误写 #gallery-panel 未命中 DOM） */
+        /* 三生石：加粗高对比描边 + 外缘线(仅 #screen-gallery，此前误写 #gallery-panel 未命中 DOM) */
         #screen-gallery .deck-card {
             border-style: solid;
             border-width: 3px;
@@ -370,7 +373,7 @@
         .map-node.reachable { opacity: 1; pointer-events: auto; }
         .map-node.reachable:hover { transform: translate(-50%, -50%) scale(1.2); filter: drop-shadow(0 0 10px var(--blood-red)); }
         .map-node.visited { opacity: 0.3; }
-        /* 地图节点：glyph + mark（ink 淡墨晕圈 / seal 朱文印）— 数据见 js/data/events.js → MapChapters */
+        /* 地图节点：glyph + mark(ink 淡墨晕圈 / seal 朱文印)— 数据见 js/data/events.js → MapChapters */
         .node-icon {
             position: relative;
             display: flex;
@@ -437,7 +440,7 @@
 
         #map-return-btn { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 150; display: none; background: rgba(139,24,24,0.9); border-color: #ff6b6b; padding: 10px 40px; font-size: 20px; border-radius: 8px;}
 
-        /* 事件界面背景：默认 + 按节点类型切换（由 #screen-event 的 class 与 --event-bg-image 驱动） */
+        /* 事件界面背景：默认 + 按节点类型切换(由 #screen-event 的 class 与 --event-bg-image 驱动) */
         #screen-event {
             --event-bg-image: url('../assets/event_bg.png');
         }
@@ -542,7 +545,7 @@
             font-size: 14px;
             padding: 1px 4px;
         }
-        /* 4+ 敌：2 列网格（田字 / 2×N），整体变窄，避免与右侧结束回合按钮重叠 */
+        /* 4+ 敌：2 列网格(田字 / 2×N)，整体变窄，避免与右侧结束回合按钮重叠 */
         .enemy-list.enemy-layout-grid {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 118px));
@@ -664,12 +667,12 @@
         }
         .entity { display: flex; flex-direction: column; align-items: center; gap: 10px; position: relative; }
         /*
-         * 妖怪立绘资产：assets/enemy_<archKey>.png（archKey 见 js/data/enemies.js → EnemyArchetypes）
+         * 妖怪立绘资产：assets/enemy_<archKey>.png(archKey 见 js/data/enemies.js → EnemyArchetypes)
          * 显示尺寸与推荐比例：
-         *   - 默认：.entity-sprite 宽 180px × 高 240px → 比例 3:4，建议原画 360×480 或 540×720（竖版，cover 裁切）
+         *   - 默认：.entity-sprite 宽 180px × 高 240px → 比例 3:4，建议原画 360×480 或 540×720(竖版，cover 裁切)
          *   - 四魑布局：.enemy-layout-chi-four .entity-sprite 92×114 → 约 46:57
          *   - 窄屏：.entity-sprite 100×140 → 5:7
-         * 玩家立绘：CSS 变量 --portrait-combat-url（assets/portrait_combat.png），与敌共用 .entity-sprite 尺寸规则
+         * 玩家立绘：CSS 变量 --portrait-combat-url(assets/portrait_combat.png)，与敌共用 .entity-sprite 尺寸规则
          */
         .entity-sprite { width: 180px; height: 240px; }
         #player .player-combat-portrait.entity-sprite {
@@ -686,7 +689,8 @@
         .hp-text { position: absolute; top: -20px; left: 0; width: 100%; text-align: center; font-size: 14px; text-shadow: 1px 1px 2px black; line-height: 1.25; }
         .hp-text .hp-pct { font-size: 12px; color: #86efac; font-weight: normal; }
         .hp-text .hp-block { font-size: 12px; color: #93c5fd; }
-        .intent { position: absolute; top: -54px; background: rgba(0,0,0,0.8); padding: 5px 14px; border: 1px solid #555; font-size: 16px; color: #ff6b6b; border-radius: 5px; max-width: 220px; white-space: normal; text-align: center; line-height: 1.25; }
+        .intent { position: absolute; top: -54px; background: rgba(0,0,0,0.8); padding: 5px 14px; border: 1px solid #555; font-size: 16px; color: #ff6b6b; border-radius: 5px; max-width: 220px; white-space: normal; text-align: center; line-height: 1.25; word-break: break-word; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
+        .intent.intent-has-detail { cursor: help; }
         .combat-bottom { height: 260px; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 20px; position: relative; }
         .pile { position: absolute; bottom: 30px; width: 100px; height: 140px; background: rgba(20,20,25,0.9); border: 1px solid #444; display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 18px; z-index: 120; }
         #draw-pile { left: 40px; } #discard-pile { right: 40px; }
@@ -734,14 +738,14 @@
             pointer-events: none;
             transition: border-color 0.25s ease, box-shadow 0.25s ease, opacity 0.25s ease;
         }
-        /* 金色（吴钩）：圆环扩张 */
+        /* 金色(吴钩)：圆环扩张 */
         .pz-char.pz-match-blade::before {
             border-color: var(--gold-light);
             box-shadow: 0 0 10px rgba(255,215,0,0.55), inset 0 0 4px rgba(184,134,11,0.35);
             opacity: 1;
         }
         .pz-char.pz-match-blade { animation: pzMatchPulse 0.4s ease; }
-        /* 青泪（感时）：柔边椭圆 + 虚线 */
+        /* 青泪(感时)：柔边椭圆 + 虚线 */
         .pz-char.pz-match-tear::before {
             border-color: #5eead4;
             border-style: dashed;
@@ -838,7 +842,7 @@
         #toast { position: fixed; top: 20%; left: 50%; transform: translateX(-50%); background: rgba(139,24,24,0.9); padding: 10px 30px; font-size: 20px; border-radius: 5px; border: 1px solid #ff6b6b; color: white; z-index: 1000; opacity: 0; pointer-events: none; transition: 0.3s; }
         #fxCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
 
-        /* ================= 诗韵触发特效（水墨爆裂） ================= */
+        /* ================= 诗韵触发特效(水墨爆裂) ================= */
         .poetry-burst {
             position: fixed; top: 38%; left: 50%; transform: translate(-50%, -50%);
             pointer-events: none; z-index: 9998;

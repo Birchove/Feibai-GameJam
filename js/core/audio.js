@@ -1,6 +1,6 @@
 const AudioSys = {
     /**
-     * 三类 BGM 资产路径（与 `assets/` 下文件名一致；地图与事件共用 WORLD）
+     * 三类 BGM 资产路径(与 `assets/` 下文件名一致；地图与事件共用 WORLD)
      */
     BGM: {
         world: 'assets/bgm_world.mp3',

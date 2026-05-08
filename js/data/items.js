@@ -14,7 +14,7 @@ const RelicDB = {
     deadwoodBranch: { id: 'deadwoodBranch', name: '\u3010\u67af\u6728\u6811\u679d\u3011', desc: '\u6253\u51fa\u540e\u8fdb\u6c89\u6c99\u7684\u724c\u670950%\u6982\u7387\u518d\u6267\u884c\u4e00\u6b21\u6548\u679c\u3002' }
 };
 
-// PoetryDB 已迁移至 js/data/poetry.js（含平仄/效果/触发）
+// PoetryDB 已迁移至 js/data/poetry.js(含平仄/效果/触发)
 
 const ItemPools = {
     eliteWeapons: ['xuanYuan'],

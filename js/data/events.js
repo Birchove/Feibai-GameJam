@@ -43,13 +43,13 @@ function Village_pickOffer() {
 
 function Village_openShopModal(onDone) {
     const offer = Village_pickOffer();
-    let html = '<div class="kuhai-flee-title" style="margin-bottom:12px;">村肆货摊</div>';
-    html += '<p style="color:#aaa;font-size:14px;line-height:1.65;text-align:left;margin:0 0 12px 0;">铜钱或可换得凡兵异宝。成交或离开皆由你意。</p>';
+    let html = '<div class="kuhai-flee-title" style="margin-bottom:12px;">荒村货摊</div>';
+    html += '<p style="color:#aaa;font-size:14px;line-height:1.65;text-align:left;margin:0 0 12px 0;">铜钱在手，或可换得兵器法宝；买也好走也好，全凭尊便。</p>';
     offer.forEach((o, i) => {
         const name = o.type === 'weapon' ? WeaponDB[o.key].name : RelicDB[o.key].name;
         html += `<div class="btn-g" style="margin:8px 0;font-size:16px;" id="vshop-buy-${i}">${name} — ${o.price} 钱</div>`;
     });
-    html += '<div class="btn-g" id="vshop-close" style="border-color:#555;margin-top:14px;">离开货摊</div>';
+    html += '<div class="btn-g" id="vshop-close" style="border-color:#555;margin-top:14px;">转身离去</div>';
 
     let modal = $('village-shop-modal');
     if (!modal) {
@@ -69,19 +69,19 @@ function Village_openShopModal(onDone) {
     offer.forEach((o, i) => {
         $(`vshop-buy-${i}`).onclick = (ev) => {
             ev.stopPropagation();
-            if (State.gold < o.price) { Game.showToast('钱财不足'); return; }
+            if (State.gold < o.price) { Game.showToast('铜钱不够'); return; }
             if (o.type === 'weapon') {
                 Game.tryAcquireWeapon(o.key, (ok) => {
                     if (!ok) return;
                     State.gold -= o.price;
-                    Game.showToast('成交');
+                    Game.showToast('银货两讫');
                     finish();
                 });
                 return;
             }
             State.gold -= o.price;
             if (!State.relics.includes(RelicDB[o.key].name)) State.relics.push(RelicDB[o.key].name);
-            Game.showToast('成交');
+            Game.showToast('银货两讫');
             finish();
         };
     });
@@ -101,10 +101,10 @@ function Village_buildHub(chapterMarker) {
     return {
         eventSkin: 'village',
         name: '荒村',
-        texts: ['残垣断壁间，似有人烟……', '可要歇脚、易物，还是拔刀清厄？'],
+        texts: ['断垣残瓦之间，隐约有炊烟痕迹……', '或可歇脚喘息，或可入市易物，抑或拔刀涤荡阴祟？'],
         opts: [
             {
-                text: '静坐调息（回复30%已损气血）',
+                text: '静坐调息 (按已损生命值回复 30% 气血)',
                 cb: () => {
                     const heal = Math.floor((State.maxHp - State.hp) * 0.3);
                     Combat.heal(Math.max(1, heal));
@@ -113,14 +113,14 @@ function Village_buildHub(chapterMarker) {
                 }
             },
             {
-                text: '逛村肆（购神兵法宝）',
+                text: '入市肆 (用铜钱购买神兵或法宝)',
                 cb: () => {
                     Village_openShopModal(() => MapSys.afterVillageChapter(chapterMarker));
                     return false;
                 }
             },
             {
-                text: '剿灭阴祟（战后再疗养、易物）',
+                text: '剿灭阴祟 (先进战斗；打赢后仍可回血与购物)',
                 cb: () => {
                     State._villagePendingChapter = chapterMarker;
                     Combat.start('enc_village_ambush');
@@ -132,68 +132,78 @@ function Village_buildHub(chapterMarker) {
 }
 
 const Events = {
-    vn1: { eventSkin: 'wangxiang', name: '我', texts: ['似乎有些记忆……', '想起了些什么……', '好像是……被杀了……', '我要杀出……阎王殿……'], opts: [] },
-    vn2: { eventSkin: 'teahouse', name: '冥府茶楼店小二', texts: ['小店……恭迎……客官……\n有何……吩咐？'], opts: [
-        { text: '歇息一会 (回复35%已损生命)', cb: () => { const heal = Math.floor((State.maxHp - State.hp) * 0.35); Combat.heal(heal); } },
-        { text: '活动筋骨 (支付100钱，删一张牌)', cb: () => {
+    vn1: {
+        eventSkin: 'wangxiang',
+        name: '我',
+        texts: [
+            '望乡台上，雾冷风凄，心底忽有旧事浮起，似曾相识。',
+            '片断纷至：人声嘈杂，刀光掠过，天地骤然一空。',
+            '我终是懂了——阳寿已尽，似是遭人毒手，魂坠黄泉。',
+            '无路可走，便劈一条路出来：阎王殿前，我也要闯出去。'
+        ],
+        opts: []
+    },
+    vn2: { eventSkin: 'teahouse', name: '冥府茶楼店小二', texts: ['客官……里边请……\n要饮一盏茶，还是听一段闲话？'], opts: [
+        { text: '借座歇脚 (恢复已损失生命值的 35%)', cb: () => { const heal = Math.floor((State.maxHp - State.hp) * 0.35); Combat.heal(heal); } },
+        { text: '活动筋骨 (支付 100 钱，从卡组中永久删除 1 张牌)', cb: () => {
             if (State.gold < 100) {
-                Game.showToast('钱财不足（需100钱）');
+                Game.showToast('百钱未足，难成此议');
                 return false;
             }
             Game.openDeckRemovePicker((ok) => {
                 if (!ok) return;
                 State.gold -= 100;
-                Game.showToast('活动筋骨：删去一张牌，花费100钱');
+                Game.showToast('筋骨已舒：百钱已付，牌已撕去');
                 MapSys.renderMap();
                 Game.navTo('screen-map');
             });
             return false;
         } },
-        { text: '凑凑热闹 (获得卡牌“破阵子”)', cb: () => { State.deck.push('c6'); Game.showToast('获得 破阵子'); } }
+        { text: '听人闲扯 (获得卡牌「破阵子」)', cb: () => { State.deck.push('c6'); Game.showToast('《破阵子》一阕，已写入残卷'); } }
     ]},
-    vn3: { eventSkin: 'temple', name: '我', texts: ['破庙中心有一尊小佛像', '要做些什么？'], opts: [
-        { text: '不去碰他，只是歇脚 (回复7生命)', cb: () => Combat.heal(7) },
-        { text: '拿走佛像 (气血上限−7；获得「佛像」：每场战斗开始对全体敌人造成11点伤害)', cb: () => {
+    vn3: { eventSkin: 'temple', name: '我', texts: ['破庙深处，有尊小佛低眉。', '近前，还是远观？'], opts: [
+        { text: '只当歇脚 (回复 7 点生命)', cb: () => Combat.heal(7) },
+        { text: '携佛而去 (生命上限 -7；获得法宝「佛像」，每场战斗开始时对全体敌人造成 11 点伤害)', cb: () => {
             State.maxHp = Math.max(1, State.maxHp - 7);
             State.hp = Math.min(State.hp, State.maxHp);
             if (!State.relics.includes('【佛像】')) State.relics.push('【佛像】');
             Game.updateUI();
-            Game.showToast('佛相入手：气血上限减少 7。已得法宝「佛像」。');
+            Game.showToast('佛像离座：气血上限减 7；法宝「佛像」已入手');
         } },
-        { text: '敬拜佛像 (悟性归零，获得卡牌“念奴娇”)', cb: () => { State.wuxing = 0; State.deck.push('c9'); Game.showToast('获得 念奴娇'); } }
+        { text: '跪拜叩首 (悟性变为 0；获得卡牌「念奴娇」)', cb: () => { State.wuxing = 0; State.deck.push('c9'); Game.showToast('《念奴娇》已写入残卷'); } }
     ]},
     village_hub_0: Village_buildHub(0),
     village_hub_1: {
         eventSkin: 'village',
         name: '荒村',
         texts: [
-            '你看到一小群鬼魂……',
-            '那貌似是死于战争的一个家庭……',
-            '你不由得想到了北宋战乱的种种过往…………'
+            '雾中聚着几个游魂，似是一户战殁之人，骨立如柴。',
+            '你心头一紧，想起兵燹连年的旧闻……',
+            '当如何处置？'
         ],
         opts: [
             {
-                text: '同情他们（获得法宝「落魄灵魂」）',
+                text: '心生恻隐 (获得法宝「落魄灵魂」)',
                 cb: () => {
                     if (!State.relics.includes('【落魄灵魂】')) State.relics.push('【落魄灵魂】');
-                    Game.showToast('阴风呜咽间，似有微薄谢礼附上魂息。');
+                    Game.showToast('阴风过处，似有一缕微光随魂息落入手心。');
                     MapSys.afterVillageChapter(1);
                     return false;
                 }
             },
             {
-                text: '祓除他们（失去6点生命，获得法宝「红缨枪」）',
+                text: '以武祓之 (自己失去 6 点生命；获得法宝「红缨枪」)',
                 cb: () => {
                     State.hp = Math.max(0, State.hp - 6);
                     if (!State.relics.includes('【红缨枪】')) State.relics.push('【红缨枪】');
                     Game.updateUI();
-                    Game.showToast('杀气荡开阴祟，一杆赤缨透骨而现。');
+                    Game.showToast('杀气荡开阴雾，一杆红缨自虚空中凝实。');
                     MapSys.afterVillageChapter(1);
                     return false;
                 }
             },
             {
-                text: '无视他们（从卡组中删去一张牌）',
+                text: '转身不顾 (从卡组中永久删除 1 张牌)',
                 cb: () => {
                     Game.openDeckRemovePicker((ok) => {
                         if (ok) MapSys.afterVillageChapter(1);
@@ -207,43 +217,43 @@ const Events = {
         eventSkin: 'village',
         name: '荒村',
         texts: [
-            '这里空无人烟……',
-            '只有一些骷髅和枯木……',
-            '要做些什么……'
+            '四下无人，唯余枯骨与朽木，风过如诉。',
+            '可拾，可弃，也可一走了之……',
+            '你欲何为？'
         ],
         opts: [
             {
-                text: '捡起枯木（「枯木树枝」+ 卡组加入1张「悔」）',
+                text: '拾起枯枝 (获得法宝「枯木树枝」；卡组加入 1 张「悔」)',
                 cb: () => {
                     if (!State.relics.includes('【枯木树枝】')) State.relics.push('【枯木树枝】');
                     State.deck.push('c_hui');
-                    Game.showToast('枯枝入手，指腹犹带湿凉。');
+                    Game.showToast('枯枝入手，指间尚带潮凉。');
                     MapSys.afterVillageChapter(2);
                     return false;
                 }
             },
             {
-                text: '拿起骷髅头（「仪式头骨」+ 卡组加入1张「悔」）',
+                text: '捧起骷髅 (获得法宝「仪式头骨」；卡组加入 1 张「悔」)',
                 cb: () => {
                     if (!State.relics.includes('【仪式头骨】')) State.relics.push('【仪式头骨】');
                     State.deck.push('c_hui');
-                    Game.showToast('颅中似有空响，如有人低语。');
+                    Game.showToast('颅骨轻响，似有人贴耳低语。');
                     MapSys.afterVillageChapter(2);
                     return false;
                 }
             },
             {
-                text: '拂去尘土（「香炉」+ 卡组加入2张「悔」）',
+                text: '扫去浮尘 (获得法宝「香炉」；卡组加入 2 张「悔」)',
                 cb: () => {
                     if (!State.relics.includes('【香炉】')) State.relics.push('【香炉】');
                     State.deck.push('c_hui', 'c_hui');
-                    Game.showToast('尘下露出兽足小炉，余温一缕。');
+                    Game.showToast('尘下露出一尊兽足小炉，余温未绝。');
                     MapSys.afterVillageChapter(2);
                     return false;
                 }
             },
             {
-                text: '转身离开',
+                text: '径自离开',
                 cb: () => {
                     MapSys.afterVillageChapter(2);
                     return false;
@@ -256,15 +266,15 @@ const Events = {
         eventSkin: 'naihe',
         name: '奈何桥',
         texts: [
-            '雾开处，桥影如线，对岸灯火依稀，却照不见来时路。',
-            '你掌中残卷已尽，冥府簿上无名亦有名——这一局，算你走过了。',
-            '桥头有风，掠过耳畔时，像极了人间某座小城里的初夏。',
-            '若有机缘再入轮回，愿你仍提剑、仍识字、仍记得那些未写完的句子。',
-            '此番冥游记，到此一笔。珍重。'
+            '雾散处，桥如一线，对岸灯影憧憧，照不见来时路。',
+            '你袖中残卷将尽，冥册之上无名亦有名——此局，算你走过一遭。',
+            '桥头风过，掠耳时竟像人间某座小城的初夏。',
+            '异日若再入轮回，愿你仍提剑、仍识字，不忘那些未写完的句子。',
+            '冥游记此搁笔。珍重。'
         ],
         opts: [
             {
-                text: '踏桥归去',
+                text: '踏桥而返',
                 cb: () => {
                     Game.showToast('魂光渐远……');
                     setTimeout(() => { Game.clearJourneyCheckpoint(); Game.navTo('screen-main'); }, 2200);

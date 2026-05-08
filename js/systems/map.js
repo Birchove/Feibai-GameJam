@@ -49,7 +49,7 @@ const MapSys = {
     },
 
     enterNode: (node) => {
-        if (State.isViewingMap) { Game.showToast('请先返回结算界面完成战利品选择！'); return; }
+        if (State.isViewingMap) { Game.showToast('请先自结算页返回，领毕犒赏再行地图'); return; }
 
         State.mapNodeIndex++;
         if (node.ev === 'vn1') EventSys.start(Events.vn1);

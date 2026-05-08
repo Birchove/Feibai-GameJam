@@ -28,6 +28,43 @@ const Game = {
                 State._resumeScreenId = '';
                 Game.refreshMainMenuCTA();
             },
+            /** 确认后回到扉页「飞白」，关闭各类浮层；不改玩法数值逻辑 */
+            confirmExitToMainMenu: () => {
+                const modal = document.createElement('div');
+                modal.className = 'modal active';
+                modal.style.zIndex = '620';
+                modal.id = 'exit-to-main-confirm';
+                modal.innerHTML = `
+                    <div class="kuhai-flee-box" style="max-width:480px;">
+                        <div class="kuhai-flee-title">返回飞白</div>
+                        <div class="kuhai-flee-text">可要就此回到扉页「飞白」？确认后便回到主界面。</div>
+                        <div class="kuhai-flee-row">
+                            <div class="btn-g" id="exit-main-yes" style="font-size:16px;">确认</div>
+                            <div class="btn-g" id="exit-main-no" style="font-size:16px;border-color:#555;">取消</div>
+                        </div>
+                    </div>`;
+                document.body.appendChild(modal);
+                const close = () => {
+                    modal.classList.remove('active');
+                    setTimeout(() => { if (modal.parentNode) modal.parentNode.removeChild(modal); }, 40);
+                };
+                const yes = $('exit-main-yes');
+                const no = $('exit-main-no');
+                if (yes) yes.onclick = (ev) => {
+                    ev.stopPropagation();
+                    close();
+                    if (typeof hideKeywordTooltip === 'function') hideKeywordTooltip();
+                    const pv = $('pv-overlay');
+                    if (pv) pv.style.display = 'none';
+                    const video = $('pv-video');
+                    if (video) { video.pause(); video.currentTime = 0; video.onended = null; }
+                    document.querySelectorAll('.modal').forEach((m) => m.classList.remove('active'));
+                    Game.clearJourneyCheckpoint();
+                    Game.navTo('screen-main');
+                    if (typeof AudioSys !== 'undefined' && AudioSys.stopBGM) AudioSys.stopBGM();
+                };
+                if (no) no.onclick = (ev) => { ev.stopPropagation(); close(); };
+            },
             navTo: (screenId) => {
                 if (typeof hideKeywordTooltip === 'function') hideKeywordTooltip();
                 document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
@@ -81,7 +118,7 @@ const Game = {
                 if (kind === 'poetry') {
                     title.innerText = '诗句残篇';
                     if (!State.poetry || State.poetry.length === 0) {
-                        body.innerHTML = '<div class="info-detail-empty">暂无搜集</div>';
+                        body.innerHTML = '<div class="info-detail-empty">尚未搜集</div>';
                     } else {
                         const grid = document.createElement('div');
                         grid.className = 'info-detail-grid';
@@ -106,14 +143,14 @@ const Game = {
                 } else if (kind === 'relics') {
                     title.innerText = '法宝';
                     if (!State.relics || State.relics.length === 0) {
-                        body.innerHTML = '<div class="info-detail-empty">空空如也</div>';
+                        body.innerHTML = '<div class="info-detail-empty">囊中空空</div>';
                     } else {
                         const grid = document.createElement('div');
                         grid.className = 'info-detail-grid';
                         State.relics.forEach((name) => {
                             const card = document.createElement('div');
                             card.className = 'info-detail-entry';
-                            let desc = '暂无释义';
+                            let desc = '暂无说明';
                             if (typeof RelicDB !== 'undefined') {
                                 const rk = Object.keys(RelicDB).find((x) => RelicDB[x] && RelicDB[x].name === name);
                                 if (rk && RelicDB[rk].desc) desc = RelicDB[rk].desc;
@@ -128,9 +165,9 @@ const Game = {
                 panel.classList.add('active');
             },
             getWeaponLabel: (key) => {
-                if (!key || typeof WeaponDB === 'undefined' || !WeaponDB[key]) return '空手';
+                if (!key || typeof WeaponDB === 'undefined' || !WeaponDB[key]) return '徒手';
                 const w = WeaponDB[key];
-                return `${w.name}（力${w.str || 0}，御${w.def || 0}）`;
+                return `${w.name}(力${w.str || 0}，御${w.def || 0})`;
             },
             promptWeaponReplace: (currentKey, nextKey, onDecision) => {
                 const cur = (typeof WeaponDB !== 'undefined') ? WeaponDB[currentKey] : null;
@@ -145,14 +182,14 @@ const Game = {
                 modal.id = 'weapon-replace-modal-temp';
                 modal.innerHTML = `
                     <div class="kuhai-flee-box" style="max-width:540px;">
-                        <div class="kuhai-flee-title">神兵更替</div>
+                        <div class="kuhai-flee-title">是否换兵</div>
                         <div class="kuhai-flee-text">
-                            当前已装备：<span style="color:var(--gold-light);">${Game.getWeaponLabel(currentKey)}</span><br>
-                            是否替换为：<span style="color:var(--gold-light);">${Game.getWeaponLabel(nextKey)}</span>
+                            手头所持：<span style="color:var(--gold-light);">${Game.getWeaponLabel(currentKey)}</span><br>
+                            可否换成：<span style="color:var(--gold-light);">${Game.getWeaponLabel(nextKey)}</span>
                         </div>
                         <div class="kuhai-flee-row">
-                            <div class="btn-g" id="weapon-replace-confirm" style="font-size:16px;">确认替换</div>
-                            <div class="btn-g" id="weapon-replace-cancel" style="font-size:16px;border-color:#555;">保持原武器</div>
+                            <div class="btn-g" id="weapon-replace-confirm" style="font-size:16px;">换成新兵</div>
+                            <div class="btn-g" id="weapon-replace-cancel" style="font-size:16px;border-color:#555;">仍用旧兵</div>
                         </div>
                     </div>
                 `;
@@ -183,23 +220,23 @@ const Game = {
                 const currentKey = State.weapon || '';
                 if (!currentKey) {
                     State.weapon = nextKey;
-                    Game.showToast(`装备神兵：${Game.getWeaponLabel(nextKey)}`);
+                    Game.showToast(`神兵入鞘：${Game.getWeaponLabel(nextKey)}`);
                     if (typeof onDone === 'function') onDone(true);
                     return;
                 }
                 if (currentKey === nextKey) {
-                    Game.showToast(`当前已装备同款神兵：${Game.getWeaponLabel(currentKey)}`);
+                    Game.showToast(`已佩同一把神兵：${Game.getWeaponLabel(currentKey)}`);
                     if (typeof onDone === 'function') onDone(true);
                     return;
                 }
                 Game.promptWeaponReplace(currentKey, nextKey, (ok) => {
                     if (!ok) {
-                        Game.showToast('未更换武器');
+                        Game.showToast('仍用旧兵，未作更换');
                         if (typeof onDone === 'function') onDone(false);
                         return;
                     }
                     State.weapon = nextKey;
-                    Game.showToast(`已更换神兵：${Game.getWeaponLabel(nextKey)}`);
+                    Game.showToast(`已换新兵：${Game.getWeaponLabel(nextKey)}`);
                     if (typeof onDone === 'function') onDone(true);
                 });
             },
@@ -221,7 +258,7 @@ const Game = {
                 document.querySelectorAll('.class-btn').forEach(b => b.classList.remove('selected'));
                 $('class-enter').style.opacity = 0;
                 $('class-icon').innerText = '❓';
-                $('class-desc').innerText = '请选择流派（当前仅开放：剑）';
+                $('class-desc').innerText = '请先点选流派(本版仅可执剑出发)';
                 Game.navTo('screen-class');
             },
             selectClass: (cls, desc) => {
@@ -238,9 +275,9 @@ const Game = {
                 document.querySelector('.class-center').onmouseout = () => $('class-icon').style.color = '#ccc';
             },
             enterMap: () => {
-                if(!State.class) return Game.showToast('请先选择流派（当前仅开放：剑）');
+                if (!State.class) return Game.showToast('请先点选流派(本版仅可执剑)');
                 if (State.class !== '剑') {
-                    Game.showToast('当前版本仅开放“剑”流派，请选择“剑”开始旅程');
+                    Game.showToast('此际只开放「剑」之一途，请改选剑再入冥府');
                     return;
                 }
                 Game.initGame(State.class);
@@ -255,7 +292,7 @@ const Game = {
                 if (State.combat) State.combat._incenseCount = 0;
                 State.str = init.str; State.def = init.def; State.agi = init.agi;
                 State.weapon = ''; State.poetry = []; State.wuxing = init.wuxing; 
-                // 流派开局自带诗句与武器（剑：吴钩霜雪明 + 绣剑）
+                // 流派开局自带诗句与武器(剑：吴钩霜雪明 + 绣剑)
                 if (cls === '剑') {
                     if (typeof PoetryDB !== 'undefined' && PoetryDB.wuGouShuangXueMing) State.poetry.push('wuGouShuangXueMing');
                     if (typeof WeaponDB !== 'undefined' && WeaponDB.xiuJian) State.weapon = 'xiuJian';
@@ -273,7 +310,7 @@ const Game = {
                 $('info-class').innerText = State.class || '无';
                 $('info-hp').innerText = `${State.hp}/${State.maxHp}`;
                 $('info-gold').innerText = State.gold;
-                // 武器属性加成（仅当装备武器时）
+                // 武器属性加成(仅当装备武器时)
                 const weaponData = (State.weapon && typeof WeaponDB !== 'undefined') ? WeaponDB[State.weapon] : null;
                 const wStr = weaponData ? (weaponData.str || 0) : 0;
                 const wDef = weaponData ? (weaponData.def || 0) : 0;
@@ -292,7 +329,7 @@ const Game = {
                 $('info-agi').innerText = State.agi;
                 
                 $('info-deck-count').innerText = State.deck.length; // 修复 Bug: 显示卡组总数
-                // 中心栏：角色基础力/御（解释左侧 11(5+6) 中的 5）
+                // 中心栏：角色基础力/御(解释左侧 11(5+6) 中的 5)
                 const baseStrEl = $('info-base-str'); if (baseStrEl) baseStrEl.innerText = State.str;
                 const baseDefEl = $('info-base-def'); if (baseDefEl) baseDefEl.innerText = State.def;
                 // 武器栏：名字 + 力/防 属性
@@ -306,15 +343,15 @@ const Game = {
                         </div>
                     `;
                 } else {
-                    $('info-weapon').innerHTML = weaponName ? `<span style="color:var(--gold); font-weight:bold;">${weaponName}</span>` : '空缺';
+                    $('info-weapon').innerHTML = weaponName ? `<span style="color:var(--gold); font-weight:bold;">${weaponName}</span>` : '<span style="color:#555;">未佩神兵</span>';
                 }
                 const poetryBox = $('info-poetry');
                 poetryBox.innerHTML = '';
                 if (State.poetry.length > 0) {
                     const line = State.poetry.map((pid) => ((typeof PoetryDB !== 'undefined' && PoetryDB[pid]) ? PoetryDB[pid].text : pid)).join(' · ');
-                    poetryBox.innerHTML = `<div style="font-size:20px;letter-spacing:2px;line-height:1.5;">${line}</div><div style="color:#666;font-size:12px;margin-top:10px;">${State.poetry.length} 篇 · 点击框内预览</div>`;
+                    poetryBox.innerHTML = `<div style="font-size:20px;letter-spacing:2px;line-height:1.5;">${line}</div><div style="color:#666;font-size:12px;margin-top:10px;">${State.poetry.length} 篇 · 点此框细览</div>`;
                 } else {
-                    poetryBox.innerHTML = '暂无搜集';
+                    poetryBox.innerHTML = '尚无残句';
                 }
                 const relicBox = $('info-relics');
                 relicBox.innerHTML = '';
@@ -330,10 +367,10 @@ const Game = {
                     relicBox.appendChild(wrap);
                     const hint = document.createElement('div');
                     hint.style.cssText = 'color:#666;font-size:12px;text-align:center;margin-top:4px;';
-                    hint.innerText = '点击框内预览';
+                    hint.innerText = '点此框细览';
                     relicBox.appendChild(hint);
                 } else {
-                    relicBox.innerHTML = '<span style="color:#666;">空空如也</span>';
+                    relicBox.innerHTML = '<span style="color:#666;">囊中空空</span>';
                 }
             },
             updateUI: () => {
@@ -360,7 +397,7 @@ const Game = {
             openDeckRemovePicker: (onDone) => {
                 const deck = State.deck;
                 if (!deck || deck.length === 0) {
-                    Game.showToast('卡组已空');
+                    Game.showToast('卡组已无牌可删');
                     if (typeof onDone === 'function') onDone(false);
                     return;
                 }
@@ -371,7 +408,7 @@ const Game = {
                 const cancelBtn = $('card-picker-cancel');
                 let selectedIdx = -1;
 
-                title.innerText = '选择一张牌从卡组永久移除';
+                title.innerText = '择一张牌，自卡组永远除去';
                 grid.innerHTML = '';
 
                 deck.forEach((cid, idx) => {
@@ -398,13 +435,13 @@ const Game = {
                 };
                 confirmBtn.onclick = () => {
                     if (selectedIdx < 0) {
-                        Game.showToast('未选择');
+                        Game.showToast('尚未点选');
                         return;
                     }
                     const removed = State.deck.splice(selectedIdx, 1)[0];
                     const nm = CardDB[removed] ? CardDB[removed].name : removed;
                     close();
-                    Game.showToast(`已从卡组移除：${nm}`);
+                    Game.showToast(`已从卡组撕去：${nm}`);
                     if (typeof Game.updateInfoPanel === 'function') Game.updateInfoPanel();
                     if (typeof onDone === 'function') onDone(true);
                 };
@@ -481,8 +518,8 @@ const Game = {
                 }
                 const patternStr = pd.pattern ? pd.pattern.join(' ') : '—';
                 const triggerTip = pd.pattern
-                    ? `连续打出「${pd.pattern.join('')}」时（最近五张平仄即满足），${pd.effectDesc}。每次满足都会触发，并消耗最早一张平仄。`
-                    : '尚未参悟其用。';
+                    ? `连续打出「${pd.pattern.join('')}」时(最近五张平仄若合于此)，${pd.effectDesc}。每应验一回，便消去最早一记平仄。`
+                    : '暂且不懂如何用这句。';
                 el.innerHTML = `
                     <div class="poetry-text">${pd.text}</div>
                     <div class="poetry-source">${pd.source || ''}</div>

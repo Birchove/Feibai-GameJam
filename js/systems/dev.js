@@ -116,7 +116,7 @@ const DevSys = {
         }
     },
 
-    // —— 渲染面板（每次打开重渲，反映最新 State）——
+    // —— 渲染面板(每次打开重渲，反映最新 State)——
     renderPanel: () => {
         const body = document.getElementById('dev-panel-body');
         if (!body) return;
@@ -166,8 +166,8 @@ const DevSys = {
             <div class="dev-section">
                 <div class="dev-section-title">修改器开关</div>
                 <div class="dev-row dev-toggle-row">
-                    <label><input type="checkbox" id="dev-god" ${State._devGod ? 'checked' : ''}/> 不死模式（HP 不低于 1）</label>
-                    <label><input type="checkbox" id="dev-oneshot" ${State._devOneShot ? 'checked' : ''}/> 一击必杀（任一伤害直接清空敌人 HP）</label>
+                    <label><input type="checkbox" id="dev-god" ${State._devGod ? 'checked' : ''}/> 不死模式(HP 不低于 1)</label>
+                    <label><input type="checkbox" id="dev-oneshot" ${State._devOneShot ? 'checked' : ''}/> 一击必杀(任一伤害直接清空敌人 HP)</label>
                     <label><input type="checkbox" id="dev-skipenemy" ${State._devSkipEnemy ? 'checked' : ''}/> 跳过敌方回合</label>
                 </div>
                 <div class="dev-row"><div class="btn-g dev-btn" onclick="DevSys.applyToggles()">应用开关</div></div>
@@ -176,12 +176,12 @@ const DevSys = {
             <div class="dev-section">
                 <div class="dev-section-title">武器 / 法宝 / 诗句</div>
                 <div class="dev-row">
-                    <label>武器（单选）</label>
+                    <label>武器(单选)</label>
                     <select id="dev-weapon">${optWeapon}</select>
                     <div class="btn-g dev-btn" onclick="DevSys.setWeapon()">切换武器</div>
                 </div>
                 <div class="dev-row">
-                    <label>法宝（单选）</label>
+                    <label>法宝(单选)</label>
                     <select id="dev-relic">${optRelic}</select>
                     <div class="btn-g dev-btn" onclick="DevSys.setRelic()">切换法宝</div>
                 </div>
@@ -201,7 +201,7 @@ const DevSys = {
             </div>
 
             <div class="dev-section ${inCombat ? '' : 'dev-disabled'}">
-                <div class="dev-section-title">战斗调试 ${inCombat ? '' : '<span class="dev-mute">（不在战斗中，部分功能不可用）</span>'}</div>
+                <div class="dev-section-title">战斗调试 ${inCombat ? '' : '<span class="dev-mute">(不在战斗中，部分功能不可用)</span>'}</div>
                 <div class="dev-row">
                     <label>追加手牌</label>
                     <select id="dev-card-pick">${optCard}</select>
@@ -325,7 +325,7 @@ const DevSys = {
         const keys = Object.keys(CardDB).filter(k => !CardDB[k].unplayable && k !== 'c_duwu');
         let added = 0;
         keys.forEach(k => { if (!State.deck.includes(k)) { State.deck.push(k); added++; } });
-        Game.showToast(`牌组追加 ${added} 张（去重，当前共 ${State.deck.length} 张）`);
+        Game.showToast(`牌组追加 ${added} 张(去重，当前共 ${State.deck.length} 张)`);
         DevSys.renderPanel();
     },
 
@@ -337,14 +337,14 @@ const DevSys = {
 
     injectHandCard: () => {
         if (!State.combat || !State.combat.inCombat) { Game.showToast('需在战斗中'); return; }
-        if (State.combat.hand.length >= 10) { Game.showToast('手牌已满（10 张上限）'); return; }
+        if (State.combat.hand.length >= 10) { Game.showToast('手牌已满(10 张上限)'); return; }
         const cId = document.getElementById('dev-card-pick').value;
         const free = document.getElementById('dev-card-zerocost').checked;
         const item = { cardId: cId };
         if (free) item.costOverride = 0;
         State.combat.hand.push(item);
         Combat.renderHand();
-        Game.showToast(`手牌追加：${CardDB[cId].name}${free ? '（0 气）' : ''}`);
+        Game.showToast(`手牌追加：${CardDB[cId].name}${free ? '(0 气)' : ''}`);
     },
 
     injectPile: () => {
@@ -411,12 +411,12 @@ const DevSys = {
     gotoNode: () => {
         const idx = parseInt(document.getElementById('dev-node').value, 10);
         if (!Number.isFinite(idx)) return;
-        // 跳转：直接进入该节点逻辑（与正常点击节点一致）
+        // 跳转：直接进入该节点逻辑(与正常点击节点一致)
         const node = MapSys.getNodes().find(n => n.id === idx);
         if (!node) return;
         // 退出战斗状态防干扰
         if (State.combat && State.combat.inCombat) State.combat.inCombat = false;
-        // 同步索引（保证后续节点解锁状态正确）
+        // 同步索引(保证后续节点解锁状态正确)
         State.mapNodeIndex = idx;
         DevSys.closePanel();
         // 复用 MapSys.enterNode 的事件 / 战斗派发逻辑

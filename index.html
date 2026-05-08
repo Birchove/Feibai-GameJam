@@ -24,7 +24,7 @@
         <div id="main-journey-btn" class="btn-g" onclick="Game.onMainJourneyClick()">开始旅程</div>
         <div class="btn-g" onclick="Game.showToast('选项功能开发中')">选项</div>
         <div class="btn-g" onclick="Game.showGallery()">三生石</div>
-        <div class="btn-g" onclick="Game.showToast('结束运行')">退出旅程</div>
+        <div class="btn-g" onclick="Game.confirmExitToMainMenu()">退出旅程</div>
     </div>
 
     <div id="screen-saves" class="screen">
@@ -61,10 +61,10 @@
             
             <div class="class-center" onclick="Game.enterMap()">
                 <div id="class-icon" style="font-size: 50px; margin-bottom: 10px;">❓</div>
-                <div id="class-enter" style="color: var(--blood-red); font-size: 16px; opacity: 0; transition: 0.3s; letter-spacing: 2px;">进入游戏</div>
+                <div id="class-enter" style="color: var(--blood-red); font-size: 16px; opacity: 0; transition: 0.3s; letter-spacing: 2px;">踏入冥府</div>
             </div>
         </div>
-        <div id="class-desc" style="background: rgba(0,0,0,0.8); padding: 20px; border: 1px solid #444; width: 600px; text-align: center; min-height: 80px; white-space: pre-line;">请选择流派</div>
+        <div id="class-desc" style="background: rgba(0,0,0,0.8); padding: 20px; border: 1px solid #444; width: 600px; text-align: center; min-height: 80px; white-space: pre-line;">点选一路，再入中央圆心(本版仅可执剑)</div>
     </div>
 
     <div id="abar" style="display: none;">
@@ -91,7 +91,7 @@
                     <div class="info-title" style="border:none;">卡组残卷 (<span id="info-deck-count" style="font-size:16px;">0</span>)</div>
                     <div class="equip-box" style="flex: 1; min-height: 120px;" onclick="Game.viewDeck()">
                         <i class="fa-solid fa-layer-group" style="font-size: 32px; margin-bottom: 8px; color:#888;"></i>
-                        <span style="font-size:14px; color: #aaa;">点击查看牌库详细</span>
+                        <span style="font-size:14px; color: #aaa;">点此查看所携残卷</span>
                     </div>
                 </div>
             </div>
@@ -120,7 +120,7 @@
                 <div style="display: flex; gap: 20px; flex: 1;">
                     <div class="equip-slot" style="flex: 1; display: flex; flex-direction: column;">
                         <div class="equip-title">武器</div>
-                        <div id="info-weapon" class="equip-box" style="flex: 1; height: 100%; flex-direction:column; padding:10px;" onclick="Game.showToast('选择武器...')">空</div>
+                        <div id="info-weapon" class="equip-box equip-box-readonly" style="flex: 1; height: 100%; flex-direction:column; padding:10px;">空</div>
                     </div>
                     <div class="equip-slot" style="flex: 1; display: flex; flex-direction: column;">
                         <div class="equip-title">法宝</div>
@@ -159,7 +159,7 @@
 
     <div id="card-picker" class="modal">
         <div id="card-picker-content" style="width: 80%; height: 80%; background: var(--ink-panel); border: 1px solid #444; border-radius: 12px; position: relative; display: flex; flex-direction: column; padding: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.9);">
-            <div class="info-title" style="border:none;" id="card-picker-title">请选择卡牌</div>
+            <div class="info-title" style="border:none;" id="card-picker-title">择一张牌自卡组除去</div>
             <div id="card-picker-grid" style="flex: 1; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 20px; justify-content: flex-start; align-content: flex-start; padding: 20px 10px;"></div>
             <div style="display:flex; gap:30px; justify-content:center; padding-top:10px;">
                 <div class="btn-g" id="card-picker-confirm" style="padding: 10px 30px; font-size:18px;">确认</div>
@@ -173,7 +173,7 @@
         <div class="btn-g" onclick="Game.navTo('screen-class'); Game.toggleModal('settings-panel')">重新开始</div>
         <div class="btn-g" onclick="Game.showToast('选项...')">选项</div>
         <div class="btn-g" onclick="Game.goMainMenuFromSettings()">主菜单</div>
-        <div class="btn-g" onclick="Game.showToast('退出')">退出旅程</div>
+        <div class="btn-g" onclick="Game.confirmExitToMainMenu()">退出旅程</div>
     </div>
 
     <div id="screen-gallery" class="screen">
@@ -219,7 +219,7 @@
         <div class="screen-content">
             <div class="combat-top">
                 <div class="stat-badge">气: <span id="ui-energy" style="color:#60a5fa">3</span>/<span id="ui-max-energy">3</span></div>
-                <div class="stat-badge">势: <span id="ui-momentum" style="color:var(--gold)">0</span>/10 <span style="font-size:12px;color:#aaa">(满10次伤害+50%)</span></div>
+                <div class="stat-badge">势: <span id="ui-momentum" style="color:var(--gold)">0</span>/10 <span style="font-size:12px;color:#aaa">(势叠满 10 点：下一次攻击伤害 +50%)</span></div>
             </div>
             
             <div class="ping-ze-tracker" id="pz-tracker"></div>

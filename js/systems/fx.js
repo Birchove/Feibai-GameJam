@@ -34,7 +34,7 @@ const DragSys = {
                     setTimeout(() => { el.style.position = 'relative'; el.style.left = '0'; el.style.top = '0'; el.style.transition = ''; }, 300);
                     return;
                 }
-                // 取手牌项的有效 cost（镜像等可能通过 costOverride 使其为 0）
+                // 取手牌项的有效 cost(镜像等可能通过 costOverride 使其为 0)
                 const handItemRaw = (State.combat && State.combat.hand) ? State.combat.hand[DragSys.index] : null;
                 const handItem = handItemRaw ? (typeof handItemRaw === 'string' ? { cardId: handItemRaw } : handItemRaw) : null;
                 const effCost = (handItem && handItem.costOverride !== undefined) ? handItem.costOverride : cd.cost;
@@ -54,7 +54,7 @@ const DragSys = {
                     const liv = (typeof Combat !== 'undefined' && Combat._livingIndices) ? Combat._livingIndices() : [];
                     const needTgt = typeof Combat !== 'undefined' && Combat.cardNeedsEnemyTarget && Combat.cardNeedsEnemyTarget(cd);
                     if (needTgt && liv.length > 1 && hitIdx < 0) {
-                        Game.showToast('请将攻击拖至目标敌人');
+                        Game.showToast('请将攻势拖到敌影之上');
                         el.style.transition = 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
                         el.style.transform = 'translate(0, 0) rotate(0)';
                         setTimeout(() => { el.style.position = 'relative'; el.style.left='0'; el.style.top='0'; el.style.transition=''; }, 300);
@@ -67,7 +67,7 @@ const DragSys = {
                     el.style.display = 'none'; 
                     Combat.playCard(DragSys.index); 
                 } else {
-                    if (inHitZone && cd.id === 'c35' && !c35ok) Game.showToast('付之一炬：需另有可焚之手牌');
+                    if (inHitZone && cd.id === 'c35' && !c35ok) Game.showToast('付之一炬：须另有一张可焚之牌');
                     else if (inHitZone) Game.showToast("无法打出此牌");
                     el.style.transition = 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
                     el.style.transform = 'translate(0, 0) rotate(0)';
@@ -91,7 +91,7 @@ const DragSys = {
         function resize() { $('bgCanvas').width = $('fxCanvas').width = window.innerWidth; $('bgCanvas').height = $('fxCanvas').height = window.innerHeight; }
         window.addEventListener('resize', resize); resize(); DragSys.drawFx(); 
 
-        // 诗韵触发特效（DOM 覆盖层，独立于 fxCanvas，避免被 DragSys 帧清屏）
+        // 诗韵触发特效(DOM 覆盖层，独立于 fxCanvas，避免被 DragSys 帧清屏)
         const Fx = {
             poetryBurst: (text, variant = 'blade') => {
                 if (!text) return;
