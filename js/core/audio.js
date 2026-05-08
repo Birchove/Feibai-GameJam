@@ -3,9 +3,9 @@ const AudioSys = {
      * 三类 BGM 资产路径(与 `assets/` 下文件名一致；地图与事件共用 WORLD)
      */
     BGM: {
-        world: 'assets/bgm_world.mp3',
-        combat: 'assets/bgm_combat.mp3',
-        boss: 'assets/bgm_boss.mp3'
+        world: './assets/bgm_world.mp3',
+        combat: './assets/bgm_combat.mp3',
+        boss: './assets/bgm_boss.mp3'
     },
 
     /** 当前循环曲类别，用于同曲不重复重头播放 */

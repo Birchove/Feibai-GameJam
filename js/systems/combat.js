@@ -644,7 +644,7 @@ const Combat = {
     },
 
     draw: (amt) => {
-        AudioSys.playSFX('assets/sfx_draw.mp3');
+        AudioSys.playSFX('./assets/sfx_draw.mp3');
         for (let i = 0; i < amt; i++) {
             if (State.combat.hand.length >= 10) break;
             if (State.combat.drawPile.length === 0) {
@@ -908,7 +908,7 @@ const Combat = {
         if (!enemy || enemy.hp <= 0 || !amount || amount < 1) return;
         const idx = State.combat.enemies.indexOf(enemy);
         if (idx < 0) return;
-        AudioSys.playSFX('assets/sfx_hit.mp3');
+        AudioSys.playSFX('./assets/sfx_hit.mp3');
         let remaining = amount;
         if (remaining > 0 && (enemy.block || 0) > 0) {
             const useBlock = Math.min(enemy.block, remaining);
@@ -974,7 +974,7 @@ const Combat = {
             else if (wt) s.classList.add('pz-match-tear');
             tr.appendChild(s);
         });
-        if (hist.length > 0) AudioSys.playSFX('assets/sfx_pingze.mp3');
+        if (hist.length > 0) AudioSys.playSFX('./assets/sfx_pingze.mp3');
     },
 
     longestSuffixPrefix: (hist, pattern) => {
@@ -1085,7 +1085,7 @@ const Combat = {
     },
 
     dealDmg: (base, isFixed = false, targetIdx, opts = {}) => {
-        AudioSys.playSFX('assets/sfx_hit.mp3');
+        AudioSys.playSFX('./assets/sfx_hit.mp3');
         if (State.combat.player.cantDmg) { Game.showToast('止戈：本回合难以伤人'); return; }
 
         if (State._dev && State._devOneShot) {

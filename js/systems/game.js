@@ -501,7 +501,7 @@ const Game = {
                     <div class="card-cost">${effCost}</div><div class="card-type ${cd.typeClass}">${cd.type}</div>
                     <div class="card-name">${cd.name}${mirrorHtml}</div>
                     <div class="card-category">${cat}</div>
-                    <div class="asset-placeholder card-img" style="background: url('assets/card_${cd.id}.png') center/cover, #222; border:none;"></div>
+                    <div class="asset-placeholder card-img" style="background: url('./assets/card_${cd.id}.png') center/cover, #222; border:none;"></div>
                     <div class="card-desc">${Game.renderCardDesc(cd)}${extra}</div>
                 `;
                 el.innerHTML = html;

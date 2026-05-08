@@ -3,9 +3,9 @@
 
 const _pick = (arr) => arr[rand(0, arr.length - 1)];
 
-/** 妖怪立绘：`assets/enemy_<archKey>.png`，archKey 与本体 `EnemyArchetypes` 键名一致(魑魅四体共用 `chi_mei_single` 一张图) */
+/** 妖怪立绘：`./assets/enemy_<archKey>.png`，archKey 与本体 `EnemyArchetypes` 键名一致(魑魅四体共用 `chi_mei_single` 一张图) */
 function enemySpriteStyle(archKey) {
-    return `url('assets/enemy_${archKey}.png') center/cover, #222`;
+    return `url('./assets/enemy_${archKey}.png') center/cover, #222`;
 }
 
 /** 意图悬停用：与战斗内持守减伤预览一致 */

@@ -7,13 +7,13 @@
          *   bgm_world.mp3  — 大地图与事件界面共用
          */
         /*
-         * 主角立绘(文件在 assets/；路径相对 css/)
+         * 主角立绘(文件在 `./../assets/`；相对本 CSS 文件)
          *   portrait_info.png   — 「侠客信息」中栏全幅(见 .info-portrait-layer)
          *   portrait_combat.png — 战斗 #player 槽(见 .player-combat-portrait)
          */
         :root {
-            --portrait-info-url: url('../assets/portrait_info.png');
-            --portrait-combat-url: url('../assets/portrait_combat.png');
+            --portrait-info-url: url('./../assets/portrait_info.png');
+            --portrait-combat-url: url('./../assets/portrait_combat.png');
             --ink-bg: #050507;
             --ink-panel: #121216;
             --ink-light: #d1d5db;
@@ -60,9 +60,9 @@
         .asset-placeholder { display: flex; justify-content: center; align-items: center; background: rgba(30,30,30,0.5); border: 1px dashed #555; color: #888; font-size: 14px; text-align: center; padding: 10px; }
 
         /* ================= 前期界面 ================= */
-        #screen-main { background: url('../assets/main_menu_bg.png') center/cover, var(--ink-bg); justify-content: center; align-items: center; }
-        #screen-saves { background: url('../assets/saves_menu_bg.png') center/cover, var(--ink-bg); justify-content: center; align-items: center; }
-        #screen-class { background: url('../assets/class_select_bg.png') center/cover, var(--ink-bg); justify-content: center; align-items: center; }
+        #screen-main { background: url('./../assets/main_menu_bg.png') center/cover, var(--ink-bg); justify-content: center; align-items: center; }
+        #screen-saves { background: url('./../assets/saves_menu_bg.png') center/cover, var(--ink-bg); justify-content: center; align-items: center; }
+        #screen-class { background: url('./../assets/class_select_bg.png') center/cover, var(--ink-bg); justify-content: center; align-items: center; }
         
         .game-title { font-size: 100px; color: #eee; letter-spacing: 30px; text-shadow: 0 0 20px rgba(139,24,24,0.8); margin-bottom: 50px; }
         .saves-container { display: flex; gap: 50px; }
@@ -366,7 +366,7 @@
         }
 
         /* ================= 地图与事件 ================= */
-        #screen-map .screen-content { background: url('../assets/map_bg.png') center/cover, var(--ink-bg); position: relative; }
+        #screen-map .screen-content { background: url('./../assets/map_bg.png') center/cover, var(--ink-bg); position: relative; }
         .map-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
         .map-line { stroke: rgba(48, 46, 44, 0.82); stroke-width: 2; stroke-dasharray: 8, 7; }
         .map-node { position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: flex-end; cursor: pointer; transition: 0.3s; opacity: 0.5; pointer-events: none;}
@@ -442,13 +442,13 @@
 
         /* 事件界面背景：默认 + 按节点类型切换(由 #screen-event 的 class 与 --event-bg-image 驱动) */
         #screen-event {
-            --event-bg-image: url('../assets/event_bg.png');
+            --event-bg-image: url('./../assets/event_bg.png');
         }
-        #screen-event.event-bg-teahouse { --event-bg-image: url('../assets/event_bg_teahouse.png'); }
-        #screen-event.event-bg-village { --event-bg-image: url('../assets/event_bg_village.png'); }
-        #screen-event.event-bg-temple { --event-bg-image: url('../assets/event_bg_temple.png'); }
-        #screen-event.event-bg-wangxiang { --event-bg-image: url('../assets/event_bg_wangxiang.png'); }
-        #screen-event.event-bg-naihe { --event-bg-image: url('../assets/event_bg_naihe.png'); }
+        #screen-event.event-bg-teahouse { --event-bg-image: url('./../assets/event_bg_teahouse.png'); }
+        #screen-event.event-bg-village { --event-bg-image: url('./../assets/event_bg_village.png'); }
+        #screen-event.event-bg-temple { --event-bg-image: url('./../assets/event_bg_temple.png'); }
+        #screen-event.event-bg-wangxiang { --event-bg-image: url('./../assets/event_bg_wangxiang.png'); }
+        #screen-event.event-bg-naihe { --event-bg-image: url('./../assets/event_bg_naihe.png'); }
 
         #screen-event .screen-content {
             background: var(--event-bg-image) center/cover, var(--ink-bg);
@@ -469,7 +469,7 @@
         .status-tooltip { visibility: hidden; position: absolute; bottom: 130%; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.95); color: #fff; padding: 6px 12px; border-radius: 4px; border: 1px solid #888; font-size: 12px; white-space: nowrap; z-index: 100; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
         .status-icon:hover .status-tooltip { visibility: visible; opacity: 1; }
 
-        #screen-combat .screen-content { display: flex; flex-direction: column; background: url('../assets/combat_bg.png') center/cover, var(--ink-bg); }
+        #screen-combat .screen-content { display: flex; flex-direction: column; background: url('./../assets/combat_bg.png') center/cover, var(--ink-bg); }
 
         /*
          * 山路战斗：`combat_bg_mountain.png` 只叠在「战区」.combat-middle 内，半透明 + 底部渐变透明，
@@ -481,7 +481,7 @@
             inset: 0;
             z-index: 0;
             pointer-events: none;
-            background: url('../assets/combat_bg_mountain.png') center 42% / cover no-repeat;
+            background: url('./../assets/combat_bg_mountain.png') center 42% / cover no-repeat;
             opacity: 0.38;
             -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.85) 45%, rgba(0,0,0,0.2) 88%, transparent 100%);
             mask-image: linear-gradient(to bottom, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.85) 45%, rgba(0,0,0,0.2) 88%, transparent 100%);
@@ -812,7 +812,7 @@
         /* ================= 战斗结算界面 ================= */
         #screen-settlement .screen-content { 
             display: flex; flex-direction: column; align-items: center; 
-            background: url('../assets/event_bg.png') center/cover, var(--ink-bg); 
+            background: url('./../assets/event_bg.png') center/cover, var(--ink-bg); 
             padding: 40px 40px 80px 40px; overflow-y: auto; justify-content: flex-start;
         }
         .settlement-title { font-size: 48px; color: var(--blood-red); margin-bottom: 30px; letter-spacing: 10px; text-shadow: 0 0 15px rgba(139,24,24,0.8); flex-shrink: 0; }
