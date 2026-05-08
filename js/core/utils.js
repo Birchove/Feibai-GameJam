@@ -1,5 +1,6 @@
 const $ = id => document.getElementById(id);
 const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+let kwTooltipGlobalListenerBound = false;
 
 const showKeywordTooltip = (kw) => {
     const tip = kw.getAttribute('data-tip');
@@ -25,6 +26,17 @@ const hideKeywordTooltip = () => {
 };
 
 const bindKeywordTooltips = (root) => {
+    if (!kwTooltipGlobalListenerBound) {
+        kwTooltipGlobalListenerBound = true;
+        document.addEventListener('pointerdown', (ev) => {
+            const target = ev.target;
+            if (!(target instanceof Element)) return;
+            if (!target.closest('.kw') && !target.closest('#kw-tooltip')) {
+                hideKeywordTooltip();
+            }
+        }, { passive: true });
+    }
+
     const keywords = Array.from(root.querySelectorAll('.kw'));
     keywords.forEach((kw) => {
         if (kw.dataset.kwTooltipBound) return;
@@ -33,5 +45,13 @@ const bindKeywordTooltips = (root) => {
             showKeywordTooltip(kw);
         });
         kw.addEventListener('mouseleave', hideKeywordTooltip);
+        kw.addEventListener('touchstart', (ev) => {
+            ev.stopPropagation();
+            showKeywordTooltip(kw);
+        }, { passive: true });
+        kw.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            showKeywordTooltip(kw);
+        });
     });
 };
