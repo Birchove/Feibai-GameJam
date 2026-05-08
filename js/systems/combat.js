@@ -497,7 +497,7 @@ const Combat = {
 
             const nameEl = document.createElement('div');
             nameEl.className = 'enemy-name-tag';
-            nameEl.style.cssText = 'font-size:13px;color:#aaa;max-width:160px;text-align:center;line-height:1.3;';
+            nameEl.style.cssText = 'font-size:15px;color:#e8eaef;max-width:160px;text-align:center;line-height:1.3;';
             nameEl.innerText = en.name;
 
             const stBar = document.createElement('div');
@@ -532,20 +532,44 @@ const Combat = {
         const kuIdx = State.combat.enemies.findIndex(e => e && e.hp > 0 && e.arch === 'ku_hai_guan_li');
         if (kuIdx < 0) return;
         Combat._buildKuHaiModalIfNeeded();
+        const el = $('kuhai-flee-modal');
+        if (el && !$('kuhai-flee-hint')) {
+            const row = el.querySelector('.kuhai-flee-row');
+            if (row && row.parentNode) {
+                const h = document.createElement('div');
+                h.id = 'kuhai-flee-hint';
+                h.className = 'kuhai-flee-hint';
+                h.hidden = true;
+                row.parentNode.insertBefore(h, row);
+            }
+        }
         const en = State.combat.enemies[kuIdx];
         const nextDmgRaw = 6 * en.turnCounter;
         const nextDmg = typeof Combat !== 'undefined' && Combat.enemyDmgAfterShushou ? Combat.enemyDmgAfterShushou(en, nextDmgRaw) : nextDmgRaw;
         const { dealt, taken } = State.combat.kuHaiStats;
         const pay = Math.max(0, Math.ceil(200 - dealt + taken));
-        const el = $('kuhai-flee-modal');
         const tx = $('kuhai-flee-text');
         const bt = $('kuhai-flee-pay');
+        const hintEl = $('kuhai-flee-hint');
         tx.innerHTML = `枯骸官吏下一罚击将造成 <span style="color:var(--blood-red);font-weight:bold;">${nextDmg}</span> 点伤势。\n\n已对其造成 <b>${dealt}</b> 点伤害，自其处累计失去 <b>${taken}</b> 气血。\n按约：赎路钱财 = 200 − 已造伤害 + 已失气血 = <b style="color:var(--gold);">${pay}</b> 钱。\n\n付钱撤离将直接离开此地，不计取胜利物。`;
         const canPay = State.gold >= pay;
         bt.classList.toggle('disabled', !canPay);
+        if (hintEl) {
+            if (!canPay) {
+                hintEl.hidden = false;
+                hintEl.innerHTML = `囊中铜钱仅 <span style="color:var(--gold);font-weight:bold;">${State.gold}</span>，不敷赎路之约（约需 <span style="color:var(--gold);font-weight:bold;">${pay}</span>）。`;
+            } else {
+                hintEl.hidden = true;
+                hintEl.innerHTML = '';
+            }
+        }
         bt.onclick = () => {
-            if (!canPay) return;
-            State.gold -= pay;
+            const payNeed = Math.max(0, Math.ceil(200 - State.combat.kuHaiStats.dealt + State.combat.kuHaiStats.taken));
+            if (State.gold < payNeed) {
+                Game.showToast('囊中铜钱不足，难以按约撤离。');
+                return;
+            }
+            State.gold -= payNeed;
             el.classList.remove('active');
             Combat._fleeCombatNoRewards();
         };
@@ -563,6 +587,7 @@ const Combat = {
             <div class="kuhai-flee-box">
                 <div class="kuhai-flee-title">官吏索赂</div>
                 <pre id="kuhai-flee-text" class="kuhai-flee-text" style="white-space:pre-wrap;font-family:inherit;margin:0;"></pre>
+                <div id="kuhai-flee-hint" class="kuhai-flee-hint" hidden></div>
                 <div class="kuhai-flee-row">
                     <div class="btn-g" id="kuhai-flee-pay">付钱撤离</div>
                     <div class="btn-g" id="kuhai-flee-stay" style="border-color:#555;">继续招架</div>
@@ -919,8 +944,9 @@ const Combat = {
         const hist = State.combat.pzHistory;
         const { blade: bIdx, tear: tIdx } = Combat.pzHighlightByPoem();
         hist.forEach((char, i) => {
-            const s = document.createElement('span'); s.className = 'pz-char'; s.innerText = char;
-            s.style.color = char === '平' ? '#9ca3af' : 'var(--blood-red)';
+            const s = document.createElement('span');
+            s.className = char === '平' ? 'pz-char pz-ping' : 'pz-char pz-ze';
+            s.innerText = char;
             const wb = bIdx.has(i);
             const wt = tIdx.has(i);
             if (wb && wt) s.classList.add('pz-match-both');

@@ -27,8 +27,8 @@ const hideKeywordTooltip = () => {
 const bindKeywordTooltips = (root) => {
     const keywords = Array.from(root.querySelectorAll('.kw'));
     keywords.forEach((kw) => {
-        if(kw.dataset.agentHoverLogged) return;
-        kw.dataset.agentHoverLogged = '1';
+        if (kw.dataset.kwTooltipBound) return;
+        kw.dataset.kwTooltipBound = '1';
         kw.addEventListener('mouseenter', () => {
             showKeywordTooltip(kw);
         });

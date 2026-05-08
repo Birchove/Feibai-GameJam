@@ -143,7 +143,7 @@ const EnemyArchetypes = {
         displayId: 'm_chimei',
         name: '魑魅魍魉',
         sprite: enemySpriteStyle('chi_mei_single'),
-        rollHp: () => rand(12, 16),
+        rollHp: () => rand(24, 32),
         displayIntent: (e) => {
             if (e.turnCounter % 2 !== 0) {
                 if (e._chiMeiNext === 'weak') return '意图: 虚弱咒';
@@ -406,12 +406,14 @@ const EnemyArchetypes = {
             const ph = ((e.turnCounter - 1) % 4) + 1;
             if (ph === 1) return '意图: 冥律 · 摄魂四层 / 峻刑';
             if (ph === 2) {
-                const raw = typeof Combat !== 'undefined' && Combat.enemyDmgAfterShushou ? Combat.enemyDmgAfterShushou(e, 44) : 44;
+                const atkBase = 44 + (e.str || 0);
+                const raw = typeof Combat !== 'undefined' && Combat.enemyDmgAfterShushou ? Combat.enemyDmgAfterShushou(e, atkBase) : atkBase;
                 const d = Math.floor(raw);
                 return `意图: 量罪罚击 (${d})`;
             }
             if (ph === 3) {
-                const raw = typeof Combat !== 'undefined' && Combat.enemyDmgAfterShushou ? Combat.enemyDmgAfterShushou(e, 11) : 11;
+                const atkBase = 11 + (e.str || 0);
+                const raw = typeof Combat !== 'undefined' && Combat.enemyDmgAfterShushou ? Combat.enemyDmgAfterShushou(e, atkBase) : atkBase;
                 const d = Math.floor(raw);
                 return `意图: 薄惩 (${d})`;
             }
@@ -425,11 +427,13 @@ const EnemyArchetypes = {
                 e.junxing = true;
                 Game.showToast('阎罗王：摄魂萦体，峻刑铭骨');
             } else if (ph === 2) {
-                if (typeof Combat !== 'undefined' && Combat.yanLuowangStrikeAndJunxing) return Combat.yanLuowangStrikeAndJunxing(e, 44);
-                Combat.takeDmg(44, false, e);
+                const atk = 44 + (e.str || 0);
+                if (typeof Combat !== 'undefined' && Combat.yanLuowangStrikeAndJunxing) return Combat.yanLuowangStrikeAndJunxing(e, atk);
+                Combat.takeDmg(atk, false, e);
             } else if (ph === 3) {
-                if (typeof Combat !== 'undefined' && Combat.yanLuowangStrikeAndJunxing) return Combat.yanLuowangStrikeAndJunxing(e, 11);
-                Combat.takeDmg(11, false, e);
+                const atk = 11 + (e.str || 0);
+                if (typeof Combat !== 'undefined' && Combat.yanLuowangStrikeAndJunxing) return Combat.yanLuowangStrikeAndJunxing(e, atk);
+                Combat.takeDmg(atk, false, e);
             } else {
                 e.shehun = (e.shehun || 0) + 4;
                 const m = (typeof State !== 'undefined' && State.combat) ? (State.combat.turn || 1) : 1;

@@ -4,7 +4,6 @@ const CardDB = {
             'c2': { id: 'c2', name: '闪避', cost: 1, type: '仄', typeClass: 'type-ze', defBase: 0, desc: `获得{V_DEF}点${K.CSHOU}`, rarity: 'low', cardType: '功卡', effect: () => Combat.addBlock(0) },
             'c3': { id: 'c3', name: '蝶恋花', cost: 0, type: '平', typeClass: 'type-ping', desc: `本回合你的${K.SH}减少3点，获得2点气`, rarity: 'low', cardType: '词牌', effect: () => { State.combat.player.turnDmgMod -= 3; State.energy += 2; } },
             'c4': { id: 'c4', name: '点水', cost: 1, type: '仄', typeClass: 'type-ze', desc: '抽取1张卡牌', rarity: 'low', cardType: '功卡', effect: () => Combat.draw(1) },
-            'c5': { id: 'c5', name: '绣剑', cost: 0, type: '平', typeClass: 'type-ping', desc: '6力6防', rarity: 'equip', cardType: '装备卡', effect: () => {} },
             'c6': { id: 'c6', name: '破阵子', cost: 3, type: '仄', typeClass: 'type-ze', desc: `打出你手牌的所有武卡，下回合你不能造成${K.SH}`, rarity: 'mid', cardType: '词牌', effect: () => { Combat.playAllAttacks(); State.combat.player.cantDmgNextTurn = true; } },
             'c7': { id: 'c7', name: '定风波', cost: 3, type: '平', typeClass: 'type-ping', toExhaust: true, desc: `你失去7点血量，让一名敌人${K.YY}，打出后进入${K.CS}`, rarity: 'high', cardType: '词牌', effect: () => {
                 Combat.takeDmg(7, true);

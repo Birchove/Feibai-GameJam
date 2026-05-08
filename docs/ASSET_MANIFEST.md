@@ -39,6 +39,26 @@ Feibai-GameJam/
   - 负向词：`characters, people, text, watermark, logo, modern furniture, neon lights, sci-fi elements, photorealistic, 3d render, over-detailed foreground clutter, blurry, noisy`
   - 出图建议：优先 `16:9`（如 `1920x1080`）；画面中部与偏下位置留“低细节空区”，用于承载“回忆一/二/三”按钮与状态文字，避免背景干扰可读性。
 
+以下为 **`class_select_bg.png`**（流派选择）、**`event_bg.png`**（事件默认 + 战斗结算）、**`event_bg_naihe.png`**（奈何桥结局皮肤）的生图提示词，风格与主菜单 / 战斗背景一致（冥府水墨武侠、`Feibai` 气质）。
+
+#### `class_select_bg.png` — `#screen-class`
+
+- **正向词**：`Chinese dark underworld wuxia class selection hall, ancient pavilion terrace overlooking misty ghost peaks, faint sword qi brushed as dry ink strokes in mid-air, drifting pale lanterns, cold moon rim, ink wash plus painterly 2D game background, charcoal blue-grey palette with restrained antique gold glints on railings, solemn breathable mood, center third relatively calm with soft vignette for sword-school emblem UI and choice buttons, high clarity, no readable text, no characters`
+- **负向词**：`text, letters, watermark, logo, people, faces, crowds, photorealistic skin, neon cyberpunk, sci-fi, cluttered foreground props, modern architecture`
+- **出图建议**：优先 `16:9`；**正中偏上**可略疏朗，便于 `#screen-class` 中央圆形流派图标与说明文字。
+
+#### `event_bg.png` — `#screen-event` 默认 / `#screen-settlement`
+
+- **正向词**：`Chinese ink wash ghost-realm council backdrop, wide panoramic riverbank under ash moon, twisted dead trees and broken stone lanterns, thin bridge silhouette dissolving in fog, painterly 2D game background for dialogue overlay, muted teal-grey and soot paper tones with faint warm lantern bloom for readability, mid-ground atmospheric density, bottom quarter softer gradient for dialog box legibility, melancholic but majestic underworld travelogue tone matching Feibai, high clarity, no characters, no text`
+- **负向词**：`text, watermark, logo, bright saturation, cartoon UI frame, photorealistic crowds, modern city, neon`
+- **出图建议**：优先 `16:9`；**画面下半约 30%** 宜偏低对比，便于叠加半透明对话框。
+
+#### `event_bg_naihe.png` — 奈何桥结局（`eventSkin: 'naihe'`）
+
+- **正向词**：`Chinese mythic Naihe bridge over forgetting river, spectral stone arch bridge spanning blood-red to ink-black water shimmer, distant silhouette of judgment halls dissolving in mist, mournful cherry-blossom petals as pale ash drifting, ink wash with touches of cinnabar seal red accents only on bridge pillars or ribbons, epic ending-story mood, painterly 2D game CG background, cold moon halo, horizontal composition for widescreen, foreboding serenity, no characters, no text`
+- **负向词**：`text, watermark, readable signage, photorealistic gore spray, cute anime style, neon cyberpunk, sci-fi spaceship`
+- **出图建议**：优先 `16:9`；桥面或水体可作视觉主线横贯中部，左右留白宜对称稳重。
+
 ---
 
 ## 2. 战斗场景背景
@@ -133,7 +153,7 @@ assets/card_<cardId>.png
 
 卡图在 `js/systems/game.js` 的 `Game.createCardDOM` 与图鉴 `gallery` 中共用，战斗手牌与卡牌列表均依赖此规则。
 
-### 5.1 常规与秘籍牌（c1–c50）
+### 5.1 常规与秘籍牌（`c1`–`c4`，`c6`–`c50`；**无 `c5`**：绣剑为神兵 `WeaponDB.xiuJian`，非卡牌）
 
 | 文件名 | 卡牌名（`CardDB`） |
 |--------|-------------------|
@@ -141,7 +161,6 @@ assets/card_<cardId>.png
 | `card_c2.png` | 闪避 |
 | `card_c3.png` | 蝶恋花 |
 | `card_c4.png` | 点水 |
-| `card_c5.png` | 绣剑 |
 | `card_c6.png` | 破阵子 |
 | `card_c7.png` | 定风波 |
 | `card_c8.png` | 水调歌头 |
@@ -197,6 +216,186 @@ assets/card_<cardId>.png
 | `card_c_jia_suo.png` | 枷锁 |
 | `card_c_hui.png` | 悔 |
 
+### 5.3 卡面横条生图提示词（`card_c7`、`card_c23`–`card_c50`）
+
+**比例**：整段插图按 **2.6 : 1** 出图（如 **1040×400** 或 **780×300**），主视觉放在**水平居中**，上下预留少许裁切安全边，便于 `card-img` 横向 `cover`。
+
+---
+
+#### `card_c7.png` — 定风波
+
+```
+Ultra-wide horizontal illustration 2.6:1 aspect ratio (game card strip), Chinese dark underworld wuxia ink-wash style matching Feibai, painterly 2D game art, cold moonlit palette (deep charcoal, desaturated blue-teal, faint parchment warmth), restrained cinnabar red and antique gold accents only as highlights, subtle paper grain and wet ink diffusion, ghost-realm mood, single strong symbolic focal motif centered for horizontal banner crop, high clarity, readable silhouette at small size — calm-after-storm metaphor: great waves and violent wind rendered as curling ink ribbons gradually flattening into smooth grey mist; a faint whirlwind ring suggesting restraint and control; subtle hint of blood-price as one thin red ink vein fading into black; epic but quiet tension. Negative: text, letters, watermark, signature, logo, photorealistic, 3D render, neon cyberpunk, oversaturated candy colors, cluttered composition, messy borders, UI frame, modern objects
+```
+
+#### `card_c23.png` — 一转攻势
+
+```
+Ultra-wide horizontal illustration 2.6:1 aspect ratio (game card strip), Chinese dark underworld wuxia ink-wash style matching Feibai, painterly 2D game art, cold moonlit palette (deep charcoal, desaturated blue-teal, faint parchment warmth), restrained cinnabar red and antique gold accents only as highlights, subtle paper grain and wet ink diffusion, ghost-realm mood, single strong symbolic focal motif centered for horizontal banner crop, high clarity, readable silhouette at small size — reversal of fortune: a spiral torque of ink and faint blade arcs twisting from collapse into rising momentum; yin-yang-like motion without literal taiji symbol; feeling of traded weakness becoming stored power in ghost arena. Negative: text, letters, watermark, signature, logo, photorealistic, 3D render, neon cyberpunk, oversaturated candy colors, cluttered composition, messy borders, UI frame, modern objects
+```
+
+#### `card_c24.png` — 束手就擒
+
+```
+Ultra-wide horizontal illustration 2.6:1 aspect ratio (game card strip), Chinese dark underworld wuxia ink-wash style matching Feibai, painterly 2D game art, cold moonlit palette (deep charcoal, desaturated blue-teal, faint parchment warmth), restrained cinnabar red and antique gold accents only as highlights, subtle paper grain and wet ink diffusion, ghost-realm mood, single strong symbolic focal motif centered for horizontal banner crop, high clarity, readable silhouette at small size — captured willingly motif: shadowy silk-rope and cuff-like ink bindings suggested by flowing brushstrokes (not graphic torture); restrained figure silhouette lowering aggression; enemy pressure visualized as slowing descending ink strokes and softened blade reflections. Negative: text, letters, watermark, signature, logo, photorealistic, 3D render, neon cyberpunk, oversaturated candy colors, cluttered composition, messy borders, UI frame, modern objects
+```
+
+#### `card_c25.png` — 厉兵秣马
+
+```
+Ultra-wide horizontal illustration 2.6:1 aspect ratio (game card strip), Chinese dark underworld wuxia ink-wash style matching Feibai, painterly 2D game art, cold moonlit palette (deep charcoal, desaturated blue-teal, faint parchment warmth), restrained cinnabar red and antique gold accents only as highlights, subtle paper grain and wet ink diffusion, ghost-realm mood, single strong symbolic focal motif centered for horizontal banner crop, high clarity, readable silhouette at small size — sharpen blades feed horses idiom: ghost-armory vibe; rows of blurred spearheads and sword edges catching cold moon glint; faint spectral horses as charcoal silhouettes drinking from ink-black water; preparation before battle underworld dawn fog. Negative: text, letters, watermark, signature, logo, photorealistic, 3D render, neon cyberpunk, oversaturated candy colors, cluttered composition, messy borders, UI frame, modern objects
+```
+
+#### `card_c26.png` — 万夫莫开
+
+```
+Ultra-wide horizontal illustration 2.6:1 aspect ratio (game card strip), Chinese dark underworld wuxia ink-wash style matching Feibai, painterly 2D game art, cold moonlit palette (deep charcoal, desaturated blue-teal, faint parchment warmth), restrained cinnabar red and antique gold accents only as highlights, subtle paper grain and wet ink diffusion, ghost-realm mood, single strong symbolic focal motif centered for horizontal banner crop, high clarity, readable silhouette at small size — narrow mountain pass fortress gate: towering cliff ink strokes forming a bottleneck; heavy wooden gate silhouette barely opening to mist; solitary guardian shadow implying immovable defense; massive scale contrast. Negative: text, letters, watermark, signature, logo, photorealistic, 3D render, neon cyberpunk, oversaturated candy colors, cluttered composition, messy borders, UI frame, modern objects
+```
+
+#### `card_c27.png` — 摧枯拉朽
+
+```
+Ultra-wide horizontal illustration 2.6:1 aspect ratio (game card strip), Chinese dark underworld wuxia ink-wash style matching Feibai, painterly 2D game art, cold moonlit palette (deep charcoal, desaturated blue-teal, faint parchment warmth), restrained cinnabar red and antique gold accents only as highlights, subtle paper grain and wet ink diffusion, ghost-realm mood, single strong symbolic focal motif centered for horizontal banner crop, high clarity, readable silhouette at small size — crush rotten wood idiom: splintered dead branches exploding into dust; sweeping ink slash tearing through decayed structures; visceral sense of collapse and vulnerability exposed; flying debris as dry ink flecks. Negative: text, letters, watermark, signature, logo, photorealistic, 3D render, neon cyberpunk, oversaturated candy colors, cluttered composition, messy borders, UI frame, modern objects
+```
+
+#### `card_c28.png` — 白虹贯日
+
+```
+Ultra-wide horizontal illustration 2.6:1 aspect ratio (game card strip), Chinese dark underworld wuxia ink-wash style matching Feibai, painterly 2D game art, cold moonlit palette (deep charcoal, desaturated blue-teal, faint parchment warmth), restrained cinnabar red and antique gold accents only as highlights, subtle paper grain and wet ink diffusion, ghost-realm mood, single strong symbolic focal motif centered for horizontal banner crop, high clarity, readable silhouette at small size — white rainbow piercing sun: a pale sword beam streak across a murky sky disk (sun as muted gold orb behind clouds); high contrast blade-light core against sooty clouds; mythic omen atmosphere without sci-fi lasers. Negative: text, letters, watermark, signature, logo, photorealistic, 3D render, neon cyberpunk, oversaturated candy colors, cluttered composition, messy borders, UI frame, modern objects
+```
+
+#### `card_c29.png` — 峨眉剑法
+
+```
+Ultra-wide horizontal illustration 2.6:1 aspect ratio (game card strip), Chinese dark underworld wuxia ink-wash style matching Feibai, painterly 2D game art, cold moonlit palette (deep charcoal, desaturated blue-teal, faint parchment warmth), restrained cinnabar red and antique gold accents only as highlights, subtle paper grain and wet ink diffusion, ghost-realm mood, single strong symbolic focal motif centered for horizontal banner crop, high clarity, readable silhouette at small size — Emei sword elegance: graceful arcs of sword qi like bamboo wind; slim blade afterimages forming layered curves; mountain mist suggestion with cliff silhouette hints; feminine-steel precision, no portrait face needed. Negative: text, letters, watermark, signature, logo, photorealistic, 3D render, neon cyberpunk, oversaturated candy colors, cluttered composition, messy borders, UI frame, modern objects
+```
+
+#### `card_c30.png` — 以逸待劳
+
+```
+Ultra-wide horizontal illustration 2.6:1 aspect ratio (game card strip), Chinese dark underworld wuxia ink-wash style matching Feibai, painterly 2D game art, cold moonlit palette (deep charcoal, desaturated blue-teal, faint parchment warmth), restrained cinnabar red and antique gold accents only as highlights, subtle paper grain and wet ink diffusion, ghost-realm mood, single strong symbolic focal motif centered for horizontal banner crop, high clarity, readable silhouette at small size — wait at ease: seated warrior shadow under twisted pine; resting blade across knees; distant exhausted enemy silhouettes blurred in fog; calm breathing smoke wisps; traps implied by subtle ink tripwire hints (abstract). Negative: text, letters, watermark, signature, logo, photorealistic, 3D render, neon cyberpunk, oversaturated candy colors, cluttered composition, messy borders, UI frame, modern objects
+```
+
+#### `card_c31.png` — 一剑封喉
+
+```
+Ultra-wide horizontal illustration 2.6:1 aspect ratio (game card strip), Chinese dark underworld wuxia ink-wash style matching Feibai, painterly 2D game art, cold moonlit palette (deep charcoal, desaturated blue-teal, faint parchment warmth), restrained cinnabar red and antique gold accents only as highlights, subtle paper grain and wet ink diffusion, ghost-realm mood, single strong symbolic focal motif centered for horizontal banner crop, high clarity, readable silhouette at small size — one strike lethal precision: extreme close angle of a single blade tip stopping at ink-black throat line suggested by shadow gap (no gore); tension frozen millisecond; thin red accent line as seal ink not blood splatter; ruthless efficiency. Negative: text, letters, watermark, signature, logo, photorealistic, 3D render, neon cyberpunk, oversaturated candy colors, cluttered composition, messy borders, UI frame, modern objects
+```
+
+#### `card_c32.png` — 波诡云谲
+
+```
+Ultra-wide horizontal illustration 2.6:1 aspect ratio (game card strip), Chinese dark underworld wuxia ink-wash style matching Feibai, painterly 2D game art, cold moonlit palette (deep charcoal, desaturated blue-teal, faint parchment warmth), restrained cinnabar red and antique gold accents only as highlights, subtle paper grain and wet ink diffusion, ghost-realm mood, single strong symbolic focal motif centered for horizontal banner crop, high clarity, readable silhouette at small size — treacherous waves and deceitful clouds idiom: swirling ink masses folding into each other like unpredictable tide; masks and fog layers implying schemes; knife-like cloud edges; uneasy motion without a stable horizon. Negative: text, letters, watermark, signature, logo, photorealistic, 3D render, neon cyberpunk, oversaturated candy colors, cluttered composition, messy borders, UI frame, modern objects
+```
+
+#### `card_c33.png` — 流星落月
+
+```
+Ultra-wide horizontal illustration 2.6:1 aspect ratio (game card strip), Chinese dark underworld wuxia ink-wash style matching Feibai, painterly 2D game art, cold moonlit palette (deep charcoal, desaturated blue-teal, faint parchment warmth), restrained cinnabar red and antique gold accents only as highlights, subtle paper grain and wet ink diffusion, ghost-realm mood, single strong symbolic focal motif centered for horizontal banner crop, high clarity, readable silhouette at small size — meteor across moon: long streak of pale blade-light tearing night mist; pale moon disk partly veiled; trailing sparks as dry ink flecks; chain-reaction energy implied by forked afterglow lines to secondary targets. Negative: text, letters, watermark, signature, logo, photorealistic, 3D render, neon cyberpunk, oversaturated candy colors, cluttered composition, messy borders, UI frame, modern objects
+```
+
+#### `card_c34.png` — 坚壁清野
+
+```
+Ultra-wide horizontal illustration 2.6:1 aspect ratio (game card strip), Chinese dark underworld wuxia ink-wash style matching Feibai, painterly 2D game art, cold moonlit palette (deep charcoal, desaturated blue-teal, faint parchment warmth), restrained cinnabar red and antique gold accents only as highlights, subtle paper grain and wet ink diffusion, ghost-realm mood, single strong symbolic focal motif centered for horizontal banner crop, high clarity, readable silhouette at small size — strong walls scorched-earth defense: massive rampart silhouette ink strokes; blackened fields before walls; empty plain leading to gate; ash-like mist; fortress endurance mood. Negative: text, letters, watermark, signature, logo, photorealistic, 3D render, neon cyberpunk, oversaturated candy colors, cluttered composition, messy borders, UI frame, modern objects
+```
+
+#### `card_c35.png` — 付之一炬
+
+```
+Ultra-wide horizontal illustration 2.6:1 aspect ratio (game card strip), Chinese dark underworld wuxia ink-wash style matching Feibai, painterly 2D game art, cold moonlit palette (deep charcoal, desaturated blue-teal, faint parchment warmth), restrained cinnabar red and antique gold accents only as highlights, subtle paper grain and wet ink diffusion, ghost-realm mood, single strong symbolic focal motif centered for horizontal banner crop, high clarity, readable silhouette at small size — burn it all idiom: torch flame rendered as controlled vermillion ink bloom consuming curling scroll-like shapes; rising ash as pale grey particles; sacrifice for change; heat shimmer lines without cartoon fire. Negative: text, letters, watermark, signature, logo, photorealistic, 3D render, neon cyberpunk, oversaturated candy colors, cluttered composition, messy borders, UI frame, modern objects
+```
+
+#### `card_c36.png` — 封刀挂剑
+
+```
+Ultra-wide horizontal illustration 2.6:1 aspect ratio (game card strip), Chinese dark underworld wuxia ink-wash style matching Feibai, painterly 2D game art, cold moonlit palette (deep charcoal, desaturated blue-teal, faint parchment warmth), restrained cinnabar red and antique gold accents only as highlights, subtle paper grain and wet ink diffusion, ghost-realm mood, single strong symbolic focal motif centered for horizontal banner crop, high clarity, readable silhouette at small size — seal the blade hang the sword: ancient weapon rack in moonlit hall shadow; silk-sealed sabre with red seal stamp motif (abstract shape only); quiet dojo underworld atmosphere; promise of drawing cards like drawing breath. Negative: text, letters, watermark, signature, logo, photorealistic, 3D render, neon cyberpunk, oversaturated candy colors, cluttered composition, messy borders, UI frame, modern objects
+```
+
+#### `card_c37.png` — 七步成诗
+
+```
+Ultra-wide horizontal illustration 2.6:1 aspect ratio (game card strip), Chinese dark underworld wuxia ink-wash style matching Feibai, painterly 2D game art, cold moonlit palette (deep charcoal, desaturated blue-teal, faint parchment warmth), restrained cinnabar red and antique gold accents only as highlights, subtle paper grain and wet ink diffusion, ghost-realm mood, single strong symbolic focal motif centered for horizontal banner crop, high clarity, readable silhouette at small size — poem in seven steps: seven faint footsteps as ripples on ink pond; brushstroke verses appearing as vertical wet streaks without letters; sudden bloom of gold flecks as inspiration; literary ghost aura. Negative: text, letters, watermark, signature, logo, photorealistic, 3D render, neon cyberpunk, oversaturated candy colors, cluttered composition, messy borders, UI frame, modern objects
+```
+
+#### `card_c38.png` — 投笔从戎
+
+```
+Ultra-wide horizontal illustration 2.6:1 aspect ratio (game card strip), Chinese dark underworld wuxia ink-wash style matching Feibai, painterly 2D game art, cold moonlit palette (deep charcoal, desaturated blue-teal, faint parchment warmth), restrained cinnabar red and antique gold accents only as highlights, subtle paper grain and wet ink diffusion, ghost-realm mood, single strong symbolic focal motif centered for horizontal banner crop, high clarity, readable silhouette at small size — cast brush join army: scholar brush dissolving into spear silhouette mid-air; ink splatter transforming into weapon edge; pivot from words to war under ghost banners; resolve and courage. Negative: text, letters, watermark, signature, logo, photorealistic, 3D render, neon cyberpunk, oversaturated candy colors, cluttered composition, messy borders, UI frame, modern objects
+```
+
+#### `card_c39.png` — 拔山扛鼎
+
+```
+Ultra-wide horizontal illustration 2.6:1 aspect ratio (game card strip), Chinese dark underworld wuxia ink-wash style matching Feibai, painterly 2D game art, cold moonlit palette (deep charcoal, desaturated blue-teal, faint parchment warmth), restrained cinnabar red and antique gold accents only as highlights, subtle paper grain and wet ink diffusion, ghost-realm mood, single strong symbolic focal motif centered for horizontal banner crop, high clarity, readable silhouette at small size — uproot mountains lift cauldron strength: colossal shadow lifting exaggerated bronze tripod silhouette; mountain ridge ink mass tilting; dust shockwave rings; raw martial might as ink weight and gold edge highlights. Negative: text, letters, watermark, signature, logo, photorealistic, 3D render, neon cyberpunk, oversaturated candy colors, cluttered composition, messy borders, UI frame, modern objects
+```
+
+#### `card_c40.png` — 文思泉涌
+
+```
+Ultra-wide horizontal illustration 2.6:1 aspect ratio (game card strip), Chinese dark underworld wuxia ink-wash style matching Feibai, painterly 2D game art, cold moonlit palette (deep charcoal, desaturated blue-teal, faint parchment warmth), restrained cinnabar red and antique gold accents only as highlights, subtle paper grain and wet ink diffusion, ghost-realm mood, single strong symbolic focal motif centered for horizontal banner crop, high clarity, readable silhouette at small size — thoughts gushing like spring: ink pouring upward like water jet from cracked stone well; brush hovering releasing endless stream; clearing mind fog into shields as rippling rings; creative surge becoming defense (abstract). Negative: text, letters, watermark, signature, logo, photorealistic, 3D render, neon cyberpunk, oversaturated candy colors, cluttered composition, messy borders, UI frame, modern objects
+```
+
+#### `card_c41.png` — 万剑归宗
+
+```
+Ultra-wide horizontal illustration 2.6:1 aspect ratio (game card strip), Chinese dark underworld wuxia ink-wash style matching Feibai, painterly 2D game art, cold moonlit palette (deep charcoal, desaturated blue-teal, faint parchment warmth), restrained cinnabar red and antique gold accents only as highlights, subtle paper grain and wet ink diffusion, ghost-realm mood, single strong symbolic focal motif centered for horizontal banner crop, high clarity, readable silhouette at small size — myriad swords return to one sect: countless slim blade silhouettes converging toward central radiant point; symmetrical formation like migratory birds; mirror shards suggested as duplicate reflections of steel; overwhelming unified strike. Negative: text, letters, watermark, signature, logo, photorealistic, 3D render, neon cyberpunk, oversaturated candy colors, cluttered composition, messy borders, UI frame, modern objects
+```
+
+#### `card_c42.png` — 城焚烬余
+
+```
+Ultra-wide horizontal illustration 2.6:1 aspect ratio (game card strip), Chinese dark underworld wuxia ink-wash style matching Feibai, painterly 2D game art, cold moonlit palette (deep charcoal, desaturated blue-teal, faint parchment warmth), restrained cinnabar red and antique gold accents only as highlights, subtle paper grain and wet ink diffusion, ghost-realm mood, single strong symbolic focal motif centered for horizontal banner crop, high clarity, readable silhouette at small size — city burned embers remain: collapsed battlement silhouettes in charred ink; orange-red ember glow cooled to controlled accents; ash flakes drifting; hollow skyline implying hand emptied then wreckage dealt (abstract). Negative: text, letters, watermark, signature, logo, photorealistic, 3D render, neon cyberpunk, oversaturated candy colors, cluttered composition, messy borders, UI frame, modern objects
+```
+
+#### `card_c43.png` — 折戟沉沙
+
+```
+Ultra-wide horizontal illustration 2.6:1 aspect ratio (game card strip), Chinese dark underworld wuxia ink-wash style matching Feibai, painterly 2D game art, cold moonlit palette (deep charcoal, desaturated blue-teal, faint parchment warmth), restrained cinnabar red and antique gold accents only as highlights, subtle paper grain and wet ink diffusion, ghost-realm mood, single strong symbolic focal motif centered for horizontal banner crop, high clarity, readable silhouette at small size — broken halberd sunk in sand: ancient weapon half-buried in black sand dunes of ink; tide line marks; retrieval hope from forgotten grave; weathered metal glint under moon; melancholy battlefield aftermath. Negative: text, letters, watermark, signature, logo, photorealistic, 3D render, neon cyberpunk, oversaturated candy colors, cluttered composition, messy borders, UI frame, modern objects
+```
+
+#### `card_c44.png` — 唇枪舌剑
+
+```
+Ultra-wide horizontal illustration 2.6:1 aspect ratio (game card strip), Chinese dark underworld wuxia ink-wash style matching Feibai, painterly 2D game art, cold moonlit palette (deep charcoal, desaturated blue-teal, faint parchment warmth), restrained cinnabar red and antique gold accents only as highlights, subtle paper grain and wet ink diffusion, ghost-realm mood, single strong symbolic focal motif centered for horizontal banner crop, high clarity, readable silhouette at small size — verbal blades crossing: two opposing arcs of thin razor wind meeting; lip-shaped mist curls stylized abstractly (not literal mouths); flying needle-like lines implying ze-tone strikes on random foes; sharp debate as combat. Negative: text, letters, watermark, signature, logo, photorealistic, 3D render, neon cyberpunk, oversaturated candy colors, cluttered composition, messy borders, UI frame, modern objects
+```
+
+#### `card_c45.png` — 固若金汤
+
+```
+Ultra-wide horizontal illustration 2.6:1 aspect ratio (game card strip), Chinese dark underworld wuxia ink-wash style matching Feibai, painterly 2D game art, cold moonlit palette (deep charcoal, desaturated blue-teal, faint parchment warmth), restrained cinnabar red and antique gold accents only as highlights, subtle paper grain and wet ink diffusion, ghost-realm mood, single strong symbolic focal motif centered for horizontal banner crop, high clarity, readable silhouette at small size — strong as molten metal soup fortress: golden citadel walls reflecting cold moon; moat as ink pool; seamless ramparts loop; ping-tone rhythm suggested by repeating circular masonry arcs; impregnable calm. Negative: text, letters, watermark, signature, logo, photorealistic, 3D render, neon cyberpunk, oversaturated candy colors, cluttered composition, messy borders, UI frame, modern objects
+```
+
+#### `card_c46.png` — 案剑瞋目
+
+```
+Ultra-wide horizontal illustration 2.6:1 aspect ratio (game card strip), Chinese dark underworld wuxia ink-wash style matching Feibai, painterly 2D game art, cold moonlit palette (deep charcoal, desaturated blue-teal, faint parchment warmth), restrained cinnabar red and antique gold accents only as highlights, subtle paper grain and wet ink diffusion, ghost-realm mood, single strong symbolic focal motif centered for horizontal banner crop, high clarity, readable silhouette at small size — hand on sword angry glare: tight close-up of gloved hand gripping jian hilt on low table; glaring eye shine in darkness (single eye light spot); tension before reckless gamble; countdown fate suggested by three faint ring pulses in mist. Negative: text, letters, watermark, signature, logo, photorealistic, 3D render, neon cyberpunk, oversaturated candy colors, cluttered composition, messy borders, UI frame, modern objects
+```
+
+#### `card_c47.png` — 刀光剑影
+
+```
+Ultra-wide horizontal illustration 2.6:1 aspect ratio (game card strip), Chinese dark underworld wuxia ink-wash style matching Feibai, painterly 2D game art, cold moonlit palette (deep charcoal, desaturated blue-teal, faint parchment warmth), restrained cinnabar red and antique gold accents only as highlights, subtle paper grain and wet ink diffusion, ghost-realm mood, single strong symbolic focal motif centered for horizontal banner crop, high clarity, readable silhouette at small size — blade flashes sword shadows: chaotic intersecting white arcs in black fog; fast duel implied by crossing streaks; doubled effects echo as faint ghost blades; slender sword silhouettes repeating. Negative: text, letters, watermark, signature, logo, photorealistic, 3D render, neon cyberpunk, oversaturated candy colors, cluttered composition, messy borders, UI frame, modern objects
+```
+
+#### `card_c48.png` — 金蝉脱壳
+
+```
+Ultra-wide horizontal illustration 2.6:1 aspect ratio (game card strip), Chinese dark underworld wuxia ink-wash style matching Feibai, painterly 2D game art, cold moonlit palette (deep charcoal, desaturated blue-teal, faint parchment warmth), restrained cinnabar red and antique gold accents only as highlights, subtle paper grain and wet ink diffusion, ghost-realm mood, single strong symbolic focal motif centered for horizontal banner crop, high clarity, readable silhouette at small size — golden cicada sheds shell: split translucent cicada husk left as hollow golden-brown silhouette; escaping shadow streak slipping sideways; previous state frozen in shell; trickster survival underworld escape. Negative: text, letters, watermark, signature, logo, photorealistic, 3D render, neon cyberpunk, oversaturated candy colors, cluttered composition, messy borders, UI frame, modern objects
+```
+
+#### `card_c49.png` — 操戈擐甲
+
+```
+Ultra-wide horizontal illustration 2.6:1 aspect ratio (game card strip), Chinese dark underworld wuxia ink-wash style matching Feibai, painterly 2D game art, cold moonlit palette (deep charcoal, desaturated blue-teal, faint parchment warmth), restrained cinnabar red and antique gold accents only as highlights, subtle paper grain and wet ink diffusion, ghost-realm mood, single strong symbolic focal motif centered for horizontal banner crop, high clarity, readable silhouette at small size — wield spear don armor: heavy lamellar armor silhouette reflecting steel grey ink; polearm raised for crushing overhead blow; dust shock; battlefield elite pressure; massive single-hit damage feeling. Negative: text, letters, watermark, signature, logo, photorealistic, 3D render, neon cyberpunk, oversaturated candy colors, cluttered composition, messy borders, UI frame, modern objects
+```
+
+#### `card_c50.png` — 枯木逢春
+
+```
+Ultra-wide horizontal illustration 2.6:1 aspect ratio (game card strip), Chinese dark underworld wuxia ink-wash style matching Feibai, painterly 2D game art, cold moonlit palette (deep charcoal, desaturated blue-teal, faint parchment warmth), restrained cinnabar red and antique gold accents only as highlights, subtle paper grain and wet ink diffusion, ghost-realm mood, single strong symbolic focal motif centered for horizontal banner crop, high clarity, readable silhouette at small size — withered tree meets spring: gnarled dead tree trunk split by single vivid cyan-green sprout line (ghost spring); life returning to HP metaphor; mist parting; faint gold sunlight through cracks in charcoal bark; tender hope in grim realm. Negative: text, letters, watermark, signature, logo, photorealistic, 3D render, neon cyberpunk, oversaturated candy colors, cluttered composition, messy borders, UI frame, modern objects
+```
+
 ---
 
 ## 6. 视频
@@ -213,19 +412,15 @@ assets/card_<cardId>.png
 
 ### 7.1 BGM（循环播放，`loop = true`，默认音量约 0.5）
 
-三类主循环曲目在 `js/core/audio.js` 的 **`AudioSys.BGM`** 中配置，并通过 **`AudioSys.playBGMTrack('world'|'combat'|'boss')`** 切换；同一曲目不会重复从头打断。  
-开场 PV 等仍可使用 **`AudioSys.playBGM(路径)`** 直链（会清除当前 track 标记）。
+三类主循环曲目在 `js/core/audio.js` 的 **`AudioSys.BGM`** 中配置，并通过 **`AudioSys.playBGMTrack('world'|'combat'|'boss')`** 切换；同一曲目不会重复从头打断。
 
 | 资产文件名 | 用途 | 引用位置 |
 |-----------|------|----------|
 | `bgm_boss.mp3` | **Boss 战**：地图节点「鬼门关」，遭遇 `enc_yan_luo_wang` | `js/systems/combat.js` → `Combat.start` |
 | `bgm_combat.mp3` | **战斗**（除 Boss 战外所有遭遇） | `js/systems/combat.js` → `Combat.start` |
 | `bgm_world.mp3` | **探索**：大地图 + 事件界面（共用同一曲） | `js/systems/game.js`（`initGame`）、`js/systems/map.js`（`EventSys.start`）、`js/systems/combat.js`（撤离战斗、胜利进结算前） |
-| `铁雨尘朝.mp3` | （可选）播放开场 PV 时与视频同步 | `js/systems/game.js` → `selectSave` |
 
 迁移说明：原先使用的 **`bgm_map.mp3`** 请改名为或替换为 **`bgm_world.mp3`**，与上表一致。
-
-注意：`铁雨尘朝.mp3` 为**中文文件名**，落盘时需与代码字符串完全一致（含编码），避免部署后 404。
 
 ### 7.2 SFX（单次播放，默认音量约 0.8）
 

@@ -5,7 +5,6 @@
          *   bgm_boss.mp3   — 鬼门关 Boss（遭遇 id：enc_yan_luo_wang）
          *   bgm_combat.mp3 — 除 Boss 以外的战斗
          *   bgm_world.mp3  — 大地图与事件界面共用
-         * 开场 PV 另用 铁雨尘朝.mp3，仍走 AudioSys.playBGM 直链，不计入上述三类。
          */
         /*
          * 主角立绘（文件在 assets/；路径相对 css/）
@@ -714,6 +713,11 @@
             font-family: 'Ma Shan Zheng','Noto Serif SC',serif;
             animation: pzPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
         }
+        .pz-char.pz-ping {
+            color: #c2c9d4;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.88), 0 0 14px rgba(0, 0, 0, 0.42);
+        }
+        .pz-char.pz-ze { color: var(--blood-red); }
         /* 灰色水墨圈：默认状态 */
         .pz-char::before {
             content: '';
@@ -770,7 +774,30 @@
         }
         .kuhai-flee-title { color: var(--gold-light); font-size: 22px; letter-spacing: 4px; margin-bottom: 14px; font-weight: bold; }
         .kuhai-flee-text { color: #ccc; font-size: 15px; line-height: 1.75; margin-bottom: 20px; text-align: left; }
+        .kuhai-flee-hint {
+            color: #c9b896;
+            font-size: 14px;
+            line-height: 1.55;
+            margin: -6px 0 14px;
+            padding: 10px 12px;
+            text-align: center;
+            border: 1px solid rgba(139, 24, 24, 0.45);
+            border-radius: 6px;
+            background: rgba(20, 12, 12, 0.55);
+            letter-spacing: 0.5px;
+        }
         .kuhai-flee-row { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-top: 8px; }
+        #kuhai-flee-pay.btn-g.disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+            pointer-events: auto;
+        }
+        #kuhai-flee-pay.btn-g.disabled:hover {
+            transform: none;
+            border-bottom-color: transparent;
+            color: #ccc;
+            text-shadow: none;
+        }
 
         .dmg-text { position: absolute; color: white; font-size: 40px; font-weight: bold; -webkit-text-stroke: 2px black; pointer-events: none; animation: floatUp 2.4s forwards; z-index: 100; font-family: 'Georgia', serif; }
         .dmg-text.crit { color: var(--blood-red); font-size: 50px; }

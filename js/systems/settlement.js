@@ -26,18 +26,21 @@ const Settlement = {
                 const getRandomCardByRarity = () => {
                     const roll = Math.random();
                     let targetRarity = 'low'; // 45%
-                    if(roll > 0.45 && roll <= 0.85) targetRarity = 'mid'; // 40%
-                    else if(roll > 0.85) targetRarity = 'high'; // 15%
-                    
-                    const pool = rewardKeyPool.filter(k => CardDB[k].rarity === targetRarity);
+                    if (roll > 0.45 && roll <= 0.85) targetRarity = 'mid'; // 40%
+                    else if (roll > 0.85) targetRarity = 'high'; // 15%
+
+                    let pool = rewardKeyPool.filter(k => CardDB[k].rarity === targetRarity);
+                    if (!pool.length) pool = rewardKeyPool.slice();
+                    if (!pool.length) return null;
                     return pool[rand(0, pool.length - 1)];
                 };
 
-                while(Settlement.currentRewards.cards.length < optionsCount) {
+                let guard = 0;
+                while (Settlement.currentRewards.cards.length < optionsCount && guard < 500) {
+                    guard++;
                     const rCard = getRandomCardByRarity();
-                    if(!Settlement.currentRewards.cards.includes(rCard)) {
-                        Settlement.currentRewards.cards.push(rCard);
-                    }
+                    if (rCard == null) break;
+                    if (!Settlement.currentRewards.cards.includes(rCard)) Settlement.currentRewards.cards.push(rCard);
                 }
                 
                 Settlement.currentRewards.weapon = isElite ? Items.randomWeapon() : null;

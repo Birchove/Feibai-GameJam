@@ -59,7 +59,6 @@ const Game = {
                 } else {
                     document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
                     el.classList.add('active');
-                    if(id === 'info-panel') Game.updateInfoPanel();
                 }
             },
             closeInfoDetail: () => {
@@ -211,7 +210,6 @@ const Game = {
                 $('pv-overlay').style.display = 'flex';
                 const video = $('pv-video');
                 video.play().catch(e=>{}); 
-                AudioSys.playBGM('assets/铁雨尘朝.mp3'); 
                 video.onended = () => { Game.skipPV(); };
             },
             skipPV: () => {
@@ -403,12 +401,12 @@ const Game = {
                         Game.showToast('未选择');
                         return;
                     }
-                const removed = State.deck.splice(selectedIdx, 1)[0];
-                const nm = CardDB[removed] ? CardDB[removed].name : removed;
-                close();
-                Game.showToast(`已从卡组移除：${nm}`);
-                if (typeof Game.updateInfoPanel === 'function') Game.updateInfoPanel();
-                if (typeof onDone === 'function') onDone(true);
+                    const removed = State.deck.splice(selectedIdx, 1)[0];
+                    const nm = CardDB[removed] ? CardDB[removed].name : removed;
+                    close();
+                    Game.showToast(`已从卡组移除：${nm}`);
+                    if (typeof Game.updateInfoPanel === 'function') Game.updateInfoPanel();
+                    if (typeof onDone === 'function') onDone(true);
                 };
                 cancelBtn.onclick = () => {
                     close();
@@ -420,7 +418,6 @@ const Game = {
                 $('gallery-low').innerHTML = ''; $('gallery-mid').innerHTML = ''; $('gallery-high').innerHTML = ''; $('gallery-token').innerHTML = '';
                 
                 Object.values(CardDB).forEach(cd => {
-                    if (cd.rarity === 'equip') return; // 不展示不可掉落的装备卡
                     const dom = Game.createCardDOM(cd);
                     if(cd.rarity === 'low') $('gallery-low').appendChild(dom);
                     else if(cd.rarity === 'mid') {
