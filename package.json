@@ -1,0 +1,34 @@
+{
+  "name": "feibai-gamejam",
+  "version": "1.0.0",
+  "description": "Feibai GameJam desktop build with Electron",
+  "main": "electron/main.js",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "build": {
+    "appId": "com.feibai.gamejam",
+    "productName": "Feibai",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "index.html",
+      "css/**/*",
+      "js/**/*",
+      "assets/**/*",
+      "electron/**/*"
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    }
+  },
+  "devDependencies": {
+    "electron": "^37.1.0",
+    "electron-builder": "^26.0.12"
+  }
+}
