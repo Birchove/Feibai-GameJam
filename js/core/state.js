@@ -1,3 +1,16 @@
+function createInitialCombatState() {
+            return {
+                inCombat: false, turn: 1, isPlayerTurn: true, hand: [], drawPile: [], discardPile: [], exhaustPile: [],
+                enemies: [],
+                enemy: { id: '', name: '', hp: 80, maxHp: 80, turnCounter: 1, dmgMod: 1, weak: 0, vuln: 0, stun: false, block: 0, str: 0 },
+                lastRewardTier: 'normal',
+                selectedTargetIndex: 0,
+                kuHaiStats: { dealt: 0, taken: 0 },
+                liuXingLuoYue: false,
+                player: { block: 0, dmgMod: 0, cantPlay: false, cantDmg: false, weak: 0, vuln: 0, turnStr: 0, turnDef: 0, turnDmgMod: 0, combatStr: 0, combatDef: 0, wStr: 0, wDef: 0, jianBiQingYe: false, nianNuJiao: false, dmgDouble: false, takeDmgDouble: false, daoGuang: false, ignorePZ: false, cantDmgNextTurn: false, cursedNextPlayer: false }, pzHistory: []
+            };
+        }
+
 const State = {
             _qibuPoetryReward: null,
             _hasJourneyCheckpoint: false,
@@ -8,14 +21,5 @@ const State = {
             deck: [], relics: [], mapNodeIndex: 0, mapChapter: 0, isViewingMap: false, 
             // 开发者模式(仅本局生效，不持久化)
             _dev: false, _devGod: false, _devOneShot: false, _devSkipEnemy: false, 
-            combat: {
-                inCombat: false, turn: 1, isPlayerTurn: true, hand: [], drawPile: [], discardPile: [], exhaustPile: [],
-                enemies: [],
-                enemy: { id: '', name: '', hp: 80, maxHp: 80, turnCounter: 1, dmgMod: 1, weak: 0, vuln: 0, stun: false, block: 0, str: 0 },
-                lastRewardTier: 'normal',
-                selectedTargetIndex: 0,
-                kuHaiStats: { dealt: 0, taken: 0 },
-                liuXingLuoYue: false,
-                player: { block: 0, dmgMod: 0, cantPlay: false, cantDmg: false, weak: 0, vuln: 0, turnStr: 0, turnDef: 0, turnDmgMod: 0, combatStr: 0, combatDef: 0, wStr: 0, wDef: 0, jianBiQingYe: false, nianNuJiao: false, dmgDouble: false, takeDmgDouble: false, daoGuang: false, ignorePZ: false, cantDmgNextTurn: false, cursedNextPlayer: false }, pzHistory: []
-            }
+            combat: createInitialCombatState()
         };

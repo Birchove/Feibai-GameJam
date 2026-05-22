@@ -328,6 +328,7 @@ const Combat = {
     shuffle: (arr) => { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } },
 
     startTurn: () => {
+        if (!State.combat || !State.combat.inCombat) return;
         State.combat.isPlayerTurn = true;
         State.energy = State.maxEnergy + (State.combat.player.nextTurnEnergy || 0);
         State.combat.player.nextTurnEnergy = 0;
@@ -812,10 +813,19 @@ const Combat = {
 
     openCardPicker: ({ source, maxCount = 1, prompt, onConfirm }) => {
         const sourceArr = source === 'hand' ? State.combat.hand : State.combat.exhaustPile;
+        if (!State.combat || !State.combat.inCombat) return;
         if (!sourceArr || sourceArr.length === 0) {
             Game.showToast(`${prompt || '请择一张牌'}：竟无牌可选`);
             return;
         }
+        const sourceIds = (arr) => arr.map((rawItem) => {
+            if (source === 'hand') {
+                const item = Combat.normalizeHandItem(rawItem);
+                return item ? item.cardId : undefined;
+            }
+            return rawItem;
+        });
+        const openedIds = sourceIds(sourceArr);
         const panel = $('card-picker');
         const grid = $('card-picker-grid');
         const title = $('card-picker-title');
@@ -860,6 +870,15 @@ const Combat = {
         confirmBtn.onclick = () => {
             if (selected.size === 0) { Game.showToast('尚未点选'); return; }
             const indices = Array.from(selected).sort((a, b) => b - a);
+            const currentArr = source === 'hand' ? State.combat.hand : State.combat.exhaustPile;
+            const currentIds = sourceIds(currentArr || []);
+            const sourceChanged = currentIds.length !== openedIds.length || openedIds.some((cid, idx) => currentIds[idx] !== cid);
+            if (!State.combat.inCombat || sourceChanged || indices.some((i) => i < 0 || i >= currentIds.length)) {
+                close();
+                Game.showToast('牌局已变动，请重新选择');
+                Combat.renderHand();
+                return;
+            }
             close();
             onConfirm(indices);
         };
@@ -1445,10 +1464,11 @@ const Combat = {
 
     endTurn: () => {
         if (!State.combat.isPlayerTurn) return;
-        const kuModal = $('kuhai-flee-modal');
-        if (kuModal && kuModal.classList.contains('active')) return;
-        const jxModal = $('junxing-modal');
-        if (jxModal && jxModal.classList.contains('active')) return;
+        const blockingModalIds = ['kuhai-flee-modal', 'junxing-modal', 'card-picker', 'pz-choice-modal'];
+        if (blockingModalIds.some((id) => {
+            const modal = $(id);
+            return modal && modal.classList.contains('active');
+        })) return;
 
         let huiN = 0;
         State.combat.hand.forEach((raw) => {

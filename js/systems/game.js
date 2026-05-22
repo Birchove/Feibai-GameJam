@@ -28,7 +28,28 @@ const Game = {
                 State._resumeScreenId = '';
                 Game.refreshMainMenuCTA();
             },
-            /** 确认后回到扉页「飞白」，关闭各类浮层；不改玩法数值逻辑 */
+            resetJourneyRuntime: () => {
+                State.energy = 3;
+                State.maxEnergy = 3;
+                State.momentum = 0;
+                State.combat = (typeof createInitialCombatState === 'function') ? createInitialCombatState() : { inCombat: false };
+                const picker = $('card-picker');
+                if (picker) {
+                    picker.classList.remove('active');
+                    const confirm = $('card-picker-confirm');
+                    const cancel = $('card-picker-cancel');
+                    if (confirm) confirm.onclick = null;
+                    if (cancel) cancel.onclick = null;
+                }
+                const pzModal = $('pz-choice-modal');
+                if (pzModal) pzModal.classList.remove('active');
+            },
+            restartJourneyFromSettings: () => {
+                Game.resetJourneyRuntime();
+                Game.navTo('screen-class');
+                Game.toggleModal('settings-panel');
+            },
+            /** 确认后回到扉页「飞白」，关闭各类浮层并中止战斗临时状态 */
             confirmExitToMainMenu: () => {
                 const modal = document.createElement('div');
                 modal.className = 'modal active';
@@ -59,6 +80,7 @@ const Game = {
                     const video = $('pv-video');
                     if (video) { video.pause(); video.currentTime = 0; video.onended = null; }
                     document.querySelectorAll('.modal').forEach((m) => m.classList.remove('active'));
+                    Game.resetJourneyRuntime();
                     Game.clearJourneyCheckpoint();
                     Game.navTo('screen-main');
                     if (typeof AudioSys !== 'undefined' && AudioSys.stopBGM) AudioSys.stopBGM();
@@ -286,10 +308,10 @@ const Game = {
                 const clsData = Object.values(ClassDB).find(c => c.name === cls) || ClassDB.sword;
                 const init = clsData.initial;
                 State._qibuPoetryReward = null;
+                Game.resetJourneyRuntime();
                 State.class = cls; State.hp = init.hp; State.maxHp = init.maxHp; State.gold = 100; State.mapNodeIndex = 0; State.mapChapter = 0; State.relics = [];
                 State._villagePendingChapter = undefined;
                 State._settlementFromVillageAmbush = false;
-                if (State.combat) State.combat._incenseCount = 0;
                 State.str = init.str; State.def = init.def; State.agi = init.agi;
                 State.weapon = ''; State.poetry = []; State.wuxing = init.wuxing; 
                 // 流派开局自带诗句与武器(剑：吴钩霜雪明 + 绣剑)
