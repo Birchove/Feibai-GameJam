@@ -208,12 +208,12 @@ const Settlement = {
                 $('map-return-btn').style.display = 'block';
             },
             returnFromMap: () => {
-                State.isViewingMap = false; 
+                Game.clearSettlementMapPreview();
                 $('screen-map').classList.remove('active');
-                $('map-return-btn').style.display = 'none';
                 $('screen-settlement').classList.add('active');
             },
             leave: () => {
+                Game.clearSettlementMapPreview();
                 const pending = State._villagePendingChapter;
                 const fromAmbush = State._settlementFromVillageAmbush;
                 State._settlementFromVillageAmbush = false;
