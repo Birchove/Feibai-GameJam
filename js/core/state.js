@@ -9,6 +9,7 @@ const State = {
             // 开发者模式(仅本局生效，不持久化)
             _dev: false, _devGod: false, _devOneShot: false, _devSkipEnemy: false, 
             combat: {
+                _runId: 0,
                 inCombat: false, turn: 1, isPlayerTurn: true, hand: [], drawPile: [], discardPile: [], exhaustPile: [],
                 enemies: [],
                 enemy: { id: '', name: '', hp: 80, maxHp: 80, turnCounter: 1, dmgMod: 1, weak: 0, vuln: 0, stun: false, block: 0, str: 0 },

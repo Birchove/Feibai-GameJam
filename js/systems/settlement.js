@@ -221,7 +221,11 @@ const Settlement = {
                 Game.navTo('screen-map');
                 if (fromAmbush && pending !== undefined && pending !== null) {
                     State._villagePendingChapter = undefined;
-                    setTimeout(() => Village_postFightRewards(pending), 400);
+                    if (typeof Combat !== 'undefined' && Combat.defer) {
+                        Combat.defer(() => Village_postFightRewards(pending), 400, { requireCombat: false });
+                    } else {
+                        setTimeout(() => Village_postFightRewards(pending), 400);
+                    }
                 }
             }
         };

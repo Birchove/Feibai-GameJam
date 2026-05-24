@@ -11,7 +11,47 @@ const Game = {
                 }
                 Game.navTo('screen-saves');
             },
+            resetJourneyRuntime: () => {
+                State.isViewingMap = false;
+                const returnBtn = $('map-return-btn');
+                if (returnBtn) returnBtn.style.display = 'none';
+
+                if (State.combat) {
+                    State.combat._runId = (State.combat._runId || 0) + 1;
+                    State.combat.inCombat = false;
+                    State.combat.isPlayerTurn = false;
+                    State.combat.hand = [];
+                    State.combat.drawPile = [];
+                    State.combat.discardPile = [];
+                    State.combat.exhaustPile = [];
+                    State.combat.enemies = [];
+                    State.combat.selectedTargetIndex = 0;
+                    State.combat.encounterKey = '';
+                    State.combat.qibuPoetryId = null;
+                    State.combat.pzHistory = [];
+                }
+
+                if (typeof Combat !== 'undefined') {
+                    if (Combat.clearDragBattleHint) Combat.clearDragBattleHint();
+                    if (Combat.applyCombatBackgroundToScreen) Combat.applyCombatBackgroundToScreen(null);
+                }
+            },
+            restartJourneyFromSettings: () => {
+                document.querySelectorAll('.modal').forEach((m) => m.classList.remove('active'));
+                Game.resetJourneyRuntime();
+                Game.clearJourneyCheckpoint();
+                State.class = '';
+                document.querySelectorAll('.class-btn').forEach(b => b.classList.remove('selected'));
+                const enter = $('class-enter'); if (enter) enter.style.opacity = 0;
+                const icon = $('class-icon'); if (icon) icon.innerText = '❓';
+                const desc = $('class-desc'); if (desc) desc.innerText = '请先点选流派(本版仅可执剑出发)';
+                Game.navTo('screen-class');
+            },
             goMainMenuFromSettings: () => {
+                if (State.combat && State.combat.inCombat) {
+                    Game.showToast('战斗中暂不可回主菜单；请先胜负已分，或选择退出旅程');
+                    return;
+                }
                 const active = document.querySelector('.screen.active');
                 if (active && active.id && active.id !== 'screen-main') {
                     State._resumeScreenId = active.id;
@@ -28,7 +68,7 @@ const Game = {
                 State._resumeScreenId = '';
                 Game.refreshMainMenuCTA();
             },
-            /** 确认后回到扉页「飞白」，关闭各类浮层；不改玩法数值逻辑 */
+            /** 确认后回到扉页「飞白」，关闭浮层并终止本次旅程的异步战斗流程 */
             confirmExitToMainMenu: () => {
                 const modal = document.createElement('div');
                 modal.className = 'modal active';
@@ -59,6 +99,7 @@ const Game = {
                     const video = $('pv-video');
                     if (video) { video.pause(); video.currentTime = 0; video.onended = null; }
                     document.querySelectorAll('.modal').forEach((m) => m.classList.remove('active'));
+                    Game.resetJourneyRuntime();
                     Game.clearJourneyCheckpoint();
                     Game.navTo('screen-main');
                     if (typeof AudioSys !== 'undefined' && AudioSys.stopBGM) AudioSys.stopBGM();
@@ -283,6 +324,7 @@ const Game = {
                 Game.initGame(State.class);
             },
             initGame: (cls) => {
+                Game.resetJourneyRuntime();
                 const clsData = Object.values(ClassDB).find(c => c.name === cls) || ClassDB.sword;
                 const init = clsData.initial;
                 State._qibuPoetryReward = null;
