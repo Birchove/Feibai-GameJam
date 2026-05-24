@@ -98,9 +98,9 @@ test('resetJourneyRuntime invalidates delayed combat callbacks', async () => {
   assert.equal(ran, false);
   assert.equal(ctx.State.combat._runId, 13);
   assert.equal(ctx.State.combat.inCombat, false);
-  assert.deepEqual(ctx.State.combat.hand, []);
-  assert.deepEqual(ctx.State.combat.drawPile, []);
-  assert.deepEqual(ctx.State.combat.enemies, []);
+  assert.deepEqual(Array.from(ctx.State.combat.hand), []);
+  assert.deepEqual(Array.from(ctx.State.combat.drawPile), []);
+  assert.deepEqual(Array.from(ctx.State.combat.enemies), []);
 });
 
 test('startTurn ignores stale run ids', () => {
