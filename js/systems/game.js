@@ -1,4 +1,45 @@
 const Game = {
+            createCombatRuntimeState: (prevCombat = {}) => {
+                const nextRunId = ((prevCombat && prevCombat._runId) || 0) + 1;
+                return {
+                    inCombat: false,
+                    turn: 1,
+                    isPlayerTurn: true,
+                    hand: [],
+                    drawPile: [],
+                    discardPile: [],
+                    exhaustPile: [],
+                    enemies: [],
+                    enemy: { id: '', name: '', hp: 0, maxHp: 0, turnCounter: 1, dmgMod: 1, weak: 0, vuln: 0, stun: false, block: 0, str: 0 },
+                    lastRewardTier: 'normal',
+                    selectedTargetIndex: 0,
+                    kuHaiStats: { dealt: 0, taken: 0 },
+                    liuXingLuoYue: false,
+                    player: { block: 0, dmgMod: 0, cantPlay: false, cantDmg: false, weak: 0, weakNextTurn: 0, vuln: 0, turnStr: 0, turnDef: 0, turnDmgMod: 0, combatStr: 0, combatDef: 0, wStr: 0, wDef: 0, jianBiQingYe: false, nianNuJiao: false, dmgDouble: false, takeDmgDouble: false, daoGuang: false, ignorePZ: false, cantDmgNextTurn: false, deathRoundsRemaining: 0, lostStrAcc: 0, emei: false, emeiCount: 0, fengDao: false, yiZhuan: false, chunQiang: false, guRuo: false, _inRepeat: false, cursedNextPlayer: false, yanJunxingBloodCount: 0, yanJunxingNextStr: 0, incorporealStacks: 0, choosePZThisTurn: false, nextTurnEnergy: 0 },
+                    pzHistory: [],
+                    _runId: nextRunId
+                };
+            },
+            clearSettlementMapPreview: () => {
+                State.isViewingMap = false;
+                const btn = $('map-return-btn');
+                if (btn) btn.style.display = 'none';
+            },
+            resetJourneyRuntime: () => {
+                State.energy = 3;
+                State.maxEnergy = 3;
+                State.momentum = 0;
+                State._qibuPoetryReward = null;
+                State._villagePendingChapter = undefined;
+                State._settlementFromVillageAmbush = false;
+                Game.clearSettlementMapPreview();
+                State.combat = Game.createCombatRuntimeState(State.combat);
+                document.querySelectorAll('.modal').forEach((m) => m.classList.remove('active'));
+                const pickerConfirm = $('card-picker-confirm');
+                const pickerCancel = $('card-picker-cancel');
+                if (pickerConfirm) pickerConfirm.onclick = null;
+                if (pickerCancel) pickerCancel.onclick = null;
+            },
             refreshMainMenuCTA: () => {
                 const btn = $('main-journey-btn');
                 if (!btn) return;
@@ -13,10 +54,15 @@ const Game = {
             },
             goMainMenuFromSettings: () => {
                 const active = document.querySelector('.screen.active');
+                if (active && active.id === 'screen-combat' && State.combat && State.combat.inCombat) {
+                    Game.showToast('战斗中不可暂回主菜单；请先分出胜负，或选择退出旅程');
+                    return;
+                }
                 if (active && active.id && active.id !== 'screen-main') {
-                    State._resumeScreenId = active.id;
+                    State._resumeScreenId = State.isViewingMap ? 'screen-settlement' : active.id;
                     State._hasJourneyCheckpoint = true;
                 }
+                Game.clearSettlementMapPreview();
                 const panel = $('settings-panel');
                 if (panel) panel.classList.remove('active');
                 document.querySelectorAll('.modal').forEach((m) => m.classList.remove('active'));
@@ -59,11 +105,24 @@ const Game = {
                     const video = $('pv-video');
                     if (video) { video.pause(); video.currentTime = 0; video.onended = null; }
                     document.querySelectorAll('.modal').forEach((m) => m.classList.remove('active'));
+                    Game.resetJourneyRuntime();
                     Game.clearJourneyCheckpoint();
                     Game.navTo('screen-main');
                     if (typeof AudioSys !== 'undefined' && AudioSys.stopBGM) AudioSys.stopBGM();
                 };
                 if (no) no.onclick = (ev) => { ev.stopPropagation(); close(); };
+            },
+            restartJourneyFromSettings: () => {
+                Game.resetJourneyRuntime();
+                Game.clearJourneyCheckpoint();
+                const panel = $('settings-panel');
+                if (panel) panel.classList.remove('active');
+                State.class = '';
+                document.querySelectorAll('.class-btn').forEach(b => b.classList.remove('selected'));
+                const enter = $('class-enter'); if (enter) enter.style.opacity = 0;
+                const icon = $('class-icon'); if (icon) icon.innerText = '❓';
+                const desc = $('class-desc'); if (desc) desc.innerText = '请先点选流派(本版仅可执剑出发)';
+                Game.navTo('screen-class');
             },
             navTo: (screenId) => {
                 if (typeof hideKeywordTooltip === 'function') hideKeywordTooltip();
@@ -285,11 +344,11 @@ const Game = {
             initGame: (cls) => {
                 const clsData = Object.values(ClassDB).find(c => c.name === cls) || ClassDB.sword;
                 const init = clsData.initial;
+                Game.resetJourneyRuntime();
                 State._qibuPoetryReward = null;
                 State.class = cls; State.hp = init.hp; State.maxHp = init.maxHp; State.gold = 100; State.mapNodeIndex = 0; State.mapChapter = 0; State.relics = [];
                 State._villagePendingChapter = undefined;
                 State._settlementFromVillageAmbush = false;
-                if (State.combat) State.combat._incenseCount = 0;
                 State.str = init.str; State.def = init.def; State.agi = init.agi;
                 State.weapon = ''; State.poetry = []; State.wuxing = init.wuxing; 
                 // 流派开局自带诗句与武器(剑：吴钩霜雪明 + 绣剑)
