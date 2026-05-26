@@ -23,9 +23,20 @@ const Game = {
                 Game.navTo('screen-main');
                 Game.refreshMainMenuCTA();
             },
+            restartJourneyFromSettings: () => {
+                const panel = $('settings-panel');
+                if (panel) panel.classList.remove('active');
+                document.querySelectorAll('.modal').forEach((m) => m.classList.remove('active'));
+                Game.clearJourneyCheckpoint();
+                Game.navTo('screen-class');
+            },
             clearJourneyCheckpoint: () => {
+                State._runId = (State._runId || 0) + 1;
                 State._hasJourneyCheckpoint = false;
                 State._resumeScreenId = '';
+                if (State.combat) State.combat._pendingPZChoice = false;
+                const pzModal = $('pz-choice-modal');
+                if (pzModal) pzModal.classList.remove('active');
                 Game.refreshMainMenuCTA();
             },
             /** 确认后回到扉页「飞白」，关闭各类浮层；不改玩法数值逻辑 */
@@ -80,6 +91,10 @@ const Game = {
                 setTimeout(() => { t.style.opacity = 0; }, durationMs);
             },
             toggleModal: (id) => {
+                if (State.combat && State.combat._pendingPZChoice && id !== 'pz-choice-modal') {
+                    Game.showToast('请先择定平仄');
+                    return;
+                }
                 const el = $(id);
                 if (!el) return;
                 if (id === 'info-panel') {
@@ -285,11 +300,16 @@ const Game = {
             initGame: (cls) => {
                 const clsData = Object.values(ClassDB).find(c => c.name === cls) || ClassDB.sword;
                 const init = clsData.initial;
+                State._runId = (State._runId || 0) + 1;
                 State._qibuPoetryReward = null;
                 State.class = cls; State.hp = init.hp; State.maxHp = init.maxHp; State.gold = 100; State.mapNodeIndex = 0; State.mapChapter = 0; State.relics = [];
                 State._villagePendingChapter = undefined;
                 State._settlementFromVillageAmbush = false;
-                if (State.combat) State.combat._incenseCount = 0;
+                if (State.combat) {
+                    State.combat._incenseCount = 0;
+                    State.combat._pendingPZChoice = false;
+                    State.combat.inCombat = false;
+                }
                 State.str = init.str; State.def = init.def; State.agi = init.agi;
                 State.weapon = ''; State.poetry = []; State.wuxing = init.wuxing; 
                 // 流派开局自带诗句与武器(剑：吴钩霜雪明 + 绣剑)
