@@ -1,4 +1,41 @@
 const Game = {
+            nextRunId: () => {
+                State._runId = (State._runId || 0) + 1;
+                return State._runId;
+            },
+            isRunActive: (runId) => (State._runId || 0) === runId && !!State._hasJourneyCheckpoint,
+            freshCombatState: () => ({
+                inCombat: false, turn: 1, isPlayerTurn: true, hand: [], drawPile: [], discardPile: [], exhaustPile: [],
+                enemies: [],
+                enemy: { id: '', name: '', hp: 0, maxHp: 0, turnCounter: 1, dmgMod: 1, weak: 0, vuln: 0, stun: false, block: 0, str: 0, shushouQin: 0 },
+                lastRewardTier: 'normal',
+                selectedTargetIndex: 0,
+                kuHaiStats: { dealt: 0, taken: 0 },
+                liuXingLuoYue: false,
+                battleConsumed: [],
+                battleZeCount: 0,
+                battlePingCount: 0,
+                battleWuPlayed: 0,
+                qibuPoetryId: null,
+                _runId: State._runId || 0,
+                _combatId: 0,
+                _pendingPZChoice: false,
+                _incenseCount: 0,
+                player: { block: 0, dmgMod: 0, cantPlay: false, cantDmg: false, weak: 0, weakNextTurn: 0, vuln: 0, turnStr: 0, turnDef: 0, turnDmgMod: 0, combatStr: 0, combatDef: 0, wStr: 0, wDef: 0, jianBiQingYe: false, nianNuJiao: false, dmgDouble: false, takeDmgDouble: false, daoGuang: false, ignorePZ: false, cantDmgNextTurn: false, cursedNextPlayer: false, deathRoundsRemaining: 0, lostStrAcc: 0, emei: false, emeiCount: 0, fengDao: false, yiZhuan: false, chunQiang: false, guRuo: false, _inRepeat: false, yanJunxingBloodCount: 0, yanJunxingNextStr: 0, incorporealStacks: 0, choosePZThisTurn: false, nextTurnEnergy: 0 },
+                pzHistory: []
+            }),
+            resetCombatRuntime: () => {
+                State.combat = Game.freshCombatState();
+                State.momentum = 0;
+                State.energy = State.maxEnergy || 3;
+                State.isViewingMap = false;
+                const mapReturn = $('map-return-btn');
+                if (mapReturn) mapReturn.style.display = 'none';
+                ['pz-choice-modal', 'kuhai-flee-modal', 'junxing-modal', 'card-picker', 'pile-panel'].forEach((id) => {
+                    const el = $(id);
+                    if (el) el.classList.remove('active');
+                });
+            },
             refreshMainMenuCTA: () => {
                 const btn = $('main-journey-btn');
                 if (!btn) return;
@@ -23,9 +60,21 @@ const Game = {
                 Game.navTo('screen-main');
                 Game.refreshMainMenuCTA();
             },
+            restartJourneyFromSettings: () => {
+                const panel = $('settings-panel');
+                if (panel) panel.classList.remove('active');
+                document.querySelectorAll('.modal').forEach((m) => m.classList.remove('active'));
+                Game.clearJourneyCheckpoint();
+                Game.navTo('screen-class');
+            },
             clearJourneyCheckpoint: () => {
+                Game.nextRunId();
                 State._hasJourneyCheckpoint = false;
                 State._resumeScreenId = '';
+                Game.resetCombatRuntime();
+                State._villagePendingChapter = undefined;
+                State._settlementFromVillageAmbush = false;
+                State._qibuPoetryReward = null;
                 Game.refreshMainMenuCTA();
             },
             /** 确认后回到扉页「飞白」，关闭各类浮层；不改玩法数值逻辑 */
@@ -80,6 +129,10 @@ const Game = {
                 setTimeout(() => { t.style.opacity = 0; }, durationMs);
             },
             toggleModal: (id) => {
+                if (State.combat && State.combat._pendingPZChoice && id !== 'pz-choice-modal') {
+                    Game.showToast('请先择定平仄');
+                    return;
+                }
                 const el = $(id);
                 if (!el) return;
                 if (id === 'info-panel') {
@@ -285,11 +338,13 @@ const Game = {
             initGame: (cls) => {
                 const clsData = Object.values(ClassDB).find(c => c.name === cls) || ClassDB.sword;
                 const init = clsData.initial;
+                Game.nextRunId();
                 State._qibuPoetryReward = null;
                 State.class = cls; State.hp = init.hp; State.maxHp = init.maxHp; State.gold = 100; State.mapNodeIndex = 0; State.mapChapter = 0; State.relics = [];
+                State.maxEnergy = init.maxEnergy || 3; State.energy = State.maxEnergy; State.momentum = 0; State.isViewingMap = false;
                 State._villagePendingChapter = undefined;
                 State._settlementFromVillageAmbush = false;
-                if (State.combat) State.combat._incenseCount = 0;
+                Game.resetCombatRuntime();
                 State.str = init.str; State.def = init.def; State.agi = init.agi;
                 State.weapon = ''; State.poetry = []; State.wuxing = init.wuxing; 
                 // 流派开局自带诗句与武器(剑：吴钩霜雪明 + 绣剑)
