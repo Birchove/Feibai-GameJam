@@ -24,9 +24,30 @@ const Game = {
                 Game.refreshMainMenuCTA();
             },
             clearJourneyCheckpoint: () => {
+                State._runId = (State._runId || 0) + 1;
+                Game.abortCombatRuntime();
                 State._hasJourneyCheckpoint = false;
                 State._resumeScreenId = '';
                 Game.refreshMainMenuCTA();
+            },
+            abortCombatRuntime: () => {
+                State._combatId = (State._combatId || 0) + 1;
+                State.isViewingMap = false;
+                const returnBtn = $('map-return-btn');
+                if (returnBtn) returnBtn.style.display = 'none';
+                if (!State.combat) return;
+                State.combat.inCombat = false;
+                State.combat.isPlayerTurn = false;
+                State.combat.hand = [];
+                State.combat.drawPile = [];
+                State.combat.discardPile = [];
+                State.combat.exhaustPile = [];
+                State.combat.enemies = [];
+                State.combat.pzHistory = [];
+                State.combat._snapshot = null;
+                State.combat._prevSnapshot = null;
+                State.combat._settlementPending = false;
+                State.combat._deathHandled = false;
             },
             /** 确认后回到扉页「飞白」，关闭各类浮层；不改玩法数值逻辑 */
             confirmExitToMainMenu: () => {
@@ -283,10 +304,14 @@ const Game = {
                 Game.initGame(State.class);
             },
             initGame: (cls) => {
+                State._runId = (State._runId || 0) + 1;
+                Game.abortCombatRuntime();
                 const clsData = Object.values(ClassDB).find(c => c.name === cls) || ClassDB.sword;
                 const init = clsData.initial;
                 State._qibuPoetryReward = null;
                 State.class = cls; State.hp = init.hp; State.maxHp = init.maxHp; State.gold = 100; State.mapNodeIndex = 0; State.mapChapter = 0; State.relics = [];
+                State.energy = State.maxEnergy = 3;
+                State.momentum = 0;
                 State._villagePendingChapter = undefined;
                 State._settlementFromVillageAmbush = false;
                 if (State.combat) State.combat._incenseCount = 0;

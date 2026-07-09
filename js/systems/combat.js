@@ -14,6 +14,21 @@ const Combat = {
 
     _COMBAT_BG_SCREEN_CLASSES: ['combat-bg-mountain'],
 
+    isActiveCombat: (runId, combatId) => (
+        State._runId === runId &&
+        State._combatId === combatId &&
+        !!(State.combat && State.combat.inCombat)
+    ),
+
+    deferInCombat: (fn, delayMs) => {
+        const runId = State._runId || 0;
+        const combatId = State._combatId || 0;
+        return setTimeout(() => {
+            if (!Combat.isActiveCombat(runId, combatId)) return;
+            fn();
+        }, delayMs);
+    },
+
     applyCombatBackgroundToScreen: (skin) => {
         const el = $('screen-combat');
         if (!el) return;
@@ -258,6 +273,9 @@ const Combat = {
     },
 
     start: (encounterId) => {
+        const runId = State._runId || 0;
+        State._combatId = (State._combatId || 0) + 1;
+        const combatId = State._combatId;
         const pendingBg = Combat._nextCombatBgSkin;
         Combat._nextCombatBgSkin = null;
         Combat.applyCombatBackgroundToScreen(pendingBg);
@@ -268,6 +286,8 @@ const Combat = {
 
         State.combat.inCombat = true;
         State.combat.turn = 1;
+        State.combat._settlementPending = false;
+        State.combat._deathHandled = false;
         State.combat.pzHistory = [];
         State.combat.drawPile = [...State.deck];
         Combat.shuffle(State.combat.drawPile);
@@ -316,18 +336,21 @@ const Combat = {
 
         if (State.relics.includes('【佛像】') || State.relics.includes('【佛像】开局震慑')) {
             setTimeout(() => {
-                if (!State.combat.inCombat) return;
+                if (!Combat.isActiveCombat(runId, combatId)) return;
                 Game.showToast('【佛像】光起：诸邪各承 11 点惩戒');
                 Combat.dealDmgAll(11, true);
             }, 500);
         }
 
-        setTimeout(Combat.startTurn, 1000);
+        setTimeout(() => {
+            if (Combat.isActiveCombat(runId, combatId)) Combat.startTurn();
+        }, 1000);
     },
 
     shuffle: (arr) => { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } },
 
     startTurn: () => {
+        if (!State.combat || !State.combat.inCombat) return;
         State.combat.isPlayerTurn = true;
         State.energy = State.maxEnergy + (State.combat.player.nextTurnEnergy || 0);
         State.combat.player.nextTurnEnergy = 0;
@@ -425,8 +448,7 @@ const Combat = {
                 }
                 if (picked) {
                     const cid = dp.splice(pickedIdx, 1)[0];
-                    setTimeout(() => {
-                        if (!State.combat.inCombat) return;
+                    Combat.deferInCombat(() => {
                         Game.showToast(`念奴娇牵动：自动打出「${picked.name}」`);
                         try { picked.effect(); } catch (err) { console.error(err); }
                         if (GONGFA_CARD_IDS.has(cid)) Combat.registerBattleConsumed(cid);
@@ -718,6 +740,9 @@ const Combat = {
     },
 
     playCard: (index) => {
+        if (!State.combat || !State.combat.inCombat) return;
+        const runId = State._runId || 0;
+        const combatId = State._combatId || 0;
         const rawItem = State.combat.hand[index];
         if (!rawItem) return;
         const item = Combat.normalizeHandItem(rawItem);
@@ -738,6 +763,7 @@ const Combat = {
         if (typeof hideKeywordTooltip === 'function') hideKeywordTooltip();
 
         const afterPZResolved = (resolvedType) => {
+            if (!Combat.isActiveCombat(runId, combatId)) return;
             State.energy -= effCost;
             if (cd.isAttack) State.momentum = Math.min(10, State.momentum + 1);
             if (resolvedType) {
@@ -768,26 +794,25 @@ const Combat = {
             }
 
             if (resolvedType === '仄' && p.chunQiang && cd.id !== 'c44') {
-                setTimeout(() => {
+                Combat.deferInCombat(() => {
                     const t = Combat._randomOtherLivingIdx(Combat._primaryTargetIdx());
                     const idx = t >= 0 ? t : Combat._primaryTargetIdx();
                     Combat.dealDmg(-5, false, idx);
                 }, 100);
             }
             if (resolvedType === '平' && p.guRuo && cd.id !== 'c45') {
-                setTimeout(() => Combat.addBlock(-4), 100);
+                Combat.deferInCombat(() => Combat.addBlock(-4), 100);
             }
             if (cd.isAttack && p.emei) {
                 p.emeiCount = (p.emeiCount || 0) + 1;
                 if (p.emeiCount >= 3) {
                     p.emeiCount -= 3;
                     Game.showToast('峨眉剑法：再抽一张');
-                    setTimeout(() => Combat.draw(1), 100);
+                    Combat.deferInCombat(() => Combat.draw(1), 100);
                 }
             }
             if (p.daoGuang && cd.id !== 'c47' && /剑/.test(cd.name) && !p._inRepeat) {
-                setTimeout(() => {
-                    if (!State.combat.inCombat) return;
+                Combat.deferInCombat(() => {
                     p._inRepeat = true;
                     try { cd.effect(); } catch (err) { console.error(err); }
                     p._inRepeat = false;
@@ -1009,8 +1034,7 @@ const Combat = {
 
         if (triggered.length === 0) return;
 
-        setTimeout(() => {
-            if (!State.combat.inCombat) return;
+        Combat.deferInCombat(() => {
             triggered.forEach(pd => {
                 Game.showToast(`诗韵应和：${pd.text}`);
                 if (typeof Fx !== 'undefined' && Fx.poetryBurst) Fx.poetryBurst(pd.text, pd.fxVariant || 'blade');
@@ -1037,7 +1061,7 @@ const Combat = {
 
         let delay = 0;
         playedItems.forEach(it => {
-            setTimeout(() => {
+            Combat.deferInCombat(() => {
                 const cd = CardDB[it.cardId];
                 if (GONGFA_CARD_IDS.has(it.cardId)) {
                     Combat.registerBattleConsumed(it.cardId);
@@ -1063,7 +1087,7 @@ const Combat = {
             delay += 400;
         });
         if (opts.withMirror) {
-            setTimeout(() => {
+            Combat.deferInCombat(() => {
                 playedItems.forEach(it => {
                     if (State.combat.hand.length >= 10) return;
                     State.combat.hand.push({ cardId: it.cardId, isMirror: true, costOverride: 0 });
@@ -1157,8 +1181,7 @@ const Combat = {
             if (depth < 24) {
                 const oth = Combat._randomOtherLivingIdx(idx);
                 if (oth >= 0) {
-                    setTimeout(() => {
-                        if (!State.combat.inCombat) return;
+                    Combat.deferInCombat(() => {
                         Combat.dealDmg(overflow, true, oth, { fromOverflow: true, chainDepth: depth + 1 });
                     }, 120);
                 }
@@ -1444,7 +1467,7 @@ const Combat = {
     },
 
     endTurn: () => {
-        if (!State.combat.isPlayerTurn) return;
+        if (!State.combat || !State.combat.inCombat || !State.combat.isPlayerTurn) return;
         const kuModal = $('kuhai-flee-modal');
         if (kuModal && kuModal.classList.contains('active')) return;
         const jxModal = $('junxing-modal');
@@ -1487,7 +1510,7 @@ const Combat = {
         }
 
         Combat.renderHand();
-        setTimeout(Combat.enemyTurn, 1000);
+        Combat.deferInCombat(() => Combat.enemyTurn(), 1000);
     },
 
     updateEnemyIntent: () => {
@@ -1510,7 +1533,9 @@ const Combat = {
     },
 
     enemyTurn: () => {
+        if (!State.combat || !State.combat.inCombat) return;
         const finishPhase = () => {
+            if (!State.combat || !State.combat.inCombat) return;
             State.combat.ganShiEchoEnemyPhase = false;
             State.combat.ganShiEchoEnemyStacks = 0;
             const p = State.combat.player;
@@ -1527,7 +1552,7 @@ const Combat = {
 
             if (State.hp > 0 && Combat._livingIndices().length > 0) {
                 State.combat.turn++;
-                setTimeout(Combat.startTurn, 1000);
+                Combat.deferInCombat(() => Combat.startTurn(), 1000);
             }
         };
 
@@ -1637,11 +1662,23 @@ const Combat = {
 
     checkDeath: () => {
         if (State.hp <= 0) {
+            if (State.combat._deathHandled) return;
+            const runId = State._runId || 0;
+            State.combat._deathHandled = true;
             State.combat.inCombat = false;
+            State._combatId = (State._combatId || 0) + 1;
             Game.showToast('胜负寻常事，洗净笔锋可重来', 4200);
             AudioSys.stopBGM();
-            setTimeout(() => { Game.clearJourneyCheckpoint(); Game.navTo('screen-main'); }, 4200);
+            setTimeout(() => {
+                if (State._runId !== runId || !State._hasJourneyCheckpoint) return;
+                Game.clearJourneyCheckpoint();
+                Game.navTo('screen-main');
+            }, 4200);
         } else if (State.combat.inCombat && Combat._livingIndices().length === 0) {
+            if (State.combat._settlementPending) return;
+            const runId = State._runId || 0;
+            const rewardTier = State.combat.lastRewardTier || 'normal';
+            State.combat._settlementPending = true;
             if (State.relics.includes('【落魄灵魂】')) {
                 State.hp = Math.min(State.maxHp, State.hp + 1);
                 State.gold += 15;
@@ -1650,9 +1687,11 @@ const Combat = {
             State._qibuPoetryReward = State.combat.qibuPoetryId || null;
             State.combat.qibuPoetryId = null;
             State.combat.inCombat = false;
+            State._combatId = (State._combatId || 0) + 1;
             AudioSys.playBGMTrack('world');
             setTimeout(() => {
-                Settlement.show(State.combat.lastRewardTier || 'normal');
+                if (State._runId !== runId || !State._hasJourneyCheckpoint) return;
+                Settlement.show(rewardTier);
             }, 1500);
         }
     }
