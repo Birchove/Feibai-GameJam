@@ -179,8 +179,8 @@ function setupCombat(State) {
   assert.equal(State.isViewingMap, false);
   assert.equal(State.combat.inCombat, false);
   assert.equal(State.combat.isPlayerTurn, false);
-  assert.deepEqual(State.combat.hand, []);
-  assert.deepEqual(State.combat.enemies, []);
+  assert.equal(State.combat.hand.length, 0);
+  assert.equal(State.combat.enemies.length, 0);
 }
 
 {
