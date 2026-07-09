@@ -121,6 +121,7 @@ function makeHarness() {
       stopBGM() {},
       playSFX() {}
     },
+    $: getElementById,
     bindKeywordTooltips() {},
     hideKeywordTooltip() {}
   };
