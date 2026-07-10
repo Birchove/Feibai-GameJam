@@ -4,6 +4,7 @@
   "description": "Feibai GameJam desktop build with Electron",
   "main": "electron/main.js",
   "scripts": {
+    "test": "node tests/lifecycle.test.js",
     "start": "electron .",
     "pack": "electron-builder --dir",
     "dist": "electron-builder"

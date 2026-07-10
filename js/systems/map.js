@@ -58,10 +58,10 @@ const MapSys = {
         else if (node.ev === 'end') EventSys.start(Events.end_story);
         else if (node.ev === 'rng_mountain') {
             Combat.setNextCombatBackground(node.combatBg);
-            Combat.start(resolveMountainEncounterId());
+            if (Combat.start(resolveMountainEncounterId()) === false) State.mapNodeIndex--;
         } else if (node.ev === 'enc_xiu_luo' || node.ev.startsWith('fight') || node.ev.startsWith('enc_')) {
             Combat.setNextCombatBackground(node.combatBg);
-            Combat.start(node.ev);
+            if (Combat.start(node.ev) === false) State.mapNodeIndex--;
         } else if (node.ev.startsWith('village_hub_')) EventSys.start(Events[node.ev]);
     }
 };
