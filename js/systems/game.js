@@ -1,4 +1,24 @@
 const Game = {
+            getRunId: () => State._runId || 0,
+            isRunCurrent: (runId) => (State._runId || 0) === runId,
+            invalidateRunCallbacks: () => {
+                State._runId = (State._runId || 0) + 1;
+                return State._runId;
+            },
+            resetJourneyTransients: () => {
+                State.isViewingMap = false;
+                State._villagePendingChapter = undefined;
+                State._settlementFromVillageAmbush = false;
+                if (State.combat) {
+                    State.combat.inCombat = false;
+                    State.combat.isPlayerTurn = false;
+                    State.combat._pendingPZChoice = false;
+                }
+                const mapReturn = $('map-return-btn');
+                if (mapReturn) mapReturn.style.display = 'none';
+                const pzModal = $('pz-choice-modal');
+                if (pzModal) pzModal.classList.remove('active');
+            },
             refreshMainMenuCTA: () => {
                 const btn = $('main-journey-btn');
                 if (!btn) return;
@@ -24,6 +44,8 @@ const Game = {
                 Game.refreshMainMenuCTA();
             },
             clearJourneyCheckpoint: () => {
+                Game.invalidateRunCallbacks();
+                Game.resetJourneyTransients();
                 State._hasJourneyCheckpoint = false;
                 State._resumeScreenId = '';
                 Game.refreshMainMenuCTA();
@@ -283,6 +305,8 @@ const Game = {
                 Game.initGame(State.class);
             },
             initGame: (cls) => {
+                Game.invalidateRunCallbacks();
+                Game.resetJourneyTransients();
                 const clsData = Object.values(ClassDB).find(c => c.name === cls) || ClassDB.sword;
                 const init = clsData.initial;
                 State._qibuPoetryReward = null;

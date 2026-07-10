@@ -216,12 +216,16 @@ const Settlement = {
             leave: () => {
                 const pending = State._villagePendingChapter;
                 const fromAmbush = State._settlementFromVillageAmbush;
+                const runId = Game.getRunId();
                 State._settlementFromVillageAmbush = false;
                 MapSys.renderMap();
                 Game.navTo('screen-map');
                 if (fromAmbush && pending !== undefined && pending !== null) {
                     State._villagePendingChapter = undefined;
-                    setTimeout(() => Village_postFightRewards(pending), 400);
+                    setTimeout(() => {
+                        if (!Game.isRunCurrent(runId) || !State._hasJourneyCheckpoint) return;
+                        Village_postFightRewards(pending);
+                    }, 400);
                 }
             }
         };
