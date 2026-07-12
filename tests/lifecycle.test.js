@@ -248,7 +248,7 @@ function testStaleDeathReturnIsIgnoredAfterNewRun() {
     Game.initGame('剑');
   `);
   h.flushTimers();
-  assert.deepStrictEqual(runIn(h.context, 'navs'), ['screen-map']);
+  assert.strictEqual(JSON.stringify(runIn(h.context, 'navs')), JSON.stringify(['screen-map']));
 }
 
 testStaleVictorySettlementIsIgnoredAfterNewRun();
