@@ -151,6 +151,10 @@ function createHarness() {
     console,
     document,
     window: {},
+    innerWidth: 1600,
+    innerHeight: 900,
+    addEventListener() {},
+    requestAnimationFrame: () => 0,
     setTimeout: (fn, delay) => {
       timers.push({ fn, delay });
       return timers.length;
