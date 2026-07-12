@@ -61,6 +61,22 @@ function makeElement(id = '') {
     querySelectorAll() {
       return [];
     },
+    getContext() {
+      return {
+        clearRect() {},
+        fillRect() {},
+        beginPath() {},
+        moveTo() {},
+        lineTo() {},
+        stroke() {},
+        fill() {},
+        arc() {},
+        save() {},
+        restore() {},
+        translate() {},
+        rotate() {}
+      };
+    },
     getBoundingClientRect() {
       return { left: 0, top: 0, width: 100, height: 100, right: 100, bottom: 100 };
     }
