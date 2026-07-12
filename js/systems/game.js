@@ -1,4 +1,24 @@
 const Game = {
+            getRunId: () => State._runId || 0,
+            isRunCurrent: (runId) => (State._runId || 0) === runId,
+            invalidateRunCallbacks: () => {
+                State._runId = (State._runId || 0) + 1;
+            },
+            resetJourneyTransients: () => {
+                if (!State.combat) return;
+                State.combat.inCombat = false;
+                State.combat.isPlayerTurn = true;
+                State.combat.hand = [];
+                State.combat.drawPile = [];
+                State.combat.discardPile = [];
+                State.combat.exhaustPile = [];
+                State.combat.enemies = [];
+                State.combat.enemy = { id: '', name: '', hp: 0, maxHp: 0, turnCounter: 1, dmgMod: 1, weak: 0, vuln: 0, stun: false, block: 0, str: 0 };
+                State.combat.selectedTargetIndex = 0;
+                State.combat.encounterKey = '';
+                State.combat.lastRewardTier = 'normal';
+                State.combat.qibuPoetryId = null;
+            },
             refreshMainMenuCTA: () => {
                 const btn = $('main-journey-btn');
                 if (!btn) return;
@@ -20,6 +40,7 @@ const Game = {
                 const panel = $('settings-panel');
                 if (panel) panel.classList.remove('active');
                 document.querySelectorAll('.modal').forEach((m) => m.classList.remove('active'));
+                if (typeof Combat !== 'undefined' && Combat.clearDragBattleHint) Combat.clearDragBattleHint();
                 Game.navTo('screen-main');
                 Game.refreshMainMenuCTA();
             },
@@ -59,6 +80,8 @@ const Game = {
                     const video = $('pv-video');
                     if (video) { video.pause(); video.currentTime = 0; video.onended = null; }
                     document.querySelectorAll('.modal').forEach((m) => m.classList.remove('active'));
+                    Game.invalidateRunCallbacks();
+                    Game.resetJourneyTransients();
                     Game.clearJourneyCheckpoint();
                     Game.navTo('screen-main');
                     if (typeof AudioSys !== 'undefined' && AudioSys.stopBGM) AudioSys.stopBGM();
@@ -285,8 +308,11 @@ const Game = {
             initGame: (cls) => {
                 const clsData = Object.values(ClassDB).find(c => c.name === cls) || ClassDB.sword;
                 const init = clsData.initial;
+                Game.invalidateRunCallbacks();
+                Game.resetJourneyTransients();
                 State._qibuPoetryReward = null;
                 State.class = cls; State.hp = init.hp; State.maxHp = init.maxHp; State.gold = 100; State.mapNodeIndex = 0; State.mapChapter = 0; State.relics = [];
+                State.maxEnergy = 3; State.energy = State.maxEnergy; State.momentum = 0;
                 State._villagePendingChapter = undefined;
                 State._settlementFromVillageAmbush = false;
                 if (State.combat) State.combat._incenseCount = 0;
