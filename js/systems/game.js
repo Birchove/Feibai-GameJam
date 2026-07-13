@@ -28,7 +28,53 @@ const Game = {
                 State._resumeScreenId = '';
                 Game.refreshMainMenuCTA();
             },
-            /** 确认后回到扉页「飞白」，关闭各类浮层；不改玩法数值逻辑 */
+            getRunId: () => State._runId || 0,
+            invalidateRunCallbacks: () => {
+                State._runId = (State._runId || 0) + 1;
+                return State._runId;
+            },
+            isRunCurrent: (runId) => (State._runId || 0) === runId,
+            deferForRun: (cb, delayMs, opts = {}) => {
+                const runId = Game.getRunId();
+                return setTimeout(() => {
+                    if (!Game.isRunCurrent(runId)) return;
+                    if (opts.requireCombat && !(State.combat && State.combat.inCombat)) return;
+                    cb();
+                }, delayMs);
+            },
+            resetJourneyTransients: () => {
+                State.momentum = 0;
+                State._qibuPoetryReward = null;
+                State._villagePendingChapter = undefined;
+                State._settlementFromVillageAmbush = false;
+                State.isViewingMap = false;
+                const mapReturn = $('map-return-btn');
+                if (mapReturn) mapReturn.style.display = 'none';
+                const pzModal = $('pz-choice-modal');
+                if (pzModal) pzModal.classList.remove('active');
+                const kuModal = $('kuhai-flee-modal');
+                if (kuModal) kuModal.classList.remove('active');
+                const jxModal = $('junxing-modal');
+                if (jxModal) jxModal.classList.remove('active');
+                if (State.combat) {
+                    State.combat.inCombat = false;
+                    State.combat.isPlayerTurn = false;
+                    State.combat.hand = [];
+                    State.combat.drawPile = [];
+                    State.combat.discardPile = [];
+                    State.combat.exhaustPile = [];
+                    State.combat.enemies = [];
+                    State.combat.enemy = { id: '', name: '', hp: 0, maxHp: 0, turnCounter: 1, dmgMod: 1, weak: 0, vuln: 0, stun: false, block: 0, str: 0 };
+                    State.combat.pzHistory = [];
+                    State.combat.encounterKey = null;
+                    State.combat.qibuPoetryId = null;
+                    State.combat._snapshot = null;
+                    State.combat._prevSnapshot = null;
+                    State.combat.ganShiEchoEnemyPhase = false;
+                    State.combat.ganShiEchoEnemyStacks = 0;
+                }
+            },
+            /** 确认后回到扉页「飞白」，关闭各类浮层并终止本次旅程的异步战斗回调 */
             confirmExitToMainMenu: () => {
                 const modal = document.createElement('div');
                 modal.className = 'modal active';
@@ -59,6 +105,8 @@ const Game = {
                     const video = $('pv-video');
                     if (video) { video.pause(); video.currentTime = 0; video.onended = null; }
                     document.querySelectorAll('.modal').forEach((m) => m.classList.remove('active'));
+                    Game.invalidateRunCallbacks();
+                    Game.resetJourneyTransients();
                     Game.clearJourneyCheckpoint();
                     Game.navTo('screen-main');
                     if (typeof AudioSys !== 'undefined' && AudioSys.stopBGM) AudioSys.stopBGM();
@@ -283,6 +331,8 @@ const Game = {
                 Game.initGame(State.class);
             },
             initGame: (cls) => {
+                Game.invalidateRunCallbacks();
+                Game.resetJourneyTransients();
                 const clsData = Object.values(ClassDB).find(c => c.name === cls) || ClassDB.sword;
                 const init = clsData.initial;
                 State._qibuPoetryReward = null;
