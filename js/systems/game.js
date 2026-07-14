@@ -80,6 +80,11 @@ const Game = {
                 setTimeout(() => { t.style.opacity = 0; }, durationMs);
             },
             toggleModal: (id) => {
+                const junxing = $('junxing-modal');
+                if (id !== 'junxing-modal' && junxing && junxing.classList.contains('active')) {
+                    Game.showToast('请先裁定峻刑');
+                    return;
+                }
                 const el = $(id);
                 if (!el) return;
                 if (id === 'info-panel') {
