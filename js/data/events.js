@@ -197,6 +197,11 @@ const Events = {
                     State.hp = Math.max(0, State.hp - 6);
                     if (!State.relics.includes('【红缨枪】')) State.relics.push('【红缨枪】');
                     Game.updateUI();
+                    // Lethal out-of-combat HP loss must end the journey; never advance as a 0-HP ghost run.
+                    if (State.hp <= 0) {
+                        Combat.checkDeath();
+                        return false;
+                    }
                     Game.showToast('杀气荡开阴雾，一杆红缨自虚空中凝实。');
                     MapSys.afterVillageChapter(1);
                     return false;
