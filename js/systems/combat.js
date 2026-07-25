@@ -267,6 +267,9 @@ const Combat = {
         State.combat.encounterKey = encounterId;
 
         State.combat.inCombat = true;
+        // Default State leaves isPlayerTurn true; keep it false until startTurn deals the opening hand
+        // so "结束回合" during the 1s intro cannot schedule enemyTurn before the first player turn.
+        State.combat.isPlayerTurn = false;
         State.combat.turn = 1;
         State.combat.pzHistory = [];
         State.combat.drawPile = [...State.deck];
@@ -313,6 +316,11 @@ const Combat = {
         Game.navTo('screen-combat');
         Game.updateUI();
         Combat.renderEnemies();
+        const endBtn = $('end-turn-btn');
+        if (endBtn) {
+            endBtn.className = '';
+            endBtn.innerText = '战端初起';
+        }
 
         if (State.relics.includes('【佛像】') || State.relics.includes('【佛像】开局震慑')) {
             setTimeout(() => {
