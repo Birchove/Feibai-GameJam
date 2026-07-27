@@ -4,7 +4,7 @@
 
 在阴阳交界处洗牌的命运：你有「气」的限制，也有「势」的爆发；刀锋上要讲究一击的伤害，纸面上还要凑近平仄——这是一款把 **武侠卡牌战斗** 与 **诗词格律(平仄)** 拧在一起的浏览器单机小品。
 
-**在线试玩：** [GitHub Pages Demo](https://birchove.github.io/Feibai-GameJam/)
+**在线试玩：** [GitHub Pages Demo](https://birchove.github.io/Feibai-GameJam/)  OR [飞白](feibai.xin)
 
 ---
 
