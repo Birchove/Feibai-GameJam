@@ -515,20 +515,31 @@ const EnemyArchetypes = {
             return '摄魂 +4。';
         },
         intent: (e) => EnemyArchetypes.yan_luo_wang.displayIntent(e),
-        act: (e) => {
+        act: async (e) => {
             const ph = ((e.turnCounter - 1) % 4) + 1;
             if (ph === 1) {
                 e.shehun = (e.shehun || 0) + 4;
                 e.junxing = true;
                 Game.showToast('阎罗王：摄魂缠身，峻刑镌骨');
+                // Phase 1 promises 峻刑; the junxing flag alone was never consumed.
+                if (typeof Combat !== 'undefined' && Combat.showJunxingModal) {
+                    await Combat.showJunxingModal();
+                }
             } else if (ph === 2) {
                 const atk = 44 + (e.str || 0);
-                if (typeof Combat !== 'undefined' && Combat.yanLuowangStrikeAndJunxing) return Combat.yanLuowangStrikeAndJunxing(e, atk);
-                Combat.takeDmg(atk, false, e);
+                if (typeof Combat !== 'undefined' && Combat.yanLuowangStrikeAndJunxing) {
+                    // Must await (not return) so post-act 摄魂→力/持守 still runs.
+                    await Combat.yanLuowangStrikeAndJunxing(e, atk);
+                } else {
+                    Combat.takeDmg(atk, false, e);
+                }
             } else if (ph === 3) {
                 const atk = 11 + (e.str || 0);
-                if (typeof Combat !== 'undefined' && Combat.yanLuowangStrikeAndJunxing) return Combat.yanLuowangStrikeAndJunxing(e, atk);
-                Combat.takeDmg(atk, false, e);
+                if (typeof Combat !== 'undefined' && Combat.yanLuowangStrikeAndJunxing) {
+                    await Combat.yanLuowangStrikeAndJunxing(e, atk);
+                } else {
+                    Combat.takeDmg(atk, false, e);
+                }
             } else {
                 e.shehun = (e.shehun || 0) + 4;
                 const m = (typeof State !== 'undefined' && State.combat) ? (State.combat.turn || 1) : 1;
