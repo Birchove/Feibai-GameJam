@@ -8,6 +8,8 @@ const Combat = {
     /** 下一次 `Combat.start` 使用的战斗背景皮肤(由地图节点 `combatBg` 传入；使用后清空) */
     _nextCombatBgSkin: null,
 
+    isCurrentRunCombat: (runId) => State.combat.inCombat && Game.isRunCurrent(runId) && State.combat._runId === runId,
+
     setNextCombatBackground: (skin) => {
         Combat._nextCombatBgSkin = skin || null;
     },
@@ -262,11 +264,19 @@ const Combat = {
         Combat._nextCombatBgSkin = null;
         Combat.applyCombatBackgroundToScreen(pendingBg);
 
+        const pack = Combat_startFromEncounter(encounterId);
+        if (!pack || !pack.enemies.length) {
+            Game.showToast('此战遭遇未成编，恐有误');
+            return false;
+        }
+
+        const runId = Game.getRunId();
         const bossBattle = encounterId === 'enc_yan_luo_wang';
         AudioSys.playBGMTrack(bossBattle ? 'boss' : 'combat');
         State.combat.encounterKey = encounterId;
 
         State.combat.inCombat = true;
+        State.combat._runId = runId;
         State.combat.turn = 1;
         State.combat.pzHistory = [];
         State.combat.drawPile = [...State.deck];
@@ -298,12 +308,6 @@ const Combat = {
         State.combat._prevSnapshot = null;
 
         $('pz-tracker').innerHTML = '';
-
-        const pack = Combat_startFromEncounter(encounterId);
-        if (!pack || !pack.enemies.length) {
-            Game.showToast('此战遭遇未成编，恐有误');
-            return;
-        }
         State.combat.enemies = pack.enemies;
         State.combat.lastRewardTier = pack.rewardTier;
         Combat._syncEnemyAlias();
@@ -316,18 +320,23 @@ const Combat = {
 
         if (State.relics.includes('【佛像】') || State.relics.includes('【佛像】开局震慑')) {
             setTimeout(() => {
-                if (!State.combat.inCombat) return;
+                if (!Combat.isCurrentRunCombat(runId)) return;
                 Game.showToast('【佛像】光起：诸邪各承 11 点惩戒');
                 Combat.dealDmgAll(11, true);
             }, 500);
         }
 
-        setTimeout(Combat.startTurn, 1000);
+        setTimeout(() => {
+            if (!Combat.isCurrentRunCombat(runId)) return;
+            Combat.startTurn();
+        }, 1000);
+        return true;
     },
 
     shuffle: (arr) => { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } },
 
     startTurn: () => {
+        if (!State.combat.inCombat) return;
         State.combat.isPlayerTurn = true;
         State.energy = State.maxEnergy + (State.combat.player.nextTurnEnergy || 0);
         State.combat.player.nextTurnEnergy = 0;
@@ -718,6 +727,7 @@ const Combat = {
     },
 
     playCard: (index) => {
+        if (!State.combat.inCombat) return;
         const rawItem = State.combat.hand[index];
         if (!rawItem) return;
         const item = Combat.normalizeHandItem(rawItem);
@@ -1444,6 +1454,7 @@ const Combat = {
     },
 
     endTurn: () => {
+        if (!State.combat.inCombat) return;
         if (!State.combat.isPlayerTurn) return;
         const kuModal = $('kuhai-flee-modal');
         if (kuModal && kuModal.classList.contains('active')) return;
@@ -1487,7 +1498,11 @@ const Combat = {
         }
 
         Combat.renderHand();
-        setTimeout(Combat.enemyTurn, 1000);
+        const runId = State.combat._runId;
+        setTimeout(() => {
+            if (!Combat.isCurrentRunCombat(runId)) return;
+            Combat.enemyTurn();
+        }, 1000);
     },
 
     updateEnemyIntent: () => {
@@ -1510,7 +1525,10 @@ const Combat = {
     },
 
     enemyTurn: () => {
+        if (!State.combat.inCombat) return;
+        const runId = State.combat._runId;
         const finishPhase = () => {
+            if (!Combat.isCurrentRunCombat(runId)) return;
             State.combat.ganShiEchoEnemyPhase = false;
             State.combat.ganShiEchoEnemyStacks = 0;
             const p = State.combat.player;
@@ -1527,7 +1545,10 @@ const Combat = {
 
             if (State.hp > 0 && Combat._livingIndices().length > 0) {
                 State.combat.turn++;
-                setTimeout(Combat.startTurn, 1000);
+                setTimeout(() => {
+                    if (!Combat.isCurrentRunCombat(runId)) return;
+                    Combat.startTurn();
+                }, 1000);
             }
         };
 
@@ -1637,10 +1658,15 @@ const Combat = {
 
     checkDeath: () => {
         if (State.hp <= 0) {
+            const runId = Game.getRunId();
             State.combat.inCombat = false;
             Game.showToast('胜负寻常事，洗净笔锋可重来', 4200);
             AudioSys.stopBGM();
-            setTimeout(() => { Game.clearJourneyCheckpoint(); Game.navTo('screen-main'); }, 4200);
+            setTimeout(() => {
+                if (!Game.isRunCurrent(runId)) return;
+                Game.clearJourneyCheckpoint();
+                Game.navTo('screen-main');
+            }, 4200);
         } else if (State.combat.inCombat && Combat._livingIndices().length === 0) {
             if (State.relics.includes('【落魄灵魂】')) {
                 State.hp = Math.min(State.maxHp, State.hp + 1);
@@ -1649,10 +1675,13 @@ const Combat = {
             }
             State._qibuPoetryReward = State.combat.qibuPoetryId || null;
             State.combat.qibuPoetryId = null;
+            const runId = Game.getRunId();
+            const rewardTier = State.combat.lastRewardTier || 'normal';
             State.combat.inCombat = false;
             AudioSys.playBGMTrack('world');
             setTimeout(() => {
-                Settlement.show(State.combat.lastRewardTier || 'normal');
+                if (!Game.isRunCurrent(runId) || !State._hasJourneyCheckpoint) return;
+                Settlement.show(rewardTier);
             }, 1500);
         }
     }
