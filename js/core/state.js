@@ -1,5 +1,6 @@
 const State = {
             _qibuPoetryReward: null,
+            _runId: 0,
             _hasJourneyCheckpoint: false,
             _resumeScreenId: '',
             class: '', gold: 100, hp: 50, maxHp: 50, energy: 3, maxEnergy: 3, momentum: 0, 
@@ -16,6 +17,9 @@ const State = {
                 selectedTargetIndex: 0,
                 kuHaiStats: { dealt: 0, taken: 0 },
                 liuXingLuoYue: false,
-                player: { block: 0, dmgMod: 0, cantPlay: false, cantDmg: false, weak: 0, vuln: 0, turnStr: 0, turnDef: 0, turnDmgMod: 0, combatStr: 0, combatDef: 0, wStr: 0, wDef: 0, jianBiQingYe: false, nianNuJiao: false, dmgDouble: false, takeDmgDouble: false, daoGuang: false, ignorePZ: false, cantDmgNextTurn: false, cursedNextPlayer: false }, pzHistory: []
+                player: { block: 0, dmgMod: 0, cantPlay: false, cantDmg: false, weak: 0, vuln: 0, turnStr: 0, turnDef: 0, turnDmgMod: 0, combatStr: 0, combatDef: 0, wStr: 0, wDef: 0, jianBiQingYe: false, nianNuJiao: false, dmgDouble: false, takeDmgDouble: false, daoGuang: false, ignorePZ: false, cantDmgNextTurn: false, cursedNextPlayer: false }, pzHistory: [],
+                _runId: 0,
+                _combatId: 0,
+                _pendingPZChoice: false
             }
         };
