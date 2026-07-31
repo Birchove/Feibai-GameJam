@@ -739,7 +739,9 @@ const Combat = {
 
         const afterPZResolved = (resolvedType) => {
             State.energy -= effCost;
-            if (cd.isAttack) State.momentum = Math.min(10, State.momentum + 1);
+            // Arm crit from *pre-play* momentum so the attack that fills 势 to 10
+            // does not consume it; UI/preview promise 势满 applies to the *next* attack.
+            State.combat._momCritArmed = cd.isAttack ? (State.momentum >= 10) : null;
             if (resolvedType) {
                 State.combat.pzHistory.push(resolvedType);
                 if (State.combat.pzHistory.length > 5) State.combat.pzHistory.shift();
@@ -766,6 +768,12 @@ const Combat = {
                 try { cd.effect(); } catch (err) { console.error(err); }
                 p._inRepeat = false;
             }
+
+            if (cd.isAttack) State.momentum = Math.min(10, State.momentum + 1);
+            // Keep armed=false through delayed multi-hits, then restore live-momentum crits.
+            setTimeout(() => {
+                if (State.combat) State.combat._momCritArmed = null;
+            }, 400);
 
             if (resolvedType === '仄' && p.chunQiang && cd.id !== 'c44') {
                 setTimeout(() => {
@@ -1046,8 +1054,12 @@ const Combat = {
                 } else {
                     State.combat.discardPile.push(it.cardId);
                 }
+                State.combat._momCritArmed = State.momentum >= 10;
                 cd.effect();
                 State.momentum = Math.min(10, State.momentum + 1);
+                setTimeout(() => {
+                    if (State.combat) State.combat._momCritArmed = null;
+                }, 400);
                 const pr = State.combat.player;
                 if (cd.cardType === '武卡') State.combat.battleWuPlayed = (State.combat.battleWuPlayed || 0) + 1;
                 if (cd.isAttack && pr.emei) {
@@ -1084,6 +1096,15 @@ const Combat = {
         Combat.checkDeath();
     },
 
+    /** Hit a specific enemy object; no-ops if it already left the field (avoids reindex retarget). */
+    dealDmgToEnemy: (base, isFixed = false, enemy, opts = {}) => {
+        if (!State.combat || !State.combat.inCombat) return;
+        if (!enemy || enemy.hp <= 0) return;
+        const i = State.combat.enemies.indexOf(enemy);
+        if (i < 0) return;
+        Combat.dealDmg(base, isFixed, i, opts);
+    },
+
     dealDmg: (base, isFixed = false, targetIdx, opts = {}) => {
         AudioSys.playSFX('./assets/sfx_hit.mp3');
         if (State.combat.player.cantDmg) { Game.showToast('止戈：本回合难以伤人'); return; }
@@ -1117,10 +1138,14 @@ const Combat = {
         if (dmg < 0) dmg = 0;
 
         let isCrit = false;
-        if (State.momentum >= 10) {
+        // Prefer per-card arming so delayed multi-hits don't crit from momentum gained by this same card.
+        const armed = State.combat._momCritArmed;
+        const shouldCrit = armed === true || (armed == null && State.momentum >= 10);
+        if (shouldCrit) {
             const mult = (State.relics && State.relics.includes('【红缨枪】')) ? 2 : 1.5;
             dmg = Math.floor(dmg * mult);
             State.momentum = 0;
+            if (armed === true) State.combat._momCritArmed = false;
             isCrit = true;
             if (State.relics && State.relics.includes('【红缨枪】')) Game.showToast('【红缨枪】势盈刃满：杀伤加倍');
         }
