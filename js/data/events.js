@@ -276,8 +276,13 @@ const Events = {
             {
                 text: '踏桥而返',
                 cb: () => {
+                    const runId = State._runId || 0;
                     Game.showToast('魂光渐远……');
-                    setTimeout(() => { Game.clearJourneyCheckpoint(); Game.navTo('screen-main'); }, 2200);
+                    setTimeout(() => {
+                        if (State._runId !== runId || !State._hasJourneyCheckpoint) return;
+                        Game.clearJourneyCheckpoint();
+                        Game.navTo('screen-main');
+                    }, 2200);
                     return false;
                 }
             }
