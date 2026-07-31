@@ -11,7 +11,12 @@ const CardDB = {
                 const en = State.combat.enemies[t];
                 if (en && en.hp > 0) { en.stun = true; Game.showToast('旋风匝地：敌势受阻'); }
             } },
-            'c8': { id: 'c8', name: '水调歌头', cost: 2, type: '平', typeClass: 'type-ping', atkBase: 0, desc: `造成{V_ATK}点${K.SH}2次，抽取(1+轻功)张卡牌`, rarity: 'mid', cardType: '词牌', effect: () => { Combat.dealDmg(0); setTimeout(()=>Combat.dealDmg(0), 200); Combat.draw(1 + State.agi); } },
+            'c8': { id: 'c8', name: '水调歌头', cost: 2, type: '平', typeClass: 'type-ping', atkBase: 0, desc: `造成{V_ATK}点${K.SH}2次，抽取(1+轻功)张卡牌`, rarity: 'mid', cardType: '词牌', effect: () => {
+                const en = State.combat.enemies[Combat._primaryTargetIdx()];
+                Combat.dealDmgToEnemy(0, false, en);
+                setTimeout(() => Combat.dealDmgToEnemy(0, false, en), 200);
+                Combat.draw(1 + State.agi);
+            } },
             'c9': { id: 'c9', name: '念奴娇', cost: 2, type: '平', typeClass: 'type-ping', desc: `${K.GF}，每回合开始失去1点生命，从弃牌堆打出1卡(本场打出后不再入手)`, rarity: 'mid', cardType: '功卡', effect: () => { State.combat.player.nianNuJiao = true; Game.showToast('念奴娇功法已运转'); } },
             'c10': { id: 'c10', name: '满江红', cost: 0, type: '平', typeClass: 'type-ping', toExhaust: true, desc: `打出后进入${K.CS}，抽取卡牌，本回合${K.SH}翻倍，受到的${K.SH}也翻倍`, rarity: 'mid', cardType: '词牌', effect: () => { Combat.draw(1); State.combat.player.dmgDouble = true; State.combat.player.takeDmgDouble = true; } },
             
@@ -35,13 +40,22 @@ const CardDB = {
                     }
                 });
             } },
-            'c15': { id: 'c15', name: '撩剑', cost: 1, type: '仄', typeClass: 'type-ze', atkBase: 4, isFixed: true, desc: `${K.FX}造成{V_ATK}点${K.SH}3次`, isAttack: true, rarity: 'low', cardType: '武卡', effect: () => { Combat.dealDmg(4, true); setTimeout(()=>Combat.dealDmg(4, true), 150); setTimeout(()=>Combat.dealDmg(4, true), 300); } },
+            'c15': { id: 'c15', name: '撩剑', cost: 1, type: '仄', typeClass: 'type-ze', atkBase: 4, isFixed: true, desc: `${K.FX}造成{V_ATK}点${K.SH}3次`, isAttack: true, rarity: 'low', cardType: '武卡', effect: () => {
+                const en = State.combat.enemies[Combat._primaryTargetIdx()];
+                Combat.dealDmgToEnemy(4, true, en);
+                setTimeout(() => Combat.dealDmgToEnemy(4, true, en), 150);
+                setTimeout(() => Combat.dealDmgToEnemy(4, true, en), 300);
+            } },
             'c16': { id: 'c16', name: '抗衡', cost: 1, type: '平', typeClass: 'type-ping', defBase: 3, desc: `获得{V_DEF}点${K.CSHOU}`, rarity: 'low', cardType: '功卡', effect: () => Combat.addBlock(3) },
             'c17': { id: 'c17', name: '斡旋', cost: 0, type: '平', typeClass: 'type-ping', desc: `${K.FX}抽取1张卡牌`, rarity: 'low', cardType: '功卡', effect: () => Combat.draw(1) },
             'c18': { id: 'c18', name: '缮甲', cost: 1, type: '仄', typeClass: 'type-ze', defBase: () => (State.combat && State.combat.shanjia) ? State.combat.shanjia + 1 : 1, desc: `获得{V_DEF}点${K.CSHOU}(每打出一次额外+1)`, rarity: 'low', cardType: '功卡', effect: () => { State.combat.shanjia = (State.combat.shanjia || 0) + 1; Combat.addBlock(0 + State.combat.shanjia); } },
             'c19': { id: 'c19', name: '磨刀', cost: 1, type: '平', typeClass: 'type-ping', defBase: -2, desc: `获得{V_DEF}点${K.CSHOU}，本回合获得1点力`, rarity: 'low', cardType: '功卡', effect: () => { Combat.addBlock(-2); State.combat.player.turnStr += 1; } },
             'c20': { id: 'c20', name: '伏击', cost: 0, type: '平', typeClass: 'type-ping', atkBase: -1, desc: `失去1点血量，造成{V_ATK}点${K.SH}`, isAttack: true, rarity: 'low', cardType: '武卡', effect: () => { Combat.takeDmg(1, true); Combat.dealDmg(-1); } },
-            'c21': { id: 'c21', name: '双斩', cost: 1, type: '仄', typeClass: 'type-ze', atkBase: -3, desc: `造成{V_ATK}点${K.SH}两次`, isAttack: true, rarity: 'low', cardType: '武卡', effect: () => { Combat.dealDmg(-3); setTimeout(()=>Combat.dealDmg(-3), 200); } },
+            'c21': { id: 'c21', name: '双斩', cost: 1, type: '仄', typeClass: 'type-ze', atkBase: -3, desc: `造成{V_ATK}点${K.SH}两次`, isAttack: true, rarity: 'low', cardType: '武卡', effect: () => {
+                const en = State.combat.enemies[Combat._primaryTargetIdx()];
+                Combat.dealDmgToEnemy(-3, false, en);
+                setTimeout(() => Combat.dealDmgToEnemy(-3, false, en), 200);
+            } },
             
             // [ 22-40: 中阶秘籍 ]
             'c22': { id: 'c22', name: '歃血为盟', cost: 2, type: '平', typeClass: 'type-ping', toExhaust: true, desc: `打出后进入${K.CS}，固定失去1点血量，对所有敌人给予三层${K.YS}和${K.XR}`, rarity: 'mid', cardType: '功卡', effect: () => {
@@ -82,9 +96,9 @@ const CardDB = {
                 const liv0 = Combat._livingIndices();
                 if (!liv0.length) return;
                 if (liv0.length === 1) {
-                    const idx = liv0[0];
-                    Combat.dealDmg(5, false, idx);
-                    setTimeout(() => Combat.dealDmg(5, false, idx), 120);
+                    const en = State.combat.enemies[liv0[0]];
+                    Combat.dealDmgToEnemy(5, false, en);
+                    setTimeout(() => Combat.dealDmgToEnemy(5, false, en), 120);
                     return;
                 }
                 Combat.dealDmgAll(5);
