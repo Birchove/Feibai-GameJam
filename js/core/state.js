@@ -1,4 +1,5 @@
 const State = {
+            _runId: 0,
             _qibuPoetryReward: null,
             _hasJourneyCheckpoint: false,
             _resumeScreenId: '',
