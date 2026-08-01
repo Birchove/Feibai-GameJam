@@ -30,8 +30,11 @@ const MapNodes = MapChapters[0];
 
 function Village_pickOffer() {
     const offer = [];
-    const keysW = typeof WeaponDB !== 'undefined' ? Object.keys(WeaponDB) : [];
+    const keysWAll = typeof WeaponDB !== 'undefined' ? Object.keys(WeaponDB) : [];
     const keysRAll = typeof RelicDB !== 'undefined' ? Object.keys(RelicDB) : [];
+    // Exclude the currently equipped weapon — buying the same key is a no-op in
+    // tryAcquireWeapon but the shop still charged gold and closed (data loss).
+    const keysW = keysWAll.filter((k) => WeaponDB[k] && k !== State.weapon);
     if (keysW.length) offer.push({ type: 'weapon', key: keysW[rand(0, keysW.length - 1)], price: 90 + rand(0, 40) });
     if (keysRAll.length) {
         const owned = new Set(State.relics || []);
@@ -71,6 +74,11 @@ function Village_openShopModal(onDone) {
             ev.stopPropagation();
             if (State.gold < o.price) { Game.showToast('铜钱不够'); return; }
             if (o.type === 'weapon') {
+                // Defensive: never charge for a weapon already in hand.
+                if (State.weapon === o.key) {
+                    Game.showToast(`已佩同一把神兵：${Game.getWeaponLabel(o.key)}`);
+                    return;
+                }
                 Game.tryAcquireWeapon(o.key, (ok) => {
                     if (!ok) return;
                     State.gold -= o.price;
