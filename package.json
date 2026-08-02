@@ -5,6 +5,7 @@
   "main": "electron/main.js",
   "scripts": {
     "start": "electron .",
+    "test": "node tests/village-shop-modal.test.js && node tests/combat-start-turn-gate.test.js",
     "pack": "electron-builder --dir",
     "dist": "electron-builder"
   },

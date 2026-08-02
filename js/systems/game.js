@@ -80,6 +80,13 @@ const Game = {
                 setTimeout(() => { t.style.opacity = 0; }, durationMs);
             },
             toggleModal: (id) => {
+                // Village shop onDone advances the chapter after ambush/hub; closing it via
+                // Settings/deck/etc. would skip that callback and strand the map past the last node.
+                const villageShop = $('village-shop-modal');
+                if (id !== 'village-shop-modal' && villageShop && villageShop.classList.contains('active')) {
+                    Game.showToast('请先了结货摊（购买或转身离去）');
+                    return;
+                }
                 const el = $(id);
                 if (!el) return;
                 if (id === 'info-panel') {
