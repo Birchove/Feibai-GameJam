@@ -38,7 +38,7 @@ const DragSys = {
                 const handItemRaw = (State.combat && State.combat.hand) ? State.combat.hand[DragSys.index] : null;
                 const handItem = handItemRaw ? (typeof handItemRaw === 'string' ? { cardId: handItemRaw } : handItemRaw) : null;
                 const effCost = (handItem && handItem.costOverride !== undefined) ? handItem.costOverride : cd.cost;
-                const canAfford = State.energy >= effCost && State.combat.isPlayerTurn && !State.combat.player.cantPlay;
+                const canAfford = State.combat && State.combat.inCombat && State.energy >= effCost && State.combat.isPlayerTurn && !State.combat.player.cantPlay;
                 const c35ok = cd.id !== 'c35' || State.combat.hand.length >= 2;
                 if(inHitZone && canAfford && c35ok) { 
                     let hitIdx = -1;
