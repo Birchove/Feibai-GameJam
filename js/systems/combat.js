@@ -718,6 +718,7 @@ const Combat = {
     },
 
     playCard: (index) => {
+        if (!State.combat || !State.combat.inCombat) return;
         const rawItem = State.combat.hand[index];
         if (!rawItem) return;
         const item = Combat.normalizeHandItem(rawItem);
@@ -1444,7 +1445,7 @@ const Combat = {
     },
 
     endTurn: () => {
-        if (!State.combat.isPlayerTurn) return;
+        if (!State.combat || !State.combat.inCombat || !State.combat.isPlayerTurn) return;
         const kuModal = $('kuhai-flee-modal');
         if (kuModal && kuModal.classList.contains('active')) return;
         const jxModal = $('junxing-modal');
@@ -1635,9 +1636,23 @@ const Combat = {
         });
     },
 
+    /** Victory/death leave isPlayerTurn true and stale hand DOM clickable for ~1.5s; freeze both. */
+    _freezeCombatInput: () => {
+        if (!State.combat) return;
+        State.combat.isPlayerTurn = false;
+        const hand = $('hand-container');
+        if (hand) hand.innerHTML = '';
+        const endBtn = $('end-turn-btn');
+        if (endBtn) {
+            endBtn.className = '';
+            endBtn.innerText = State.hp <= 0 ? '落败' : '胜负已分';
+        }
+    },
+
     checkDeath: () => {
         if (State.hp <= 0) {
             State.combat.inCombat = false;
+            Combat._freezeCombatInput();
             Game.showToast('胜负寻常事，洗净笔锋可重来', 4200);
             AudioSys.stopBGM();
             setTimeout(() => { Game.clearJourneyCheckpoint(); Game.navTo('screen-main'); }, 4200);
@@ -1650,6 +1665,7 @@ const Combat = {
             State._qibuPoetryReward = State.combat.qibuPoetryId || null;
             State.combat.qibuPoetryId = null;
             State.combat.inCombat = false;
+            Combat._freezeCombatInput();
             AudioSys.playBGMTrack('world');
             setTimeout(() => {
                 Settlement.show(State.combat.lastRewardTier || 'normal');
