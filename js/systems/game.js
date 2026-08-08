@@ -19,6 +19,7 @@ const Game = {
                 }
                 const panel = $('settings-panel');
                 if (panel) panel.classList.remove('active');
+                Game.resolveWeaponReplacePrompt(false);
                 document.querySelectorAll('.modal').forEach((m) => m.classList.remove('active'));
                 Game.navTo('screen-main');
                 Game.refreshMainMenuCTA();
@@ -58,6 +59,7 @@ const Game = {
                     if (pv) pv.style.display = 'none';
                     const video = $('pv-video');
                     if (video) { video.pause(); video.currentTime = 0; video.onended = null; }
+                    Game.resolveWeaponReplacePrompt(false);
                     document.querySelectorAll('.modal').forEach((m) => m.classList.remove('active'));
                     Game.clearJourneyCheckpoint();
                     Game.navTo('screen-main');
@@ -80,6 +82,11 @@ const Game = {
                 setTimeout(() => { t.style.opacity = 0; }, durationMs);
             },
             toggleModal: (id) => {
+                const replaceModal = Game._weaponReplaceModal;
+                if (id !== 'weapon-replace-modal-temp' && replaceModal && replaceModal.classList.contains('active')) {
+                    Game.showToast('请先决定是否换兵');
+                    return;
+                }
                 const el = $(id);
                 if (!el) return;
                 if (id === 'info-panel') {
@@ -169,6 +176,26 @@ const Game = {
                 const w = WeaponDB[key];
                 return `${w.name}(力${w.str || 0}，御${w.def || 0})`;
             },
+            _weaponReplaceModal: null,
+            _weaponReplaceOnDecision: null,
+            /** Resolve/dismiss an open weapon-replace prompt; safe if none is pending. */
+            resolveWeaponReplacePrompt: (ok = false) => {
+                const modal = Game._weaponReplaceModal;
+                const onDecision = Game._weaponReplaceOnDecision;
+                Game._weaponReplaceModal = null;
+                Game._weaponReplaceOnDecision = null;
+                if (modal) {
+                    modal.classList.remove('active');
+                    const confirmBtn = modal.querySelector('#weapon-replace-confirm');
+                    const cancelBtn = modal.querySelector('#weapon-replace-cancel');
+                    if (confirmBtn) confirmBtn.onclick = null;
+                    if (cancelBtn) cancelBtn.onclick = null;
+                    if (modal.parentNode) {
+                        setTimeout(() => { if (modal.parentNode) modal.parentNode.removeChild(modal); }, 40);
+                    }
+                }
+                if (typeof onDecision === 'function') onDecision(!!ok);
+            },
             promptWeaponReplace: (currentKey, nextKey, onDecision) => {
                 const cur = (typeof WeaponDB !== 'undefined') ? WeaponDB[currentKey] : null;
                 const nxt = (typeof WeaponDB !== 'undefined') ? WeaponDB[nextKey] : null;
@@ -176,6 +203,15 @@ const Game = {
                     if (typeof onDecision === 'function') onDecision(false);
                     return;
                 }
+                // Prior unresolved prompt (e.g. orphaned by modal stack) must not leave
+                // duplicate IDs that steal getElementById / leave callbacks hanging.
+                if (Game._weaponReplaceOnDecision || Game._weaponReplaceModal) {
+                    Game.resolveWeaponReplacePrompt(false);
+                }
+                document.querySelectorAll('#weapon-replace-modal-temp').forEach((stale) => {
+                    if (stale && stale.parentNode) stale.parentNode.removeChild(stale);
+                });
+
                 const modal = document.createElement('div');
                 modal.className = 'modal active';
                 modal.style.zIndex = '520';
@@ -194,8 +230,13 @@ const Game = {
                     </div>
                 `;
                 document.body.appendChild(modal);
-                const recConfirm = $('weapon-replace-confirm');
-                const recCancel = $('weapon-replace-cancel');
+                Game._weaponReplaceModal = modal;
+                Game._weaponReplaceOnDecision = onDecision;
+
+                // Bind within this modal — never global getElementById — so a stale twin
+                // cannot leave the visible prompt's buttons inert.
+                const recConfirm = modal.querySelector('#weapon-replace-confirm');
+                const recCancel = modal.querySelector('#weapon-replace-cancel');
                 if (cur && nxt && recConfirm && recCancel) {
                     const curStr = cur.str || 0; const curDef = cur.def || 0;
                     const nxtStr = nxt.str || 0; const nxtDef = nxt.def || 0;
@@ -204,11 +245,7 @@ const Game = {
                     if (allBetter) recConfirm.classList.add('reco-choice');
                     else if (allWorse) recCancel.classList.add('reco-choice');
                 }
-                const close = (ok) => {
-                    modal.classList.remove('active');
-                    setTimeout(() => { if (modal.parentNode) modal.parentNode.removeChild(modal); }, 40);
-                    if (typeof onDecision === 'function') onDecision(!!ok);
-                };
+                const close = (ok) => { Game.resolveWeaponReplacePrompt(!!ok); };
                 if (recConfirm) recConfirm.onclick = (ev) => { ev.stopPropagation(); close(true); };
                 if (recCancel) recCancel.onclick = (ev) => { ev.stopPropagation(); close(false); };
             },
