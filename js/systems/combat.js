@@ -748,12 +748,9 @@ const Combat = {
             }
 
             State.combat.hand.splice(index, 1);
+            // 功法本场封存；其余牌在效果结算后再入弃/沉沙，避免抽牌洗牌把自己抽回手牌
             if (GONGFA_CARD_IDS.has(cardId)) {
                 Combat.registerBattleConsumed(cardId);
-            } else if (item.isMirror || cd.toExhaust) {
-                State.combat.exhaustPile.push(cardId);
-            } else {
-                State.combat.discardPile.push(cardId);
             }
 
             cd.effect();
@@ -765,6 +762,14 @@ const Combat = {
                 p._inRepeat = true;
                 try { cd.effect(); } catch (err) { console.error(err); }
                 p._inRepeat = false;
+            }
+
+            if (!GONGFA_CARD_IDS.has(cardId)) {
+                if (item.isMirror || cd.toExhaust) {
+                    State.combat.exhaustPile.push(cardId);
+                } else {
+                    State.combat.discardPile.push(cardId);
+                }
             }
 
             if (resolvedType === '仄' && p.chunQiang && cd.id !== 'c44') {
@@ -1041,11 +1046,8 @@ const Combat = {
                 const cd = CardDB[it.cardId];
                 if (GONGFA_CARD_IDS.has(it.cardId)) {
                     Combat.registerBattleConsumed(it.cardId);
-                } else if (it.isMirror || cd.toExhaust) {
-                    State.combat.exhaustPile.push(it.cardId);
-                } else {
-                    State.combat.discardPile.push(it.cardId);
                 }
+                // 效果内可能抽牌/洗牌：先结算，再把打出的牌放入弃/沉沙
                 cd.effect();
                 State.momentum = Math.min(10, State.momentum + 1);
                 const pr = State.combat.player;
@@ -1056,6 +1058,13 @@ const Combat = {
                         pr.emeiCount -= 3;
                         Game.showToast('峨眉剑法：再抽一张');
                         Combat.draw(1);
+                    }
+                }
+                if (!GONGFA_CARD_IDS.has(it.cardId)) {
+                    if (it.isMirror || cd.toExhaust) {
+                        State.combat.exhaustPile.push(it.cardId);
+                    } else {
+                        State.combat.discardPile.push(it.cardId);
                     }
                 }
                 Combat.renderHand(); Game.updateUI(); Combat.checkDeath();
@@ -1513,6 +1522,8 @@ const Combat = {
         const finishPhase = () => {
             State.combat.ganShiEchoEnemyPhase = false;
             State.combat.ganShiEchoEnemyStacks = 0;
+            // 敌方行动中已分出胜负时，勿再扣案剑回合或开下一回合，避免胜局被写成暴毙
+            if (!State.combat || !State.combat.inCombat) return;
             const p = State.combat.player;
             if (p.deathRoundsRemaining > 0) {
                 p.deathRoundsRemaining -= 1;
