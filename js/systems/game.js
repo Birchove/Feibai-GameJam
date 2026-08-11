@@ -19,6 +19,7 @@ const Game = {
                 }
                 const panel = $('settings-panel');
                 if (panel) panel.classList.remove('active');
+                Game.dismissExitConfirm();
                 document.querySelectorAll('.modal').forEach((m) => m.classList.remove('active'));
                 Game.navTo('screen-main');
                 Game.refreshMainMenuCTA();
@@ -28,8 +29,31 @@ const Game = {
                 State._resumeScreenId = '';
                 Game.refreshMainMenuCTA();
             },
+            _exitConfirmModal: null,
+            /** Remove any exit-to-main confirm overlay (tracked or orphaned duplicate). */
+            dismissExitConfirm: () => {
+                const tracked = Game._exitConfirmModal;
+                Game._exitConfirmModal = null;
+                const removeOne = (m) => {
+                    if (!m) return;
+                    m.classList.remove('active');
+                    const yes = m.querySelector ? m.querySelector('#exit-main-yes') : null;
+                    const no = m.querySelector ? m.querySelector('#exit-main-no') : null;
+                    if (yes) yes.onclick = null;
+                    if (no) no.onclick = null;
+                    if (m.parentNode) m.parentNode.removeChild(m);
+                };
+                removeOne(tracked);
+                document.querySelectorAll('#exit-to-main-confirm').forEach((stale) => {
+                    if (stale !== tracked) removeOne(stale);
+                });
+            },
             /** 确认后回到扉页「飞白」，关闭各类浮层；不改玩法数值逻辑 */
             confirmExitToMainMenu: () => {
+                // Prior prompt may have been hidden (not removed) by toggleModal, leaving
+                // duplicate #exit-main-yes / #exit-main-no that steal getElementById.
+                Game.dismissExitConfirm();
+
                 const modal = document.createElement('div');
                 modal.className = 'modal active';
                 modal.style.zIndex = '620';
@@ -44,12 +68,12 @@ const Game = {
                         </div>
                     </div>`;
                 document.body.appendChild(modal);
-                const close = () => {
-                    modal.classList.remove('active');
-                    setTimeout(() => { if (modal.parentNode) modal.parentNode.removeChild(modal); }, 40);
-                };
-                const yes = $('exit-main-yes');
-                const no = $('exit-main-no');
+                Game._exitConfirmModal = modal;
+                const close = () => { Game.dismissExitConfirm(); };
+                // Bind within this modal — never global getElementById — so a stale twin
+                // cannot leave the visible Confirm/Cancel buttons inert.
+                const yes = modal.querySelector('#exit-main-yes');
+                const no = modal.querySelector('#exit-main-no');
                 if (yes) yes.onclick = (ev) => {
                     ev.stopPropagation();
                     close();
@@ -94,6 +118,9 @@ const Game = {
                 if (el.classList.contains('active')) {
                     el.classList.remove('active');
                 } else {
+                    // Opening another modal used to only strip .active from exit-confirm,
+                    // leaving an orphaned DOM node with duplicate button IDs.
+                    Game.dismissExitConfirm();
                     document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
                     el.classList.add('active');
                 }

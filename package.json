@@ -5,6 +5,7 @@
   "main": "electron/main.js",
   "scripts": {
     "start": "electron .",
+    "test": "node tests/exit-confirm-modal.test.js",
     "pack": "electron-builder --dir",
     "dist": "electron-builder"
   },
