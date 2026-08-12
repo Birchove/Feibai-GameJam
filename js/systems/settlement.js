@@ -54,6 +54,14 @@ const Settlement = {
                 const qibuId = State._qibuPoetryReward;
                 State._qibuPoetryReward = null;
                 Settlement.currentRewards.qibuPoetry = (qibuId && typeof PoetryDB !== 'undefined' && PoetryDB[qibuId]) ? PoetryDB[qibuId] : null;
+                // 七步成诗「必将获得」+ UI「已记入佚札」：入结算即写入 State.poetry，
+                // 避免点「离开」未点「领取犒赏」时残句永久丢失。
+                if (Settlement.currentRewards.qibuPoetry) {
+                    const pid = Settlement.currentRewards.qibuPoetry.id;
+                    if (!State.poetry) State.poetry = [];
+                    if (!State.poetry.includes(pid)) State.poetry.push(pid);
+                    if (typeof Game !== 'undefined' && Game.updateInfoPanel) Game.updateInfoPanel();
+                }
 
                 Settlement.render();
                 Game.navTo('screen-settlement');
@@ -173,13 +181,10 @@ const Settlement = {
                     }
                 });
 
-                Settlement.createBox('qibu', r.qibuPoetry ? `七步成诗·本场拾得残句：\n「${r.qibuPoetry.text}」\n(已记入佚札)` : null, () => {
-                    if (!State.poetry.includes(r.qibuPoetry.id)) State.poetry.push(r.qibuPoetry.id);
-                    Game.updateInfoPanel();
-                    Game.showToast(`拾得残句：${r.qibuPoetry.text}`);
-                });
+                // 七步残句已在 show() 记入；此处仅展示，不再依赖「领取犒赏」。
+                Settlement.createBox('qibu', r.qibuPoetry ? `七步成诗·本场拾得残句：\n「${r.qibuPoetry.text}」\n(已记入佚札)` : null, null, { alreadyClaimed: !!r.qibuPoetry });
             },
-            createBox: (type, text, claimCb) => {
+            createBox: (type, text, claimCb, opts = {}) => {
                 const box = $(`reward-${type}-box`);
                 const content = $(`reward-${type}-content`);
                 box.className = 'reward-box'; 
@@ -189,6 +194,10 @@ const Settlement = {
                     box.classList.add('claimed'); 
                 } else {
                     content.innerHTML = `<div style="font-size:18px; margin-bottom:15px; white-space:pre-wrap;">${text}</div>`;
+                    if (opts.alreadyClaimed || typeof claimCb !== 'function') {
+                        box.classList.add('claimed');
+                        return;
+                    }
                     const btn = document.createElement('div');
                     btn.className = 'reward-claim-btn'; btn.innerText = '领取犒赏';
                     btn.onclick = () => {
