@@ -267,6 +267,9 @@ const Combat = {
         State.combat.encounterKey = encounterId;
 
         State.combat.inCombat = true;
+        // Previous fight may have ended on the player's turn, leaving isPlayerTurn true
+        // and the end-turn button armed during this 1s windup. Block input until startTurn.
+        State.combat.isPlayerTurn = false;
         State.combat.turn = 1;
         State.combat.pzHistory = [];
         State.combat.drawPile = [...State.deck];
@@ -274,6 +277,11 @@ const Combat = {
         State.combat.discardPile = [];
         State.combat.hand = [];
         State.combat.exhaustPile = [];
+        const etBtn = $('end-turn-btn');
+        if (etBtn) {
+            etBtn.className = '';
+            etBtn.innerText = '准备开战';
+        }
         State.combat.kuHaiStats = { dealt: 0, taken: 0 };
         State.combat.liuXingLuoYue = false;
         State.combat.battleConsumed = [];
@@ -312,6 +320,7 @@ const Combat = {
         Combat.refreshEnemyIntentLocks();
         Game.navTo('screen-combat');
         Game.updateUI();
+        Combat.renderHand();
         Combat.renderEnemies();
 
         if (State.relics.includes('【佛像】') || State.relics.includes('【佛像】开局震慑')) {
