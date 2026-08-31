@@ -202,6 +202,11 @@ const Combat = {
         document.querySelectorAll('.entity.enemy-slot.drag-hover-target').forEach((el) => el.classList.remove('drag-hover-target'));
     },
 
+    isPZChoicePending: () => {
+        const modal = $('pz-choice-modal');
+        return !!(State.combat && (State.combat._pendingPZChoice || (modal && modal.classList.contains('active'))));
+    },
+
     openPZChoiceModal: (onPick) => {
         let modal = $('pz-choice-modal');
         if (!modal) {
@@ -269,6 +274,7 @@ const Combat = {
         State.combat.inCombat = true;
         State.combat.turn = 1;
         State.combat.pzHistory = [];
+        State.combat._pendingPZChoice = false;
         State.combat.drawPile = [...State.deck];
         Combat.shuffle(State.combat.drawPile);
         State.combat.discardPile = [];
@@ -301,6 +307,9 @@ const Combat = {
 
         const pack = Combat_startFromEncounter(encounterId);
         if (!pack || !pack.enemies.length) {
+            State.combat.inCombat = false;
+            State.combat._pendingPZChoice = false;
+            AudioSys.playBGMTrack('world');
             Game.showToast('此战遭遇未成编，恐有误');
             return;
         }
@@ -688,7 +697,7 @@ const Combat = {
             group.cards.forEach(({ item, index }, stackIndex) => {
                 const cd = CardDB[item.cardId];
                 const effCost = (item.costOverride !== undefined) ? item.costOverride : cd.cost;
-                let canPlay = State.combat.isPlayerTurn && !cd.unplayable && State.energy >= effCost && !State.combat.player.cantPlay;
+                let canPlay = State.combat.isPlayerTurn && !cd.unplayable && State.energy >= effCost && !State.combat.player.cantPlay && !Combat.isPZChoicePending();
                 if (cd.id === 'c35' && State.combat.hand.length < 2) canPlay = false;
 
                 let extraDesc = '';
@@ -718,6 +727,7 @@ const Combat = {
     },
 
     playCard: (index) => {
+        if (Combat.isPZChoicePending()) return;
         const rawItem = State.combat.hand[index];
         if (!rawItem) return;
         const item = Combat.normalizeHandItem(rawItem);
@@ -737,16 +747,17 @@ const Combat = {
         }
         if (typeof hideKeywordTooltip === 'function') hideKeywordTooltip();
 
-        const afterPZResolved = (resolvedType) => {
+        const recordPZ = (resolvedType) => {
+            if (!resolvedType) return;
+            State.combat.pzHistory.push(resolvedType);
+            if (State.combat.pzHistory.length > 5) State.combat.pzHistory.shift();
+            Combat.renderPZ();
+            Combat.checkPoetryTrigger();
+        };
+
+        const commitCardPlay = () => {
             State.energy -= effCost;
             if (cd.isAttack) State.momentum = Math.min(10, State.momentum + 1);
-            if (resolvedType) {
-                State.combat.pzHistory.push(resolvedType);
-                if (State.combat.pzHistory.length > 5) State.combat.pzHistory.shift();
-                Combat.renderPZ();
-                Combat.checkPoetryTrigger();
-            }
-
             State.combat.hand.splice(index, 1);
             if (GONGFA_CARD_IDS.has(cardId)) {
                 Combat.registerBattleConsumed(cardId);
@@ -755,7 +766,9 @@ const Combat = {
             } else {
                 State.combat.discardPile.push(cardId);
             }
+        };
 
+        const afterPZResolved = (resolvedType) => {
             cd.effect();
 
             const p = State.combat.player;
@@ -804,9 +817,20 @@ const Combat = {
         };
 
         if (State.combat.player.ignorePZ) {
-            Combat.openPZChoiceModal((pickedType) => afterPZResolved(pickedType));
+            State.combat._pendingPZChoice = true;
+            commitCardPlay();
+            Combat.renderHand();
+            Game.updateUI();
+            Combat.openPZChoiceModal((pickedType) => {
+                if (!State.combat._pendingPZChoice) return;
+                State.combat._pendingPZChoice = false;
+                recordPZ(pickedType);
+                afterPZResolved(pickedType);
+            });
             return;
         }
+        recordPZ(cd.type);
+        commitCardPlay();
         afterPZResolved(cd.type);
     },
 
@@ -1445,6 +1469,7 @@ const Combat = {
 
     endTurn: () => {
         if (!State.combat.isPlayerTurn) return;
+        if (Combat.isPZChoicePending()) return;
         const kuModal = $('kuhai-flee-modal');
         if (kuModal && kuModal.classList.contains('active')) return;
         const jxModal = $('junxing-modal');
@@ -1617,6 +1642,7 @@ const Combat = {
 
     viewPile: (type) => {
         if (!State.combat.inCombat) return;
+        if (Combat.isPZChoicePending()) return;
         Game.toggleModal('pile-panel');
         const grid = $('pile-grid');
         grid.innerHTML = '';
@@ -1638,9 +1664,15 @@ const Combat = {
     checkDeath: () => {
         if (State.hp <= 0) {
             State.combat.inCombat = false;
+            State.combat._pendingPZChoice = false;
             Game.showToast('胜负寻常事，洗净笔锋可重来', 4200);
             AudioSys.stopBGM();
-            setTimeout(() => { Game.clearJourneyCheckpoint(); Game.navTo('screen-main'); }, 4200);
+            const runId = State._runId || 0;
+            setTimeout(() => {
+                if ((State._runId || 0) !== runId) return;
+                Game.clearJourneyCheckpoint();
+                Game.navTo('screen-main');
+            }, 4200);
         } else if (State.combat.inCombat && Combat._livingIndices().length === 0) {
             if (State.relics.includes('【落魄灵魂】')) {
                 State.hp = Math.min(State.maxHp, State.hp + 1);
@@ -1650,9 +1682,13 @@ const Combat = {
             State._qibuPoetryReward = State.combat.qibuPoetryId || null;
             State.combat.qibuPoetryId = null;
             State.combat.inCombat = false;
+            State.combat._pendingPZChoice = false;
             AudioSys.playBGMTrack('world');
+            const runId = State._runId || 0;
+            const rewardTier = State.combat.lastRewardTier || 'normal';
             setTimeout(() => {
-                Settlement.show(State.combat.lastRewardTier || 'normal');
+                if ((State._runId || 0) !== runId || !State._hasJourneyCheckpoint || State.combat.inCombat) return;
+                Settlement.show(rewardTier);
             }, 1500);
         }
     }

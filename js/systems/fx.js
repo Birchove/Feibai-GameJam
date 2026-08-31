@@ -2,6 +2,7 @@ const DragSys = {
             cardEl: null, cardData: null, index: -1, isDragging: false, startPt: {x:0, y:0}, currPt: {x:0, y:0},
             ctx: $('fxCanvas').getContext('2d'), paths: [],
             start: (e, el, cd, idx) => {
+                if (typeof Combat !== 'undefined' && Combat.isPZChoicePending && Combat.isPZChoicePending()) return;
                 DragSys.isDragging = true; DragSys.cardEl = el; DragSys.cardData = cd; DragSys.index = idx;
                 DragSys.startPt = { x: e.clientX, y: e.clientY }; DragSys.currPt = { ...DragSys.startPt };
                 const rect = el.getBoundingClientRect();
@@ -38,7 +39,8 @@ const DragSys = {
                 const handItemRaw = (State.combat && State.combat.hand) ? State.combat.hand[DragSys.index] : null;
                 const handItem = handItemRaw ? (typeof handItemRaw === 'string' ? { cardId: handItemRaw } : handItemRaw) : null;
                 const effCost = (handItem && handItem.costOverride !== undefined) ? handItem.costOverride : cd.cost;
-                const canAfford = State.energy >= effCost && State.combat.isPlayerTurn && !State.combat.player.cantPlay;
+                const pzPending = typeof Combat !== 'undefined' && Combat.isPZChoicePending && Combat.isPZChoicePending();
+                const canAfford = State.energy >= effCost && State.combat.isPlayerTurn && !State.combat.player.cantPlay && !pzPending;
                 const c35ok = cd.id !== 'c35' || State.combat.hand.length >= 2;
                 if(inHitZone && canAfford && c35ok) { 
                     let hitIdx = -1;
