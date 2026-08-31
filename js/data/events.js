@@ -277,7 +277,11 @@ const Events = {
                 text: '踏桥而返',
                 cb: () => {
                     Game.showToast('魂光渐远……');
-                    setTimeout(() => { Game.clearJourneyCheckpoint(); Game.navTo('screen-main'); }, 2200);
+                    if (typeof Combat !== 'undefined' && Combat.defer) {
+                        Combat.defer(() => { Game.clearJourneyCheckpoint(); Game.navTo('screen-main'); }, 2200, { requireCombat: false });
+                    } else {
+                        setTimeout(() => { Game.clearJourneyCheckpoint(); Game.navTo('screen-main'); }, 2200);
+                    }
                     return false;
                 }
             }
