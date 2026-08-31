@@ -1637,11 +1637,11 @@ const Combat = {
 
     checkDeath: () => {
         if (State.hp <= 0) {
-            State.combat.inCombat = false;
+            if (State.combat) State.combat.inCombat = false;
             Game.showToast('胜负寻常事，洗净笔锋可重来', 4200);
             AudioSys.stopBGM();
             setTimeout(() => { Game.clearJourneyCheckpoint(); Game.navTo('screen-main'); }, 4200);
-        } else if (State.combat.inCombat && Combat._livingIndices().length === 0) {
+        } else if (State.combat && State.combat.inCombat && Combat._livingIndices().length === 0) {
             if (State.relics.includes('【落魄灵魂】')) {
                 State.hp = Math.min(State.maxHp, State.hp + 1);
                 State.gold += 15;
