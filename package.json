@@ -5,6 +5,7 @@
   "main": "electron/main.js",
   "scripts": {
     "start": "electron .",
+    "test": "node tests/settlement-map-preview.test.js",
     "pack": "electron-builder --dir",
     "dist": "electron-builder"
   },

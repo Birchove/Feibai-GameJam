@@ -1,4 +1,9 @@
 const Game = {
+            clearSettlementMapPreview: () => {
+                State.isViewingMap = false;
+                const returnBtn = $('map-return-btn');
+                if (returnBtn) returnBtn.style.display = 'none';
+            },
             refreshMainMenuCTA: () => {
                 const btn = $('main-journey-btn');
                 if (!btn) return;
@@ -14,16 +19,24 @@ const Game = {
             goMainMenuFromSettings: () => {
                 const active = document.querySelector('.screen.active');
                 if (active && active.id && active.id !== 'screen-main') {
-                    State._resumeScreenId = active.id;
+                    State._resumeScreenId = State.isViewingMap && active.id === 'screen-map' ? 'screen-settlement' : active.id;
                     State._hasJourneyCheckpoint = true;
                 }
+                Game.clearSettlementMapPreview();
                 const panel = $('settings-panel');
                 if (panel) panel.classList.remove('active');
                 document.querySelectorAll('.modal').forEach((m) => m.classList.remove('active'));
                 Game.navTo('screen-main');
                 Game.refreshMainMenuCTA();
             },
+            restartJourneyFromSettings: () => {
+                Game.clearJourneyCheckpoint();
+                const panel = $('settings-panel');
+                if (panel) panel.classList.remove('active');
+                Game.navTo('screen-class');
+            },
             clearJourneyCheckpoint: () => {
+                Game.clearSettlementMapPreview();
                 State._hasJourneyCheckpoint = false;
                 State._resumeScreenId = '';
                 Game.refreshMainMenuCTA();
@@ -285,6 +298,7 @@ const Game = {
             initGame: (cls) => {
                 const clsData = Object.values(ClassDB).find(c => c.name === cls) || ClassDB.sword;
                 const init = clsData.initial;
+                Game.clearSettlementMapPreview();
                 State._qibuPoetryReward = null;
                 State.class = cls; State.hp = init.hp; State.maxHp = init.maxHp; State.gold = 100; State.mapNodeIndex = 0; State.mapChapter = 0; State.relics = [];
                 State._villagePendingChapter = undefined;
