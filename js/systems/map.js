@@ -1,7 +1,11 @@
 const MapSys = {
+    /** Set while a node entry has left the map (combat/event); cleared in renderMap. */
+    _nodeEntryBusy: false,
+
     getNodes: () => (typeof MapChapters !== 'undefined' && MapChapters[State.mapChapter]) ? MapChapters[State.mapChapter] : MapChapters[0],
 
     renderMap: () => {
+        MapSys._nodeEntryBusy = false;
         MapSys.nodesData = MapSys.getNodes();
         const svg = $('map-svg');
         const container = $('map-nodes-container');
@@ -48,9 +52,17 @@ const MapSys = {
         Game.navTo('screen-map');
     },
 
-    enterNode: (node) => {
+    enterNode: (node, opts) => {
         if (State.isViewingMap) { Game.showToast('请先自结算页返回，领毕犒赏再行地图'); return; }
+        // Double-click / queued second click: the first entry already incremented and left the map.
+        // Without this, 破庙 or 鬼门关 skip the following node and can leave no reachable tile.
+        if (!(opts && opts.force)) {
+            if (MapSys._nodeEntryBusy) return;
+            const mapEl = $('screen-map');
+            if (mapEl && !mapEl.classList.contains('active')) return;
+        }
 
+        MapSys._nodeEntryBusy = true;
         State.mapNodeIndex++;
         if (node.ev === 'vn1') EventSys.start(Events.vn1);
         else if (node.ev === 'vn2') EventSys.start(Events.vn2);

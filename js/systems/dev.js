@@ -419,8 +419,8 @@ const DevSys = {
         // 同步索引(保证后续节点解锁状态正确)
         State.mapNodeIndex = idx;
         DevSys.closePanel();
-        // 复用 MapSys.enterNode 的事件 / 战斗派发逻辑
-        MapSys.enterNode(node);
+        // 复用 MapSys.enterNode 的事件 / 战斗派发逻辑(force：战斗中跳转时地图未必仍为当前屏)
+        MapSys.enterNode(node, { force: true });
     },
 
     openEvent: () => {
